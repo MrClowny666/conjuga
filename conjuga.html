@@ -259,13 +259,13 @@ quedar|to stay, to remain
 creer|to believe
 hablar|to speak
 llevar|to carry, to wear
-dejar|to leave, to let
+dejar|to leave (behind), to let
 seguir|to follow, to continue|st=i
 encontrar|to find|st=ue
 llamar|to call
 venir|to come|yo=vengo st=ie pret=vin fut=vendr tu=ven
 pensar|to think|st=ie
-salir|to go out, to leave|yo=salgo fut=saldr tu=sal
+salir|to go out, to leave (a place)|yo=salgo fut=saldr tu=sal
 volver|to return|st=ue part=vuelto
 tomar|to take, to drink
 conocer|to know (people, places)|zc
@@ -311,7 +311,7 @@ convertir|to convert|st=ie
 ganar|to win, to earn
 formar|to form
 traer|to bring|yo=traigo pret=traj
-partir|to leave, to split
+partir|to leave (depart), to split
 morir|to die|st=ue part=muerto
 aceptar|to accept
 realizar|to carry out
@@ -330,8 +330,8 @@ correr|to run
 utilizar|to use
 pagar|to pay
 ayudar|to help
-gustar|to please
-jugar|to play|st=ue
+gustar|to please (be liked)
+jugar|to play (games, sport)|st=ue
 escuchar|to listen
 cumplir|to fulfill
 ofrecer|to offer|zc
@@ -439,7 +439,7 @@ establecer|to establish|zc
 desaparecer|to disappear|zc
 pertenecer|to belong|zc
 obedecer|to obey|zc
-crecer|to grow|zc
+crecer|to grow (get bigger)|zc
 enviar|to send|st=acc
 confiar|to trust|st=acc
 graduar|to graduate|st=acc
@@ -454,7 +454,7 @@ ahorrar|to save (money)
 alquilar|to rent
 apagar|to turn off
 aprobar|to approve, to pass (an exam)|st=ue
-arreglar|to fix
+arreglar|to fix (repair)
 avisar|to warn
 besar|to kiss
 borrar|to erase
@@ -481,7 +481,7 @@ firmar|to sign
 funcionar|to work (machines)
 gastar|to spend
 gritar|to shout
-guardar|to keep
+guardar|to keep, to save (put away)
 importar|to matter
 invitar|to invite
 llenar|to fill
@@ -565,7 +565,7 @@ amanecer|to dawn|zc
 anochecer|to get dark|zc
 envejecer|to grow old|zc
 carecer|to lack|zc
-complacer|to please|zc
+complacer|to please (satisfy someone)|zc
 oscurecer|to darken|zc
 florecer|to bloom|zc
 lucir|to shine, to look|zc
@@ -603,7 +603,7 @@ rogar|to beg|st=ue
 sonar|to sound, to ring|st=ue
 soler|to usually do|st=ue
 soltar|to let go|st=ue
-tostar|to toast|st=ue
+tostar|to toast (bread)|st=ue
 perseguir|to chase|st=i
 gemir|to moan|st=i
 rendir|to yield|st=i
@@ -630,7 +630,7 @@ masticar|to chew
 picar|to sting, to chop
 ubicar|to locate
 acercar|to bring closer
-arrancar|to start, to pull out
+arrancar|to start (an engine), to pull out
 destacar|to stand out
 convocar|to summon
 complicar|to complicate
@@ -666,7 +666,7 @@ asegurar|to assure
 asustar|to scare
 atrapar|to catch
 aumentar|to increase
-brindar|to toast, to offer
+brindar|to toast (with a drink), to offer
 calcular|to calculate
 callar|to keep quiet
 causar|to cause
@@ -679,7 +679,7 @@ consultar|to consult
 contratar|to hire
 conversar|to talk
 copiar|to copy
-cultivar|to grow
+cultivar|to grow (plants), to cultivate
 dañar|to damage
 declarar|to declare
 denunciar|to report
@@ -701,7 +701,7 @@ estimar|to estimate
 examinar|to examine
 explorar|to explore
 fallar|to fail
-fijar|to fix, to set
+fijar|to fix (attach), to set
 fumar|to smoke
 generar|to generate
 golpear|to hit
@@ -721,7 +721,7 @@ negociar|to negotiate
 nombrar|to name
 ocultar|to hide
 operar|to operate
-opinar|to think, to give an opinion
+opinar|to give an opinion, to reckon
 ordenar|to tidy, to order
 pasear|to stroll
 pelear|to fight
@@ -753,11 +753,11 @@ sospechar|to suspect
 sumar|to add up
 superar|to overcome
 tardar|to take (time)
-trasladar|to move
+trasladar|to move (relocate), to transfer
 acceder|to access
 ceder|to give way
-cometer|to commit
-comprometer|to commit
+cometer|to commit (a crime, a mistake)
+comprometer|to commit (pledge), to compromise
 conceder|to grant
 esconder|to hide
 ofender|to offend
@@ -772,7 +772,7 @@ emprender|to undertake
 someter|to submit
 corresponder|to correspond
 aburrir|to bore
-acudir|to go, to come
+acudir|to turn up, to attend
 definir|to define
 difundir|to spread
 emitir|to emit
@@ -808,19 +808,19 @@ maquillarse|to put on makeup
 quejarse|to complain
 equivocarse|to make a mistake
 acordarse|to remember|st=ue
-ponerse|to put on, to become
+ponerse|to put on, to become (mood, state)
 olvidarse|to forget
 alegrarse|to be glad
 enojarse|to get angry
 relajarse|to relax
 mudarse|to move (house)
 prepararse|to get ready
-convertirse|to become
+convertirse|to become (turn into)
 atreverse|to dare
 despedirse|to say goodbye
 arrepentirse|to regret|st=ie
 caerse|to fall down
-hacerse|to become
+hacerse|to become (by effort)
 moverse|to move
 abrirse|to open (up)
 acabarse|to run out`;
@@ -2555,13 +2555,25 @@ function choices(x){ // four options: the answer plus plausible wrong ones
       ...shuffle(conj(x.v,x.t).filter(Boolean)),...shuffle(TT.map(t=>conj(x.v,t.id)[x.p]).filter(Boolean))];
     for(const f of pool){if(set.size>=4)break;if(f)set.add(f)}
   }else{
-    const other=pick(VERBS.filter(v=>v!==x.v&&!v.refl&&v.rank<=300));set.add(other.inf);
+    const other=pick(VERBS.filter(v=>v!==x.v&&!v.refl&&v.rank<=300&&!covers(v,x.v)));set.add(other.inf);
     const r=x.v.root,stem=r.slice(0,-2);
     for(const e of shuffle(['ar','er','ir']))if(set.size<4&&stem+e!==r&&!verbBy(stem+e))set.add(stem+e+(x.v.refl?'se':''));
   }
   while(set.size<4)set.add(pick(VERBS).inf);
   return shuffle([...set]);
 }
+// Synonym check for Meaning questions: u counts if it covers every sense of v ("to try" ⊆ probar's "to try, to taste").
+const senses=v=>v.en.split(/,(?![^(]*\))/).map(s=>s.trim().toLowerCase());
+// Extra synonyms the glosses don't show. a=b=c: all accepted for each other. a>b>c: b and c accepted when a is asked, not the reverse.
+const SYN=`arreglar=reparar salvar=rescatar empezar=comenzar=iniciar terminar=acabar reducir=disminuir huir=escapar aguantar=soportar
+ indicar=señalar poner=colocar echar=tirar charlar=conversar
+ pensar>creer permitir>dejar impedir>evitar prevenir>evitar quedar>permanecer vivir>residir terminar>concluir acabar>concluir
+ necesitar>requerir lograr>alcanzar obtener>conseguir quitar>sacar>eliminar aceptar>admitir bajar>descender sugerir>proponer
+ proteger>defender perdonar>disculpar averiguar>descubrir carecer>faltar anochecer>oscurecer afectar>influir reponer>sustituir
+ grabar>registrar presionar>apretar difundir>extender asumir>suponer divertir>entretener introducir>presentar notar>percibir
+ aparecer>surgir cambiar>variar crear>generar conservar>mantener`;
+const synOf={};for(const e of SYN.trim().split(/\s+/)){const w=e.split(/[=>]/);for(const a of e.includes('=')?w:[w[0]])for(const b of w)if(a!==b)(synOf[a]||(synOf[a]=new Set)).add(b)}
+const covers=(u,v)=>u!==v&&(!!synOf[v.inf]?.has(u.inf)||!!u.refl===!!v.refl&&senses(v).every(s=>senses(u).includes(s)));
 function diagnose(x,got){
   const g=strip(got);
   if(x.kind==='tip')return['Not quite.',x.note];
@@ -2637,7 +2649,9 @@ function quiz(qs,opt){
   function next2(){next()}
   function submit(got,typed){
     if(!got)return;
-    const exact=got===cur.ans,loose=strip(got)===strip(cur.ans),ok=exact||(typed&&loose&&!S.strict);
+    const exact=got===cur.ans,loose=strip(got)===strip(cur.ans);
+    const syn=cur.kind==='mean'&&!loose&&VERBS.find(v=>(S.strict?v.inf===got:strip(v.inf)===strip(got))&&covers(v,cur.v));
+    const ok=exact||(typed&&loose&&!S.strict)||!!syn;
     if(!ok&&typed&&S.typo&&!typoUsed&&lev(strip(got),strip(cur.ans))<=2&&got.length>2){typoUsed=true;$('hint').innerHTML='<span class="badc">🤔 There might be a typo. Check it, then press Check again.</span>';return}
     phase='fb';record(ok,got);if($('hint'))$('hint').textContent='';
     const ans=$('ans');if(ans){ans.disabled=true;ans.className='answer '+(ok?'ok':'bad')}
@@ -2645,7 +2659,7 @@ function quiz(qs,opt){
     if(ok){
       speak(say);
       if(exact&&S.pause!=='always'){fb.innerHTML=`<div class="fb ok">¡Correcto!</div>`;phase='wait';setTimeout(()=>{if(phase==='wait')next()},mode==='mc'?900:650);return}
-      fb.innerHTML=`<div class="fb ok">${exact?'¡Correcto!':'Correct, but mind the accent:'} <span class="c">${exact?'':cur.ans}</span></div>`;
+      fb.innerHTML=syn?`<div class="fb ok">¡Correcto! ${syn.inf} works too. This one was looking for: <span class="c">${cur.ans}</span></div>`:`<div class="fb ok">${exact?'¡Correcto!':'Correct, but mind the accent:'} <span class="c">${exact?'':cur.ans}</span></div>`;
     }else{
       // near miss = within 2 letters and not some other real form (those get a specific diagnosis instead)
       const d0=diagnose(cur,got),near=got.length>2&&lev(strip(got),strip(cur.ans))<=2&&!(d0&&/^(Right|Wrong|Regular)/.test(d0[0])),d=near&&d0&&d0[0]==='Not a real verb.'?null:d0;
