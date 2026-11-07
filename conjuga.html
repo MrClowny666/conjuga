@@ -109,6 +109,7 @@ input[type=search],.answer{width:100%;box-sizing:border-box;border:2px solid var
 .switch{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0}
 .switch input{width:22px;height:22px;accent-color:var(--blue);flex:none}
 .switch select{max-width:55%;font:inherit;padding:6px;border-radius:8px;border:1px solid var(--edge);background:var(--surface);color:inherit}
+.switch input[type=range]{width:45%;height:auto}
 .big{font-family:var(--display);font-size:34px;font-weight:800;font-variant-numeric:tabular-nums}
 .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .kpis .card{padding:12px;text-align:center}
@@ -193,6 +194,10 @@ mark{background:none;color:var(--irr);font-weight:700;text-decoration:underline 
 .mist{padding:12px;display:flex;flex-direction:column;gap:4px}
 .bars{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;height:140px;align-items:end}
 .heat{display:grid;gap:4px}
+.skill{display:flex;flex-direction:column;gap:4px;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:10px 0;color:inherit;font:inherit;cursor:pointer}
+.skill .meter{display:block;margin-top:2px}
+.vgrid{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px}.vgrid .cell{height:auto;aspect-ratio:1;border-radius:5px;cursor:pointer}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px}.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:5px}
 .cell{height:34px;border:0;border-radius:8px;font:700 13px var(--body);padding:0;color:var(--ink);display:grid;place-items:center}
 .h4{background:var(--blue);color:var(--blue-ink)}.h3{background:color-mix(in srgb,var(--blue) 50%,var(--surface))}
 .h2{background:var(--blue-soft)}.h1{background:var(--irr-soft);box-shadow:inset 0 0 0 1.5px var(--irr)}.h0{background:var(--bg);color:var(--muted)}
@@ -1360,7 +1365,7 @@ const norm=s=>s.trim().toLowerCase().replace(/\s+/g,' ');
 const KEY='conjuga-v1';
 const fresh=()=>({lv:{},xp:0,streak:0,last:'',st:{},miss:[],vos:true,strict:false,tts:true,pt:['pres'],pg:['ar','erir','stem','spell','irr'],
   fav:[],vf:{pop:0,end:'all',refl:'include',irr:[]},favOnly:false,hidePro:false,enPro:false,esNames:false,expand:true,
-  typo:true,auto:false,pause:'never',theme:'system',stp:{},days:{},quizzes:0,scoreSum:0,vs:{},missOk:{},
+  typo:true,auto:false,pause:'never',theme:'system',stp:{},days:{},fm:{},quizzes:0,scoreSum:0,vs:{},missOk:{},
   cq:{what:'conj',how:'type',tenses:['pres'],pron:[0,1,2,3,4,5],verbs:'top100',n:10,hideInf:false,hideEn:false,irrOnly:false}});
 let S;try{S=Object.assign(fresh(),JSON.parse(localStorage.getItem(KEY)||'{}'))}catch{S=fresh()}
 S.cq=Object.assign(fresh().cq,S.cq);
@@ -1369,12 +1374,16 @@ const applyTheme=()=>{if(!THEMES.some(t=>t[0]===S.theme))S.theme='system';const 
 applyTheme();
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch{}};
 const today=()=>new Date().toISOString().slice(0,10);
-function bumpStreak(){const d=today();if(S.last===d)return;const y=new Date(Date.now()-864e5).toISOString().slice(0,10);S.streak=S.last===y?S.streak+1:1;S.last=d}
+// A freeze covers one missed day; earn one for every 7 days in a row, hold at most 2. Returns true when a freeze was spent.
+function bumpStreak(){const d=today();if(S.last===d)return false;const ago=n=>new Date(Date.now()-n*864e5).toISOString().slice(0,10);
+  const froze=S.last===ago(2)&&S.freeze>0;if(froze)S.freeze--;
+  S.streak=S.last===ago(1)||froze?S.streak+1:1;S.last=d;if(S.streak%7===0)S.freeze=Math.min(2,(S.freeze||0)+1);
+  S.best=Math.max(S.best||0,S.streak);return froze}
 // Spanish voices, best first: downloaded Premium/Enhanced/neural voices beat the default compact one.
 const esVoices=()=>{try{const sc=v=>(/premium|enhanced|natural|neural|google|siri/i.test(v.name)?2:0)+(/^es[-_]ES/i.test(v.lang)?1:0)-(/^(eddy|flo|grandma|grandpa|reed|rocko|sandy|shelley)\b/i.test(v.name)?3:0);
   return speechSynthesis.getVoices().filter(v=>/^es/i.test(v.lang)).sort((a,b)=>sc(b)-sc(a))}catch{return[]}};
 function speak(txt,force){if(!(S.tts||force)||!('speechSynthesis'in window))return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(txt),vs=esVoices(),v=vs.find(x=>x.voiceURI===S.voice)||vs[0];
-  u.lang=v?v.lang:'es-ES';if(v)u.voice=v;speechSynthesis.speak(u)}catch{}}
+  u.lang=v?v.lang:'es-ES';if(v)u.voice=v;u.rate=S.rate||1;speechSynthesis.speak(u)}catch{}}
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 const persons=()=>[0,1,2,3,4,5].filter(i=>S.vos||i!==4);
@@ -1464,7 +1473,7 @@ const VIEWS={
    document.getElementById('vod').onclick=()=>verbSheet(vd);document.getElementById('tod').onclick=()=>goTip(td[0]);
    document.getElementById('sent5').onclick=()=>quiz(weightedPick(sentPool(),5,s=>COMMON_T.has(s.t)?3:1).map(qs_),{title:'Sentences'});
    document.getElementById('sentTest').onclick=()=>quiz(shuffle(sentPool()).slice(0,10).map(qs_),{title:'Level-up test',pass:8});
-   document.getElementById('rev').onclick=()=>quiz(shuffle(S.miss).slice(0,15).map(k=>{const[inf,t,p]=k.split('|');const v=verbBy(inf);return v&&T[t]&&conj(v,t)[+p]?q(v,t,+p):null}).filter(Boolean),{title:'Smart review'});
+   document.getElementById('rev').onclick=()=>formQuiz(S.miss,'Smart review');
   };draw();
  },
  verbs(){
@@ -1510,26 +1519,67 @@ const VIEWS={
  stats(){
   const stars=Object.values(S.lv).reduce((a,b)=>a+b,0),avg=S.quizzes?Math.round(S.scoreSum/S.quizzes):0;
   const days=[...Array(7)].map((_,k)=>{const d=new Date(Date.now()-(6-k)*864e5);return{key:d.toISOString().slice(0,10),lab:k===6?'Today':d.toLocaleDateString('en',{weekday:'short'})}});
-  const mx=Math.max(1,...days.map(d=>S.days[d.key]||0));
+  const mx=Math.max(1,...days.map(d=>S.days[d.key]||0)),wk=days.filter(d=>S.days[d.key]).length,GOAL=5;
   const weak=Object.entries(S.stp).filter(([,s])=>s.n>=3).map(([k,s])=>{const[t,p]=k.split('|');return{t,p:+p,pct:Math.round(s.c/s.n*100)}}).filter(w=>T[w.t]).sort((a,b)=>a.pct-b.pct)[0];
-  const mastered=n=>VERBS.filter(v=>v.rank<=n&&S.vs[v.inf]&&S.vs[v.inf].c>=5&&S.vs[v.inf].c/S.vs[v.inf].n>=.9).length;
+  const isM=v=>S.vs[v.inf]&&S.vs[v.inf].c>=5&&S.vs[v.inf].c/S.vs[v.inf].n>=.9;
+  const mastered=n=>VERBS.filter(v=>v.rank<=n&&isM(v)).length;
+  const fc=fmCounts(),sk=skillStats(),range=verbRange(sk);
+  // next up: one action, most urgent first
+  const pathLvl=t=>LEVELS.find(l=>l.t.id===t);
+  const firstGap=sk.find(x=>x.started&&x.pct<80),fresh=sk.find(x=>!x.started);
+  const nu=fc.fading?{h:`${fc.fading} ${fc.fading===1?'form is':'forms are'} fading`,p:'A quick refresh brings them back before they slip away.',b:'Refresh',go:()=>formQuiz(fc.fadingKeys,'Refresh')}
+   :fc.due.length?{h:`Lock in ${fc.due.length} ${fc.due.length===1?'form':'forms'}`,p:'You typed these right on an earlier day. Get them right again today and they count as known.',b:'Lock in',go:()=>formQuiz(fc.due,'Lock in')}
+   :firstGap?{h:`Keep going: ${firstGap.name}`,p:`${firstGap.pct}% · aims at the patterns you haven’t got yet.`,b:'Practise',go:()=>skillQuiz(firstGap)}
+   :fresh?{h:`New skill: ${fresh.name}`,p:`<i>${fresh.es}</i>`,b:pathLvl(fresh.ts[0])?'Start lesson':'Start',go:()=>pathLvl(fresh.ts[0])?intro(pathLvl(fresh.ts[0])):skillQuiz(fresh)}
+   :S.miss.length?{h:'Smart review',p:`${S.miss.length} forms you’ve missed before.`,b:'Review',go:()=>formQuiz(S.miss,'Smart review')}
+   :{h:'Keep it fresh',p:'A mixed set from the top 100 verbs.',b:'Practise',go:()=>quiz(build(['pres','pret','impf','fut','subj'],VERBS.filter(v=>v.rank<=100),10),{title:'Mixed practice'})};
+  const skRow=(x,i)=>`<button class="skill" data-sk="${i}"><span class="row"><b>${x.name}</b><span class="small ${x.pct>=80?'okc':'muted'}">${x.pct>=80?'✓ You can':x.pct+'%'}</span></span>
+    <span class="muted small"><i>${x.es}</i></span><span class="muted" style="font-size:12px">${x.ts.map(tn).join(' · ')} · ${x.cefr}</span><span class="meter"><i style="width:${x.pct}%"></i></span></button>`;
+  const shown=sk.filter(x=>x.started),nxt=sk.find(x=>!x.started);if(nxt)shown.push(nxt);
+  const hidden=sk.filter(x=>!shown.includes(x));
+  // verb collection: top 100 verbs, coloured by stage
+  const kf={};for(const[k,r]of Object.entries(S.fm))if(fmState(r)==='known'){const inf=k.split('|')[0];kf[inf]=(kf[inf]||0)+1}
+  const top=VERBS.filter(v=>!v.refl&&v.rank<=100).sort((a,b)=>a.rank-b.rank),stage=v=>isM(v)?4:(kf[v.inf]||0)>=6?3:S.vs[v.inf]?2:0;
+  const STG={4:'Mastered',3:'Known',2:'Practising',0:'Not started'},cnt=st=>top.filter(v=>stage(v)===st).length;
+  const best=Math.max(S.best||0,S.streak),bestDay=Math.max(0,...Object.values(S.days));
   view.innerHTML=`<div class="stack"><h1 style="font-size:26px">Progress</h1>
-  <div class="kpis"><div class="card"><div class="big">${S.streak}</div><div class="muted small">Day streak</div></div>
+  <div class="card stack"><div class="row"><div><div class="big" style="font-size:48px;line-height:1">${fc.known.toLocaleString()}</div><div class="muted small">Forms you know</div></div>${fc.week?`<span class="pill gold">+${fc.week} this week</span>`:''}</div>
+   <p class="muted small" style="margin:0">${fc.known||fc.half||fc.fading?'A form counts once you’ve typed it right on two different days. Leave it too long and it starts to fade.':'Type your answers in any quiz to start counting. A form counts once you’ve typed it right on two different days.'}</p>
+   ${fc.half||fc.fading?`<p class="small" style="margin:0">${[fc.half&&`<b>${fc.half}</b> half-learned`,fc.fading&&`<b>${fc.fading}</b> fading`].filter(Boolean).join(' · ')}</p>`:''}</div>
+  <div class="card stack" style="background:var(--blue-soft)"><span class="muted small">Next up</span><h3>${nu.h}</h3><p class="small" style="margin:0">${nu.p}</p><button class="btn" id="nu">${nu.b}</button></div>
+  <div class="card stack"><div class="row"><h3>What you can say</h3>${range?`<span class="pill">Verb range ≈ ${range}</span>`:''}</div>
+   <div>${shown.map(x=>skRow(x,sk.indexOf(x))).join('')}</div>
+   ${hidden.length?`<details class="deep"><summary>${hidden.length} more ${hidden.length===1?'skill':'skills'}</summary>${hidden.map(x=>skRow(x,sk.indexOf(x))).join('')}</details>`:''}
+   <p class="muted" style="font-size:12px;margin:0">A skill is ✓ at 80%: two verbs you know for each pattern (person × verb type). Levels are a rough guide to the verb forms, not a full language test.</p></div>
+  <div class="kpis"><div class="card"><div class="big">${S.streak}</div><div class="muted small">Day streak${S.freeze?`<br>❄️ ${S.freeze} ${S.freeze===1?'freeze':'freezes'}`:''}</div></div>
   <div class="card"><div class="big">${avg}%</div><div class="muted small">Average score</div></div>
   <div class="card"><div class="big">${S.quizzes}</div><div class="muted small">Quizzes</div></div></div>
-  <div class="card stack"><h3>Quizzes completed</h3><div class="bars">${days.map(d=>{const c=S.days[d.key]||0;return `<div class="bcol"><span class="bnum">${c||''}</span><i style="height:${c/mx*100}%"></i><span class="blab">${d.lab}</span></div>`}).join('')}</div></div>
+  <div class="card stack"><div class="row"><h3>Quizzes completed</h3><span class="pill ${wk>=GOAL?'gold':''}">${wk>=GOAL?'🎯 Goal met · ':''}${wk}/${GOAL} days</span></div><div class="bars">${days.map(d=>{const c=S.days[d.key]||0;return `<div class="bcol"><span class="bnum">${c||''}</span><i style="height:${c/mx*100}%"></i><span class="blab">${d.lab}</span></div>`}).join('')}</div>
+   <p class="muted" style="font-size:12px;margin:0">Goal: practise on ${GOAL} of any 7 days. Every 7 days in a row earns a streak freeze (up to 2), which covers one missed day.</p></div>
+  <div class="card stack"><div class="row"><h3>Verb collection</h3><span class="muted small">Top 100</span></div>
+   <div class="vgrid">${top.map(v=>`<button class="cell h${stage(v)}" data-vc="${v.inf}" title="${v.inf}" aria-label="${v.inf}: ${STG[stage(v)]}"></button>`).join('')}</div>
+   <div class="legend small muted">${[4,3,2,0].map(st=>`<span><i class="cell h${st}"></i>${STG[st]} ${cnt(st)}</span>`).join('')}</div>
+   <p class="muted" style="font-size:12px;margin:0">Known: 6 or more forms you know. Tap a square to open the verb.</p></div>
   <div class="card stack"><h3>Top verbs mastered</h3><p class="muted small" style="margin:0">A verb counts as mastered after 5 correct answers at 90% accuracy or better.</p>
    ${[100,200,500].map(n=>{const tot=VERBS.filter(v=>v.rank<=n).length,m=mastered(n);return `<div><div class="row small"><span>Top ${n} verbs</span><span class="muted">${m}/${tot}</span><button class="btn sm ghost" data-top="${n}">Quiz</button></div><div class="meter"><i style="width:${m/tot*100}%"></i></div></div>`}).join('')}</div>
-  <div class="card"><h3>Accuracy by tense and person</h3><p class="muted small" style="margin:2px 0 12px">Tap a cell to practise it.</p>${heatHtml()}</div>
+  <div class="card"><h3>Personal bests</h3><div class="kpis" style="margin-top:10px">
+   <div><div class="big" style="font-size:26px">${best}</div><div class="muted small">Longest streak</div></div>
+   <div><div class="big" style="font-size:26px">${S.bestRun||0}</div><div class="muted small">Right in a row</div></div>
+   <div><div class="big" style="font-size:26px">${bestDay}</div><div class="muted small">Quizzes in a day</div></div></div></div>
+  <details class="card deep"><summary>Tense details</summary><div class="stack" style="margin-top:12px">
+  <div><h3>Accuracy by tense and person</h3><p class="muted small" style="margin:2px 0 12px">Tap a cell to practise it.</p>${heatHtml()}</div>
   ${weak?`<button class="card" id="weak" style="display:flex;align-items:center;gap:10px;text-align:left;background:var(--irr-soft);color:var(--ink)"><span style="flex:1">Weakest: <b>${LAB[weak.p]}, ${tns(weak.t)}</b> · ${weak.pct}%</span><span class="btn sm">Practise</span></button>`:''}
-  <div class="card stack"><h3>Accuracy by tense</h3>${TT.filter(t=>S.st[t.id]).map(t=>{const s=S.st[t.id],p=Math.round(s.c/s.n*100);
-   return `<div><div class="row small"><span>${tn(t.id)}</span><span class="muted">${p}% of ${s.n}</span></div><div class="meter"><i style="width:${p}%"></i></div></div>`}).join('')||'<p class="muted small" style="margin:0">Finish a level or a quiz to see your accuracy here.</p>'}
-   <p class="muted small" style="margin:0">${stars} of ${LEVELS.length*3} level stars earned.</p></div>
+  <div class="stack"><h3>Accuracy by tense</h3><p class="muted small" style="margin:0">Recent answers count most.</p>${TT.filter(t=>S.st[t.id]).map(t=>{const s=S.st[t.id],p=Math.round(s.c/s.n*100);
+   return `<div><div class="row small"><span>${tn(t.id)}</span><span class="muted">${p}%${s.n<10?` of ${Math.round(s.n)}`:''}</span></div><div class="meter"><i style="width:${p}%"></i></div></div>`}).join('')||'<p class="muted small" style="margin:0">Finish a level or a quiz to see your accuracy here.</p>'}
+   <p class="muted small" style="margin:0">${stars} of ${LEVELS.length*3} level stars earned.</p></div></div></details>
   </div>`;
   const drillCell=(t,p)=>quiz(build([t],VERBS.filter(v=>v.rank<=100),10,{pron:[p]}),{title:`${tn(t)} · ${LAB[p]}`});
   view.querySelectorAll('[data-cell]').forEach(b=>b.onclick=()=>{const[t,p]=b.dataset.cell.split('|');drillCell(t,+p)});
+  document.getElementById('nu').onclick=nu.go;
+  view.querySelectorAll('[data-sk]').forEach(b=>b.onclick=()=>skillQuiz(sk[+b.dataset.sk]));
+  view.querySelectorAll('[data-vc]').forEach(b=>b.onclick=()=>verbSheet(verbBy(b.dataset.vc)));
   if(weak)document.getElementById('weak').onclick=()=>drillCell(weak.t,weak.p);
-  view.querySelectorAll('[data-top]').forEach(b=>b.onclick=()=>{const n=+b.dataset.top,vs=VERBS.filter(v=>v.rank<=n&&!(S.vs[v.inf]&&S.vs[v.inf].c>=5&&S.vs[v.inf].c/S.vs[v.inf].n>=.9));
+  view.querySelectorAll('[data-top]').forEach(b=>b.onclick=()=>{const n=+b.dataset.top,vs=VERBS.filter(v=>v.rank<=n&&!isM(v));
     quiz(build(['pres','pret','impf','fut','subj'],vs,10),{title:`Top ${n} verbs`})});
  }
 };
@@ -1546,12 +1596,13 @@ function settingsHtml(all){
   return `<div class="switch"><span>Theme<br><span class="muted small">System follows your phone's light or dark setting.</span></span></div><div class="themes" role="group" aria-label="Theme">${THEMES.map(([v,l])=>`<button data-theme-set="${v}" aria-pressed="${S.theme===v}"><span class="tprev" aria-hidden="true">${(v==='system'?['light','dark']:[v]).map(t=>`<span data-theme="${t}"><i></i><b></b></span>`).join('')}</span><span>${l}</span></button>`).join('')}</div>`+sw('vos','Include vosotros','Turn off for Latin American Spanish. Also applies to quizzes.')+sw('hidePro','Hide Spanish pronouns','In the verb tables')+sw('enPro','Show English pronouns','In the lesson formation tables')+
    sw('esNames','Use Spanish tense names','El Pretérito Perfecto instead of Present perfect')+sw('expand','Expand all tenses by default')+
    (all?sw('strict','Check accents','Count "hablo" for "habló" as wrong')+sw('typo','Check for typos','Warn about a likely typo before marking an answer wrong')+
-    sw('auto','Auto-check answers','Submit as soon as you have typed the right answer')+sw('pauseAlways','Pause on correct answers','Show the review after right answers too')+sw('tts','Read quiz answers aloud'):'')+`<label class="switch" for="s-voice"><span>Voice<br><span class="muted small">For a more natural voice, download a Premium or Enhanced Spanish voice in your device's Spoken Content settings.</span></span><select id="s-voice"></select></label>`;
+    sw('auto','Auto-check answers','Submit as soon as you have typed the right answer')+sw('pauseAlways','Pause on correct answers','Show the review after right answers too')+sw('tts','Read quiz answers aloud'):'')+`<label class="switch" for="s-voice"><span>Voice<br><span class="muted small">For a more natural voice, download a Premium or Enhanced Spanish voice in your device's Spoken Content settings.</span></span><select id="s-voice"></select></label><label class="switch" for="s-rate"><span>Speed<br><span class="muted small" id="s-rate-v">${(S.rate||1).toFixed(1)}×</span></span><input type="range" id="s-rate" min="0.5" max="1.5" step="0.1" value="${S.rate||1}"></label>`;
 }
 function bindSettings(after){for(const k of['vos','hidePro','enPro','esNames','expand','strict','tts','typo','auto']){const el=document.getElementById('s-'+k);if(el)el.onchange=e=>{S[k]=e.target.checked;save();after()}}
   document.querySelectorAll('[data-theme-set]').forEach(b=>b.onclick=()=>{S.theme=b.dataset.themeSet;save();applyTheme();document.querySelectorAll('[data-theme-set]').forEach(x=>x.setAttribute('aria-pressed',S.theme===x.dataset.themeSet))});
   const vo=document.getElementById('s-voice');if(vo){const fill=()=>{vo.innerHTML='<option value="">Automatic (best available)</option>'+esVoices().map(v=>`<option value="${v.voiceURI.replace(/"/g,'&quot;')}">${v.name.replace(/</g,'&lt;')} (${v.lang})</option>`).join('');vo.value=S.voice||'';if(vo.value!==(S.voice||''))vo.value=''};
     fill();try{speechSynthesis.addEventListener('voiceschanged',fill)}catch{}vo.onchange=()=>{S.voice=vo.value;save();speak('Hola, ¿qué tal?',true)}}
+  const ra=document.getElementById('s-rate');if(ra){ra.oninput=()=>{S.rate=+ra.value;document.getElementById('s-rate-v').textContent=S.rate.toFixed(1)+'×'};ra.onchange=()=>{save();speak('Hola, ¿qué tal?',true)}}
   const pa=document.getElementById('s-pauseAlways');if(pa)pa.onchange=e=>{S.pause=e.target.checked?'always':'never';save();after()}}
 
 /* ---------- sheets and modals ---------- */
@@ -2595,9 +2646,65 @@ function showSteps(v,t,i){
   <ol class="ol">${steps(v,t,+i).map(s=>`<li>${s}</li>`).join('')}</ol><button class="btn" id="mc">Close</button>`);
   document.getElementById('mc').onclick=closeModal;
 }
-function recordAnswer(x,ok){
+/* ---------- form memory ----------
+   S.fm['inf|tense|person'] = [box, last day seen, day it became known]; days are UTC day numbers.
+   Only typed answers count. A right answer moves the form up a box at most once per day, a wrong one sends it back to 0,
+   so "known" (box 2+) means typed correctly on at least two separate days. A known form starts fading once it has gone
+   unpractised for twice its box interval. ponytail: Leitner boxes, swap for a proper memory model if the counts feel off. */
+const DAY=()=>Math.floor(Date.now()/864e5),FMI=[0,1,3,7,14,30,60];
+const fmState=(r,d=DAY())=>!r||!r[0]?'new':r[0]<2?'half':d-r[1]>FMI[r[0]]*2?'fading':'known';
+let FMS=null; // what changed during the current quiz
+function fmRecord(x,ok){
+  const k=x.v.inf+'|'+x.t+'|'+x.p,d=DAY(),r=S.fm[k]||(S.fm[k]=[0,0,0]),was=fmState(r,d);
+  if(!ok){if(was==='known'&&FMS)FMS.lost++;r[0]=0;r[1]=d;return}
+  if(d<=r[1])return;
+  r[0]=Math.min(r[0]+1,FMI.length-1);r[1]=d;if(r[0]===2)r[2]=d;
+  if(!FMS)return;
+  if(r[0]===1)FMS.half++;else if(r[0]===2)FMS.learned++;else FMS.stronger++;
+}
+function fmCounts(){const d=DAY(),c={known:0,fading:0,half:0,due:[],week:0,fadingKeys:[]};
+  for(const[k,r]of Object.entries(S.fm)){const s=fmState(r,d);
+    if(s==='known'){c.known++;if(d-r[2]<7)c.week++}else if(s==='fading'){c.fading++;c.fadingKeys.push(k)}else if(s==='half'){c.half++;if(r[1]<d)c.due.push(k)}}
+  return c}
+/* ---------- skills: what the tenses let you say ----------
+   A skill's score is pattern coverage: for each tense × person × verb group, two different verbs you know = full marks
+   (one = half), because knowing hablé and tomé means you have the -ar preterite yo pattern.
+   ponytail: irregulars treated like the other groups; give them a higher bar if scores run ahead of real ability. */
+const SKILLS=[
+ {id:'now',name:'Talk about now',es:'Vivo en Madrid y trabajo mucho.',ts:['pres'],cefr:'A1'},
+ {id:'plans',name:'Make plans',es:'Voy a viajar. Mañana lloverá.',ts:['prox','fut'],cefr:'A2'},
+ {id:'done',name:'Say what you’ve done',es:'Hoy he comido paella.',ts:['perf'],cefr:'A2'},
+ {id:'ask',name:'Ask and tell',es:'¡Ven aquí! No toques eso.',ts:['imp','neg'],cefr:'A2'},
+ {id:'stories',name:'Tell stories',es:'Llovía cuando salí. Ya había cenado.',ts:['pret','impf','plup'],cefr:'A2–B1'},
+ {id:'polite',name:'Be polite, imagine',es:'¿Podrías ayudarme? Me gustaría ir.',ts:['cond'],cefr:'B1'},
+ {id:'wish',name:'Wish, doubt, feel',es:'Espero que vengas. Me alegra que hayas venido.',ts:['subj','psubj'],cefr:'B1–B2'},
+ {id:'hypo',name:'What if',es:'Si tuviera tiempo, habría ido. Ya habrán llegado.',ts:['isubj','condp','plsubj','futp'],cefr:'B2–C1'}];
+const BANDS=[['A1',['now']],['A2',['plans','done','ask','stories']],['B1',['polite','wish']],['B2',['hypo']]];
+const VBY=new Map(VERBS.map(v=>[v.inf,v]));
+const skPs=t=>(t==='imp'||t==='neg'?[1,2,3,4,5]:[0,1,2,3,4,5]).filter(p=>S.vos||p!==4);
+function knownCells(){const d=DAY(),cell={};
+  for(const[k,r]of Object.entries(S.fm)){if(fmState(r,d)!=='known')continue;const[inf,t,p]=k.split('|'),v=VBY.get(inf);if(v){const c=t+'|'+p+'|'+v.g;cell[c]=(cell[c]||0)+1}}
+  return cell}
+function skillStats(){const cell=knownCells(),seen=new Set(Object.keys(S.fm).map(k=>k.split('|')[1]));
+  return SKILLS.map(s=>{let n=0,got=0;for(const t of s.ts)for(const p of skPs(t))for(const g of GROUPS){n++;got+=Math.min(cell[t+'|'+p+'|'+g.id]||0,2)/2}
+    return{...s,pct:Math.round(got/n*100),started:s.ts.some(t=>seen.has(t)||S.st[t])}})}
+function verbRange(sk){let lv='';for(const[b,ids]of BANDS){if(ids.every(id=>sk.find(x=>x.id===id).pct>=80))lv=b;else break}return lv}
+function skillQuiz(s){ // aim at the patterns not covered yet, one question per gap first
+  const cell=knownCells(),kn=new Set(Object.entries(S.fm).filter(([,r])=>fmState(r)==='known').map(([k])=>k)),cand=[];
+  for(const t of s.ts)for(const p of skPs(t))for(const g of GROUPS)if((cell[t+'|'+p+'|'+g.id]||0)<2)
+    for(const v of groupVerbs(g.id).slice(0,8))if(conj(v,t)[p]&&!kn.has(v.inf+'|'+t+'|'+p))cand.push([v,t,p,t+p+g.id]);
+  const seen=new Set(),first=[],rest=[];for(const c of shuffle(cand))(seen.has(c[3])?rest:first).push(c),seen.add(c[3]);
+  const qs=[...first,...rest].slice(0,10).map(([v,t,p])=>q(v,t,p));
+  quiz(qs.length?qs:build(s.ts,VERBS.filter(v=>v.rank<=100),10),{title:s.name})}
+function formQuiz(keys,title){quiz(shuffle(keys).slice(0,15).map(k=>{const[inf,t,p]=k.split('|');const v=verbBy(inf);return v&&T[t]&&(S.vos||+p!==4)&&conj(v,t)[+p]?q(v,t,+p):null}).filter(Boolean),{title})}
+function recordAnswer(x,ok,typed){
+  S.run=ok?(S.run||0)+1:0;if(S.run>(S.bestRun||0))S.bestRun=S.run;
   if(x.kind==='tip')return;
-  if(x.kind==='conj'||x.kind==='sent'&&x.p!=null){const st=S.st[x.t]||(S.st[x.t]={c:0,n:0});st.n++;if(ok)st.c++;const k=x.t+'|'+x.p,sp=S.stp[k]||(S.stp[k]={c:0,n:0});sp.n++;if(ok)sp.c++}
+  if(typed&&(x.kind==='conj'||x.kind==='sent'&&x.p!=null))fmRecord(x,ok);
+  // Accuracy fades old answers: each new one shrinks the rest by 2%, so a tense's score reflects roughly its last 50 answers
+  // and early mistakes stop dragging it down. n is the weighted count, so it tops out near 50.
+  const dk=(o,k)=>{const r=o[k]||(o[k]={c:0,n:0});r.c=r.c*.98+(ok?1:0);r.n=r.n*.98+1};
+  if(x.kind==='conj'||x.kind==='sent'&&x.p!=null){dk(S.st,x.t);dk(S.stp,x.t+'|'+x.p)}
   const vs=S.vs[x.v.inf]||(S.vs[x.v.inf]={c:0,n:0});vs.n++;if(ok)vs.c++;
   if(x.kind!=='conj')return;
   const key=x.v.inf+'|'+x.t+'|'+x.p;
@@ -2608,6 +2715,7 @@ function quiz(qs,opt){
   if(!qs.length)return;
   const mode=opt.mode||'type';
   let i=0,total=qs.length,okN=0,badN=0,cur,phase,typoUsed;
+  FMS={learned:0,stronger:0,half:0,lost:0};const run0=S.bestRun||0;
   const mistakes=[],covered=[...new Set(qs.map(x=>x.v).filter(Boolean))];
   const exit=()=>opt.back?opt.back():closeSheet();
   open(`<div class="qtop"><button class="x" aria-label="Quit" id="cx">×</button><div class="prog"><i id="pb" style="width:0"></i></div>
@@ -2645,7 +2753,7 @@ function quiz(qs,opt){
         $('no').onclick=()=>{record(false,'');next2()};$('yes').onclick=()=>{record(true);next2()}};
     }
   }
-  function record(ok,got){if(navigator.vibrate&&navigator.userActivation?.hasBeenActive!==false)try{navigator.vibrate(ok?15:[30,40,30])}catch{}recordAnswer(cur,ok);ok?okN++:badN++;if(!ok)mistakes.push({x:cur,got});save();i++;tally()}
+  function record(ok,got){if(navigator.vibrate&&navigator.userActivation?.hasBeenActive!==false)try{navigator.vibrate(ok?15:[30,40,30])}catch{}recordAnswer(cur,ok,mode==='type');ok?okN++:badN++;if(!ok)mistakes.push({x:cur,got});save();i++;tally()}
   function next2(){next()}
   function submit(got,typed){
     if(!got)return;
@@ -2675,14 +2783,17 @@ function quiz(qs,opt){
   }
   function finish(){
     const pct=Math.round(okN/total*100),stars=pct>=100?3:pct>=80?2:pct>=60?1:0;
-    S.xp+=okN*10;bumpStreak();S.quizzes++;S.scoreSum+=pct;S.days[today()]=(S.days[today()]||0)+1;
+    S.xp+=okN*10;const froze=bumpStreak();S.quizzes++;S.scoreSum+=pct;S.days[today()]=(S.days[today()]||0)+1;
     if(opt.level&&stars>(S.lv[opt.level.id]||0))S.lv[opt.level.id]=stars;
     save();header();
+    const fc=fmCounts(),fx=FMS,fp=[fx.learned&&`<b>+${fx.learned}</b> learned`,fx.stronger&&`${fx.stronger} strengthened`,fx.half&&`${fx.half} to lock in tomorrow`,fx.lost&&`${fx.lost} slipped`].filter(Boolean);
+    const fmHtml=fp.length?`<div class="card" style="text-align:center;align-self:stretch"><div class="muted small">Forms you know</div><div class="big">${fc.known.toLocaleString()}</div><div class="small">${fp.join(' · ')}</div>${fx.half?'<div class="muted small" style="margin-top:4px">Type them right again tomorrow and they count as known.</div>':''}</div>`
+      :mode!=='type'&&qs.some(x=>x.kind==='conj')?'<p class="muted small" style="margin:0">Typed answers grow your Forms you know count.</p>':'';
     const nextLvl=opt.level&&stars?LEVELS[LEVELS.indexOf(opt.level)+1]:null;
     const msg=opt.pass?(okN>=opt.pass?'Passed. You’re ready for the next level.':`Not yet. You need ${opt.pass} of ${total} to pass. Practise a few sets and try again.`):pct===100?'You made that look easy!':pct>=80?'So close! Keep practising to get 100%.':pct>=60?'Good effort. Review the mistakes below.':'Keep going. Each mistake is now in your Smart review.';
     body.innerHTML=`<div class="prompt stack" style="align-items:center"><div class="big" style="font-size:64px">${pct}%</div>
       <p class="muted" style="margin:0">${opt.title} – ${okN} of ${total} correct</p><p style="margin:0;font-size:18px">${msg}</p>
-      ${opt.level?starHtml(stars):''}<span class="pill gold">🔥 ${S.streak} day streak</span>
+      ${opt.level?starHtml(stars):''}<span class="pill gold">🔥 ${S.streak} day streak</span>${froze?'<span class="pill">❄️ A freeze saved your streak</span>':''}${S.bestRun>run0&&S.bestRun>=10?`<span class="pill gold">🏅 New best: ${S.bestRun} right in a row</span>`:''}${fmHtml}
       ${opt.level&&!stars?'<p class="muted small" style="margin:0">Score 60% or more to unlock the next level.</p>':''}</div>
       ${mistakes.length?`<section class="stack"><h2 style="font-size:20px">Your mistakes</h2>${mistakes.map((m,k)=>`<div class="card mist"><div class="row"><span class="muted small">${m.x.kind==='conj'?`${m.x.who} (${m.x.v.inf.toUpperCase()}) · ${tn(m.x.t)}`:m.x.kind==='sent'?`${m.x.s} (${m.x.v.inf})`:m.x.kind==='tip'?m.x.s:m.x.v.en}</span>${m.x.kind==='conj'?`<button class="speak" data-ms="${k}" aria-label="Steps">${ICON.steps.replace('<svg','<svg width="20" height="20"')}</button>`:''}</div>
         <div>✓ <b>${hl(m.x.ans,m.got)}</b> ${m.got?`&nbsp; ✗ <span class="wrongc">${hl(m.got,m.x.ans)}</span>`:''}</div></div>`).join('')}
