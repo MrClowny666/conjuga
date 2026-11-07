@@ -1245,12 +1245,12 @@ function heatHtml(){ // rows: the level-path tenses plus the imperative; columns
 function toggleFav(inf){S.fav=S.fav.includes(inf)?S.fav.filter(x=>x!==inf):[...S.fav,inf];save()}
 function settingsHtml(all){
   const sw=(k,t,d)=>`<label class="switch" for="s-${k}"><span>${t}${d?`<br><span class="muted small">${d}</span>`:''}</span><input type="checkbox" id="s-${k}" ${(k==='pauseAlways'?S.pause==='always':S[k])?'checked':''}></label>`;
-  return `<div class="switch"><span>Theme<br><span class="muted small">System follows your phone's light or dark setting.</span></span></div><div class="themes" role="group" aria-label="Theme">${THEMES.map(([v,l])=>`<button data-theme-set="${v}" aria-pressed="${S.theme===v}"><span class="tprev" aria-hidden="true">${(v==='system'?['light','dark']:[v]).map(t=>`<span data-theme="${t}"><i></i><b></b></span>`).join('')}</span><span>${l}</span></button>`).join('')}</div>`+sw('vos','Include vosotros','Turn off for Latin American Spanish. Also applies to quizzes.')+sw('hidePro','Hide Spanish pronouns','In the verb tables')+
+  return `<div class="switch"><span>Theme<br><span class="muted small">System follows your phone's light or dark setting.</span></span></div><div class="themes" role="group" aria-label="Theme">${THEMES.map(([v,l])=>`<button data-theme-set="${v}" aria-pressed="${S.theme===v}"><span class="tprev" aria-hidden="true">${(v==='system'?['light','dark']:[v]).map(t=>`<span data-theme="${t}"><i></i><b></b></span>`).join('')}</span><span>${l}</span></button>`).join('')}</div>`+sw('vos','Include vosotros','Turn off for Latin American Spanish. Also applies to quizzes.')+sw('hidePro','Hide Spanish pronouns','In the verb tables')+sw('enPro','Show English pronouns','In the lesson formation tables')+
    sw('esNames','Use Spanish tense names','El Pretérito Perfecto instead of Present perfect')+sw('expand','Expand all tenses by default')+
    (all?sw('strict','Check accents','Count "hablo" for "habló" as wrong')+sw('typo','Check for typos','Warn about a likely typo before marking an answer wrong')+
     sw('auto','Auto-check answers','Submit as soon as you have typed the right answer')+sw('pauseAlways','Pause on correct answers','Show the review after right answers too')+sw('tts','Read quiz answers aloud'):'')+`<label class="switch" for="s-voice"><span>Voice<br><span class="muted small">For a more natural voice, download a Premium or Enhanced Spanish voice in your device's Spoken Content settings.</span></span><select id="s-voice"></select></label>`;
 }
-function bindSettings(after){for(const k of['vos','hidePro','esNames','expand','strict','tts','typo','auto']){const el=document.getElementById('s-'+k);if(el)el.onchange=e=>{S[k]=e.target.checked;save();after()}}
+function bindSettings(after){for(const k of['vos','hidePro','enPro','esNames','expand','strict','tts','typo','auto']){const el=document.getElementById('s-'+k);if(el)el.onchange=e=>{S[k]=e.target.checked;save();after()}}
   document.querySelectorAll('[data-theme-set]').forEach(b=>b.onclick=()=>{S.theme=b.dataset.themeSet;save();applyTheme();document.querySelectorAll('[data-theme-set]').forEach(x=>x.setAttribute('aria-pressed',S.theme===x.dataset.themeSet))});
   const vo=document.getElementById('s-voice');if(vo){const fill=()=>{vo.innerHTML='<option value="">Automatic (best available)</option>'+esVoices().map(v=>`<option value="${v.voiceURI.replace(/"/g,'&quot;')}">${v.name.replace(/</g,'&lt;')} (${v.lang})</option>`).join('');vo.value=S.voice||'';if(vo.value!==(S.voice||''))vo.value=''};
     fill();try{speechSynthesis.addEventListener('voiceschanged',fill)}catch{}vo.onchange=()=>{S.voice=vo.value;save();speak('Hola, ¿qué tal?',true)}}
@@ -1323,13 +1323,12 @@ function intro(l){
   <section class="card stack"><h2 style="font-size:20px">Usage</h2><p style="margin:0">${t.use}</p>
    <table>${t.ex.map(([es,en])=>`<tr><td style="color:var(--ink);width:50%">${es}</td><td class="muted">${en}</td></tr>`).join('')}</table>
    ${PEX[l.t.id]?`<h3 style="margin:4px 0 0">One for each pronoun</h3><table>${persons().map(i=>{const[es,en]=PEX[l.t.id][i];return `<tr><td class="muted small" style="white-space:nowrap">${LAB[i]}</td><td style="color:var(--ink)">${es.replace(/\*(.+?)\*/g,'<b>$1</b>')}</td><td class="muted">${en}</td></tr>`}).join('')}</table>`:''}</section>
-  <section class="card stack"><div class="row"><h2 style="font-size:20px">Formation</h2><button class="chip" id="enp" aria-pressed="${S.enPro}">English pronouns</button></div><p style="margin:0">${FORM_NOTE[l.t.id]}</p><div style="overflow-x:auto" id="formTbl">${endingsTable(l.t.id)}</div></section>
+  <section class="card stack"><h2 style="font-size:20px">Formation</h2><p style="margin:0">${FORM_NOTE[l.t.id]}</p><div style="overflow-x:auto">${endingsTable(l.t.id)}</div></section>
   <div class="grid2">${sample.map(v=>`<div class="card"><h3>${v.inf} <span class="muted small">${v.en}</span></h3>${table(v,l.t.id)}</div>`).join('')}</div>
   <div class="spacer"></div><div class="row"><button class="btn ghost" id="fl">Flash cards: meanings</button><button class="btn" id="st">Start level</button></div>`);
   document.getElementById('cx').onclick=closeSheet;
   document.getElementById('fl').onclick=()=>quiz(groupVerbs(l.g.id).slice(0,10).map(qm),{title:'Meanings',mode:'flash',back:()=>intro(l)});
   document.getElementById('st').onclick=()=>quiz(build([l.t.id],groupVerbs(l.g.id),10),{title:l.g.name,level:l});
-  const enp=document.getElementById('enp');enp.onclick=()=>{S.enPro=!S.enPro;save();enp.setAttribute('aria-pressed',S.enPro);document.getElementById('formTbl').innerHTML=endingsTable(l.t.id)};
 }
 function verbSheet(v){
   const collapsed=new Set(S.expand?[]:TT.map(t=>t.id));
