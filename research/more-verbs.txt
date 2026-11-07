@@ -1,0 +1,254 @@
+caber|to fit|yo=quepo pret=cup fut=cabr
+rehacer|to redo|like=hacer
+posponer|to postpone|like=poner
+oponer|to oppose|like=poner
+reponer|to replace|like=poner
+retener|to retain|like=tener
+entretener|to entertain|like=tener
+intervenir|to intervene|like=venir
+provenir|to come from|like=venir
+extraer|to extract|like=traer
+revolver|to stir|st=ue part=revuelto
+envolver|to wrap|st=ue part=envuelto
+inscribir|to enroll|part=inscrito
+imprimir|to print|part=impreso
+distribuir|to distribute
+sustituir|to substitute
+constituir|to constitute
+concluir|to conclude
+excluir|to exclude
+disminuir|to decrease
+atribuir|to attribute
+influir|to influence
+seducir|to seduce|zc
+deducir|to deduce|zc
+desconocer|not to know|zc
+padecer|to suffer from|zc
+permanecer|to remain|zc
+fortalecer|to strengthen|zc
+favorecer|to favor|zc
+amanecer|to dawn|zc
+anochecer|to get dark|zc
+envejecer|to grow old|zc
+carecer|to lack|zc
+complacer|to please|zc
+oscurecer|to darken|zc
+florecer|to bloom|zc
+lucir|to shine, to look|zc
+acertar|to get right|st=ie
+atender|to attend to|st=ie
+atravesar|to cross|st=ie
+confesar|to confess|st=ie
+descender|to descend|st=ie
+extender|to extend|st=ie
+fregar|to scrub|st=ie
+gobernar|to govern|st=ie
+helar|to freeze|st=ie
+manifestar|to show, to express|st=ie
+merendar|to have a snack|st=ie
+regar|to water|st=ie
+temblar|to tremble|st=ie
+tropezar|to trip|st=ie
+apretar|to squeeze|st=ie
+advertir|to warn|st=ie
+consentir|to consent|st=ie
+hervir|to boil|st=ie
+invertir|to invest|st=ie
+herir|to wound|st=ie
+requerir|to require|st=ie
+acordar|to agree|st=ue
+apostar|to bet|st=ue
+colgar|to hang|st=ue
+comprobar|to check|st=ue
+demostrar|to demonstrate|st=ue
+forzar|to force|st=ue
+morder|to bite|st=ue
+promover|to promote|st=ue
+renovar|to renew|st=ue
+rogar|to beg|st=ue
+sonar|to sound, to ring|st=ue
+soler|to usually do|st=ue
+soltar|to let go|st=ue
+tostar|to toast|st=ue
+perseguir|to chase|st=i
+gemir|to moan|st=i
+rendir|to yield|st=i
+prohibir|to prohibit|st=acc
+reunir|to gather|st=acc
+variar|to vary|st=acc
+vaciar|to empty|st=acc
+averiguar|to find out
+extinguir|to extinguish
+surgir|to arise
+sumergir|to submerge
+acoger|to welcome
+indicar|to indicate
+publicar|to publish
+pescar|to fish
+aparcar|to park
+atacar|to attack
+educar|to educate
+dedicar|to dedicate
+criticar|to criticize
+chocar|to crash
+identificar|to identify
+masticar|to chew
+picar|to sting, to chop
+ubicar|to locate
+acercar|to bring closer
+arrancar|to start, to pull out
+destacar|to stand out
+convocar|to summon
+complicar|to complicate
+clasificar|to classify
+cargar|to load
+entregar|to deliver
+obligar|to force
+pegar|to stick, to hit
+juzgar|to judge
+agregar|to add
+castigar|to punish
+navegar|to sail
+investigar|to investigate
+analizar|to analyze
+aterrizar|to land
+avanzar|to advance
+cazar|to hunt
+gozar|to enjoy
+rechazar|to reject
+rezar|to pray
+lanzar|to launch
+abandonar|to abandon
+aclarar|to clarify
+acostumbrar|to be used to
+adoptar|to adopt
+afectar|to affect
+aguantar|to put up with
+animar|to encourage
+anunciar|to announce
+apoyar|to support
+apreciar|to appreciate
+apuntar|to note down
+asegurar|to assure
+asustar|to scare
+atrapar|to catch
+aumentar|to increase
+brindar|to toast, to offer
+calcular|to calculate
+callar|to keep quiet
+causar|to cause
+citar|to quote
+combinar|to combine
+comentar|to comment
+confirmar|to confirm
+conservar|to keep
+consultar|to consult
+contratar|to hire
+conversar|to talk
+copiar|to copy
+cultivar|to grow
+dañar|to damage
+declarar|to declare
+denunciar|to report
+descansar|to rest
+desarrollar|to develop
+determinar|to determine
+disculpar|to excuse
+diseñar|to design
+disparar|to shoot
+editar|to edit
+eliminar|to eliminate
+empujar|to push
+enfrentar|to face
+engañar|to deceive
+ensayar|to rehearse
+entrenar|to train
+escapar|to escape
+estimar|to estimate
+examinar|to examine
+explorar|to explore
+fallar|to fail
+fijar|to fix, to set
+fumar|to smoke
+generar|to generate
+golpear|to hit
+grabar|to record
+heredar|to inherit
+ignorar|to ignore
+imaginar|to imagine
+informar|to inform
+iniciar|to start
+inventar|to invent
+lamentar|to regret
+liberar|to free
+limitar|to limit
+molestar|to bother
+montar|to ride, to assemble
+negociar|to negotiate
+nombrar|to name
+ocultar|to hide
+operar|to operate
+opinar|to think, to give an opinion
+ordenar|to tidy, to order
+pasear|to stroll
+pelear|to fight
+perdonar|to forgive
+pesar|to weigh
+plantear|to raise (an issue)
+presionar|to press
+procurar|to try
+pronunciar|to pronounce
+quemar|to burn
+reciclar|to recycle
+recuperar|to recover
+reflejar|to reflect
+registrar|to register
+relacionar|to relate
+renunciar|to resign
+reparar|to repair
+representar|to represent
+rescatar|to rescue
+respirar|to breathe
+retirar|to withdraw
+revisar|to check
+rodear|to surround
+saltar|to jump
+señalar|to point out
+solucionar|to solve
+soportar|to bear
+sospechar|to suspect
+sumar|to add up
+superar|to overcome
+tardar|to take (time)
+trasladar|to move
+acceder|to access
+ceder|to give way
+cometer|to commit
+comprometer|to commit
+conceder|to grant
+esconder|to hide
+ofender|to offend
+proceder|to proceed
+prender|to turn on, to light
+pretender|to aim to
+recorrer|to travel around
+socorrer|to help
+suceder|to happen
+toser|to cough
+emprender|to undertake
+someter|to submit
+corresponder|to correspond
+aburrir|to bore
+acudir|to go, to come
+definir|to define
+difundir|to spread
+emitir|to emit
+escupir|to spit
+percibir|to perceive
+persistir|to persist
+residir|to reside
+transmitir|to transmit
+consumir|to consume
+asumir|to assume
+resumir|to summarize
+sacudir|to shake

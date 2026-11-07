@@ -1,0 +1,1130 @@
+<title>Conjuga Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: one phone-width column, a screen per view, bottom nav on browse screens */
+:root{
+  --paper:#F6F4EF; --card:#FFFFFF; --sunk:#ECE9E2; --line:#E2DED6; --track:#DAD6CD;
+  --ink:#16181D; --muted:#5B5F68; --soft:#3F434B;
+  --accent:#2350C8; --accent-ink:#FFFFFF; --accent-soft:#D6DEF7; --accent-hover:#1A3C99;
+  --irr:#A35F00; --irr-soft:#F7E3C4; --ok:#1E7A4F; --ok-soft:#E4F2EA; --bad:#C2362B;
+  --stage:#E5E1D8;
+  --display:'Bricolage Grotesque', 'Arial Narrow', system-ui, sans-serif;
+  --text:'Atkinson Hyperlegible', system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#121316; --card:#1C1E23; --sunk:#24272D; --line:#2C2F36; --track:#363A42;
+  --ink:#EDEBE6; --muted:#A3A7B0; --soft:#C4C7CE;
+  --accent:#8AA8FF; --accent-ink:#0E1630; --accent-soft:#26345E; --accent-hover:#A9C0FF;
+  --irr:#F2B544; --irr-soft:#3A2C12; --ok:#4FD08F; --ok-soft:#163324; --bad:#FF7A6E;
+  --stage:#0B0C0E; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#121316; --card:#1C1E23; --sunk:#24272D; --line:#2C2F36; --track:#363A42;
+  --ink:#EDEBE6; --muted:#A3A7B0; --soft:#C4C7CE;
+  --accent:#8AA8FF; --accent-ink:#0E1630; --accent-soft:#26345E; --accent-hover:#A9C0FF;
+  --irr:#F2B544; --irr-soft:#3A2C12; --ok:#4FD08F; --ok-soft:#163324; --bad:#FF7A6E;
+  --stage:#0B0C0E; color-scheme:dark}
+html,body{height:100%}
+body{background:var(--stage);color:var(--ink);font-family:var(--text);font-size:15px;display:flex;justify-content:center;padding-left:max(0px, env(safe-area-inset-left, 0px));padding-right:max(0px, env(safe-area-inset-right, 0px))}
+.phone{position:relative;width:100%;max-width:420px;height:100%;max-height:880px;background:var(--paper);overflow:hidden;display:flex;flex-direction:column}
+@media (min-width:500px){body{align-items:center;padding-block:16px}.phone{border-radius:32px;box-shadow:0 0 0 1px var(--line)}}
+.scroll{flex:1;overflow-y:auto;padding-bottom:24px}
+.d{font-family:var(--display);letter-spacing:-0.02em}
+h1,h2,p{margin:0}
+.irr{color:var(--irr);text-decoration:underline dotted 2px;text-underline-offset:5px}
+.bad{color:var(--bad);text-decoration:line-through 2px}
+.muted{color:var(--muted)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+button{font-family:var(--text);cursor:pointer}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.pri{height:52px;border:0;border-radius:26px;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:16px;padding:0 22px}
+.pri:hover{background:var(--accent-hover)}
+.sec{height:52px;border:1.5px solid var(--muted);border-radius:26px;background:transparent;color:var(--ink);font-weight:700;font-size:16px;padding:0 20px}
+.ib{width:48px;height:48px;border:0;border-radius:24px;background:transparent;color:var(--ink);display:flex;align-items:center;justify-content:center}
+.card{background:var(--card);border-radius:24px}
+.top{padding:28px 20px 0}
+.top h1{font-size:36px;font-weight:700}
+nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--sunk);height:76px;flex:none}
+nav button{border:0;background:none;color:var(--soft);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:700}
+nav .pill{width:56px;height:32px;border-radius:16px;display:flex;align-items:center;justify-content:center}
+nav button[aria-current="page"]{color:var(--ink)}
+nav button[aria-current="page"] .pill{background:var(--accent-soft)}
+.segs{display:grid;gap:4px}
+.seg{height:8px;border-radius:4px;background:var(--track);box-sizing:border-box}
+.seg.ok{background:var(--ok)}.seg.no{background:var(--bad)}.seg.now{background:none;border:2px solid var(--accent)}
+.tl{display:inline-flex;align-self:flex-start;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--card)}
+.tl button{border:0;background:none;min-width:44px;height:36px;padding:0 12px;font-family:inherit;font-weight:700;font-size:13px;color:var(--soft)}
+.tl button[aria-pressed="true"]{background:var(--accent-soft);color:var(--ink)}
+.chip{display:inline-flex;padding:6px 12px;border-radius:16px;background:var(--sunk);font-size:13px;font-weight:700}
+.acc{width:44px;height:40px;border:0;border-radius:10px;background:var(--sunk);color:var(--ink);font:600 18px var(--display)}
+.dock{display:flex;gap:8px;align-items:center;padding:12px;background:var(--card);border-top:1px solid var(--line)}
+.dock input{flex:1;min-width:0;height:52px;border:2px solid var(--accent);border-radius:16px;padding:0 16px;font:600 22px var(--display);color:var(--ink);background:var(--card);box-sizing:border-box}
+.sheet{background:var(--card);border-radius:28px 28px 0 0;padding:24px;display:flex;flex-direction:column;gap:14px;box-shadow:0 -1px 0 var(--line)}
+.diff{display:grid;grid-template-columns:96px 1fr;row-gap:8px;align-items:baseline}
+.note{padding:14px 16px;border-radius:16px;background:var(--paper);font-size:15px;line-height:1.45}
+.right{padding:20px 24px 28px;background:var(--ok-soft);color:var(--ok);display:flex;align-items:center;gap:12px}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.08)}100%{transform:scale(1)}}
+.pop{display:inline-block;animation:pop 260ms cubic-bezier(.2,.9,.3,1.4)}
+@keyframes shake{0%,100%{transform:none}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.shake{animation:shake 220ms}
+@media (prefers-reduced-motion:reduce){.pop,.shake{animation:none}}
+.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:16px}
+.formgrid>div{padding:8px 0;border-top:1px solid var(--line)}
+.tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-bottom:1px solid var(--track);margin-top:18px}
+.tabs button{height:48px;border:0;background:none;color:var(--muted);font-size:15px}
+.tabs button[aria-selected="true"]{color:var(--ink);font-weight:700;box-shadow:inset 0 -3px 0 var(--accent)}
+.heat{display:grid;grid-template-columns:78px repeat(6,minmax(0,1fr));gap:4px}
+.cell{height:34px;border:0;border-radius:8px;font:700 13px var(--text);padding:0;color:var(--ink)}
+.h4{background:var(--accent);color:var(--accent-ink)}.h3{background:color-mix(in srgb,var(--accent) 50%,var(--card));color:var(--ink)}
+.h2{background:var(--accent-soft)}.h1{background:var(--irr-soft);box-shadow:inset 0 0 0 1.5px var(--irr)}.h0{background:var(--paper);color:var(--muted)}
+.search{width:100%;height:48px;border:1.5px solid var(--line);border-radius:24px;padding:0 18px;font:16px var(--text);background:var(--card);color:var(--ink);box-sizing:border-box}
+.letter{font-size:18px;font-weight:800;color:var(--muted);padding:16px 4px 4px}
+.vrow{width:100%;display:flex;align-items:center;gap:10px;border:0;border-bottom:1px solid var(--line);background:none;padding:12px 4px;text-align:left;color:var(--ink);font-size:15px}
+.vrow b{font-size:18px;flex:none}.vrow .muted{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tag{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:99px;background:var(--accent-soft);color:var(--ink);white-space:nowrap}
+.tag.irr{background:var(--irr-soft);color:var(--irr)}
+.lvls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.lvl{border:1px solid var(--line);border-radius:16px;background:var(--card);padding:12px;text-align:left;display:flex;flex-direction:column;gap:4px;min-height:84px;color:var(--ink)}
+.lvl:disabled{opacity:.45;cursor:not-allowed}
+.lvl .n{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.stars{color:var(--irr);letter-spacing:2px}.stars i{font-style:normal;color:var(--track)}
+.bar{height:8px;border-radius:4px;background:var(--track);overflow:hidden;margin-top:6px}.bar i{display:block;height:100%;background:var(--accent);border-radius:4px}
+</style>
+
+<div class="phone" id="app"></div>
+
+<script>
+const ICON = {
+  x:'<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  back:'<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>',
+  today:'<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></svg>',
+  gear:'<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>',
+  levels:'<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5l8 4 8-4v14l-8 4-8-4z"/></svg>',
+  practice:'<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>',
+  verbs:'<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h11l3 3v13H5z"/><path d="M9 10h6M9 14h6"/></svg>',
+  prog:'<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>',
+  check:'<svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M7.5 12.5l3 3 6-6.5"/></svg>'
+};
+
+const BANK = [
+  {p:'tú', v:'tener', en:'you had', a:'tuviste', note:'Tener switches to the stem tuv- in the pretérito: tuve, tuviste, tuvo.'},
+  {p:'yo', v:'hacer', en:'I did, I made', a:'hice', note:'Hacer uses the stem hic-, and the yo ending is an unstressed -e: hice.'},
+  {p:'ellos', v:'poder', en:'they could', a:'pudieron', note:'Poder switches to the stem pud-: pude, pudiste, pudieron.'},
+  {p:'nosotros', v:'estar', en:'we were', a:'estuvimos', note:'Estar takes the strong stem estuv-: estuve, estuvimos.'},
+  {p:'él', v:'decir', en:'he said', a:'dijo', note:'Decir uses the stem dij-: dije, dijo, and dijeron (no i after j).'},
+  {p:'yo', v:'poner', en:'I put', a:'puse', note:'Poner switches to the stem pus-: puse, pusiste, puso.'},
+  {p:'vosotros', v:'querer', en:'you all wanted', a:'quisisteis', note:'Querer takes the stem quis-: quise, quisisteis.'},
+  {p:'ella', v:'venir', en:'she came', a:'vino', note:'Venir takes the stem vin-, with an unstressed -o: vino.'}
+];
+
+/* Verb dictionary data and conjugation engine, copied from conjuga.html */
+const RAW=`ser|to be (identity, trait)|part=sido ger=siendo tu=sé
+estar|to be (state, location)|pret=estuv tu=está
+tener|to have|yo=tengo st=ie pret=tuv fut=tendr tu=ten
+hacer|to do, to make|yo=hago fut=har part=hecho tu=haz
+ir|to go|ger=yendo tu=ve
+poder|to be able to, can|st=ue pret=pud fut=podr ger=pudiendo
+decir|to say, to tell|yo=digo st=i pret=dij fut=dir part=dicho tu=di
+haber|to have (auxiliary)|pret=hub fut=habr
+dar|to give
+ver|to see|yo=veo part=visto
+saber|to know (facts)|pret=sup fut=sabr
+querer|to want, to love|st=ie pret=quis fut=querr
+llegar|to arrive
+pasar|to pass, to happen
+deber|to owe, must
+poner|to put|yo=pongo pret=pus fut=pondr part=puesto tu=pon
+parecer|to seem|zc
+quedar|to stay, to remain
+creer|to believe
+hablar|to speak
+llevar|to carry, to wear
+dejar|to leave, to let
+seguir|to follow, to continue|st=i
+encontrar|to find|st=ue
+llamar|to call
+venir|to come|yo=vengo st=ie pret=vin fut=vendr tu=ven
+pensar|to think|st=ie
+salir|to go out, to leave|yo=salgo fut=saldr tu=sal
+volver|to return|st=ue part=vuelto
+tomar|to take, to drink
+conocer|to know (people, places)|zc
+vivir|to live
+sentir|to feel|st=ie
+tratar|to try, to treat
+mirar|to look at, to watch
+contar|to tell, to count|st=ue
+empezar|to begin|st=ie
+esperar|to wait, to hope
+buscar|to look for
+existir|to exist
+entrar|to enter
+trabajar|to work
+escribir|to write|part=escrito
+perder|to lose|st=ie
+producir|to produce|zc
+ocurrir|to happen
+entender|to understand|st=ie
+pedir|to ask for|st=i
+recibir|to receive
+recordar|to remember|st=ue
+terminar|to finish
+permitir|to allow
+aparecer|to appear|zc
+conseguir|to get, to achieve|st=i
+comenzar|to begin|st=ie
+servir|to serve|st=i
+sacar|to take out
+necesitar|to need
+mantener|to maintain|like=tener
+resultar|to turn out
+leer|to read
+caer|to fall|yo=caigo
+cambiar|to change
+presentar|to present
+crear|to create
+abrir|to open|part=abierto
+considerar|to consider
+oír|to hear|yo=oigo fut=oir
+acabar|to finish
+convertir|to convert|st=ie
+ganar|to win, to earn
+formar|to form
+traer|to bring|yo=traigo pret=traj
+partir|to leave, to split
+morir|to die|st=ue part=muerto
+aceptar|to accept
+realizar|to carry out
+suponer|to suppose|like=poner
+comprender|to understand
+lograr|to achieve
+explicar|to explain
+preguntar|to ask
+tocar|to touch, to play (music)
+reconocer|to recognize|zc
+estudiar|to study
+alcanzar|to reach
+nacer|to be born|zc
+dirigir|to direct
+correr|to run
+utilizar|to use
+pagar|to pay
+ayudar|to help
+gustar|to please
+jugar|to play|st=ue
+escuchar|to listen
+cumplir|to fulfill
+ofrecer|to offer|zc
+descubrir|to discover|part=descubierto
+levantar|to lift
+intentar|to try
+usar|to use
+decidir|to decide
+repetir|to repeat|st=i
+olvidar|to forget
+valer|to be worth|yo=valgo fut=valdr
+comer|to eat
+mostrar|to show|st=ue
+ocupar|to occupy
+mover|to move|st=ue
+continuar|to continue|st=acc
+referir|to refer|st=ie
+beber|to drink
+cerrar|to close|st=ie
+dormir|to sleep|st=ue
+vender|to sell
+caminar|to walk
+comprar|to buy
+viajar|to travel
+bailar|to dance
+cocinar|to cook
+cantar|to sing
+nadar|to swim
+limpiar|to clean
+lavar|to wash
+preparar|to prepare
+enseñar|to teach, to show
+aprender|to learn
+subir|to go up
+bajar|to go down
+abrazar|to hug
+amar|to love
+odiar|to hate
+desear|to wish
+manejar|to drive
+conducir|to drive|zc
+traducir|to translate|zc
+construir|to build
+destruir|to destroy
+incluir|to include
+huir|to flee
+contribuir|to contribute
+almorzar|to have lunch|st=ue
+cenar|to have dinner
+desayunar|to have breakfast
+costar|to cost|st=ue
+soñar|to dream|st=ue
+volar|to fly|st=ue
+probar|to try, to taste|st=ue
+devolver|to give back|st=ue part=devuelto
+resolver|to solve|st=ue part=resuelto
+llover|to rain|st=ue
+doler|to hurt|st=ue
+preferir|to prefer|st=ie
+mentir|to lie|st=ie
+sugerir|to suggest|st=ie
+divertir|to amuse|st=ie
+defender|to defend|st=ie
+encender|to turn on|st=ie
+despertar|to wake|st=ie
+sentar|to seat|st=ie
+negar|to deny|st=ie
+nevar|to snow|st=ie
+calentar|to heat|st=ie
+recomendar|to recommend|st=ie
+medir|to measure|st=i
+vestir|to dress|st=i
+elegir|to choose|st=i
+corregir|to correct|st=i
+competir|to compete|st=i
+impedir|to prevent|st=i
+despedir|to fire, to dismiss|st=i
+escoger|to choose
+proteger|to protect
+coger|to take, to catch
+recoger|to pick up
+exigir|to demand
+fingir|to pretend
+distinguir|to distinguish
+obtener|to obtain|like=tener
+contener|to contain|like=tener
+detener|to stop, to detain|like=tener
+sostener|to support|like=tener
+componer|to compose|like=poner
+proponer|to propose|like=poner
+imponer|to impose|like=poner
+disponer|to arrange|like=poner
+exponer|to expose|like=poner
+deshacer|to undo|like=hacer
+convenir|to suit|like=venir
+prevenir|to prevent|like=venir
+atraer|to attract|like=traer
+distraer|to distract|like=traer
+andar|to walk|pret=anduv
+reducir|to reduce|zc
+introducir|to introduce|zc
+agradecer|to thank|zc
+merecer|to deserve|zc
+establecer|to establish|zc
+desaparecer|to disappear|zc
+pertenecer|to belong|zc
+obedecer|to obey|zc
+crecer|to grow|zc
+enviar|to send|st=acc
+confiar|to trust|st=acc
+graduar|to graduate|st=acc
+actuar|to act|st=acc
+romper|to break|part=roto
+cubrir|to cover|part=cubierto
+poseer|to possess
+acompañar|to accompany
+admirar|to admire
+adivinar|to guess
+ahorrar|to save (money)
+alquilar|to rent
+apagar|to turn off
+aprobar|to approve, to pass (an exam)|st=ue
+arreglar|to fix
+avisar|to warn
+besar|to kiss
+borrar|to erase
+celebrar|to celebrate
+charlar|to chat
+cobrar|to charge
+colocar|to place
+completar|to complete
+comunicar|to communicate
+contestar|to answer
+controlar|to control
+cortar|to cut
+cruzar|to cross
+cuidar|to take care of
+dibujar|to draw
+disfrutar|to enjoy
+durar|to last
+echar|to throw
+entregar|to deliver
+evitar|to avoid
+expresar|to express
+faltar|to be missing
+firmar|to sign
+funcionar|to work (machines)
+gastar|to spend
+gritar|to shout
+guardar|to keep
+importar|to matter
+invitar|to invite
+llenar|to fill
+llorar|to cry
+luchar|to fight
+mandar|to send, to order
+marcar|to mark
+matar|to kill
+mejorar|to improve
+mencionar|to mention
+notar|to notice
+observar|to observe
+organizar|to organize
+pintar|to paint
+practicar|to practice
+prestar|to lend
+quitar|to remove
+regalar|to give (a gift)
+regresar|to return
+reservar|to book
+respetar|to respect
+robar|to steal
+saludar|to greet
+salvar|to save (rescue)
+secar|to dry
+tirar|to throw away
+visitar|to visit
+votar|to vote
+barrer|to sweep
+coser|to sew
+depender|to depend
+meter|to put in
+prometer|to promise
+responder|to answer
+sorprender|to surprise
+temer|to fear
+asistir|to attend
+compartir|to share
+describir|to describe|part=descrito
+discutir|to argue, to discuss
+dividir|to divide
+insistir|to insist
+sufrir|to suffer
+unir|to join
+añadir|to add
+aplaudir|to applaud
+admitir|to admit
+resistir|to resist
+omitir|to omit
+interrumpir|to interrupt
+caber|to fit|yo=quepo pret=cup fut=cabr
+rehacer|to redo|like=hacer
+posponer|to postpone|like=poner
+oponer|to oppose|like=poner
+reponer|to replace|like=poner
+retener|to retain|like=tener
+entretener|to entertain|like=tener
+intervenir|to intervene|like=venir
+provenir|to come from|like=venir
+extraer|to extract|like=traer
+revolver|to stir|st=ue part=revuelto
+envolver|to wrap|st=ue part=envuelto
+inscribir|to enroll|part=inscrito
+imprimir|to print|part=impreso
+distribuir|to distribute
+sustituir|to substitute
+constituir|to constitute
+concluir|to conclude
+excluir|to exclude
+disminuir|to decrease
+atribuir|to attribute
+influir|to influence
+seducir|to seduce|zc
+deducir|to deduce|zc
+desconocer|not to know|zc
+padecer|to suffer from|zc
+permanecer|to remain|zc
+fortalecer|to strengthen|zc
+favorecer|to favor|zc
+amanecer|to dawn|zc
+anochecer|to get dark|zc
+envejecer|to grow old|zc
+carecer|to lack|zc
+complacer|to please|zc
+oscurecer|to darken|zc
+florecer|to bloom|zc
+lucir|to shine, to look|zc
+acertar|to get right|st=ie
+atender|to attend to|st=ie
+atravesar|to cross|st=ie
+confesar|to confess|st=ie
+descender|to descend|st=ie
+extender|to extend|st=ie
+fregar|to scrub|st=ie
+gobernar|to govern|st=ie
+helar|to freeze|st=ie
+manifestar|to show, to express|st=ie
+merendar|to have a snack|st=ie
+regar|to water|st=ie
+temblar|to tremble|st=ie
+tropezar|to trip|st=ie
+apretar|to squeeze|st=ie
+advertir|to warn|st=ie
+consentir|to consent|st=ie
+hervir|to boil|st=ie
+invertir|to invest|st=ie
+herir|to wound|st=ie
+requerir|to require|st=ie
+acordar|to agree|st=ue
+apostar|to bet|st=ue
+colgar|to hang|st=ue
+comprobar|to check|st=ue
+demostrar|to demonstrate|st=ue
+forzar|to force|st=ue
+morder|to bite|st=ue
+promover|to promote|st=ue
+renovar|to renew|st=ue
+rogar|to beg|st=ue
+sonar|to sound, to ring|st=ue
+soler|to usually do|st=ue
+soltar|to let go|st=ue
+tostar|to toast|st=ue
+perseguir|to chase|st=i
+gemir|to moan|st=i
+rendir|to yield|st=i
+prohibir|to prohibit|st=acc
+reunir|to gather|st=acc
+variar|to vary|st=acc
+vaciar|to empty|st=acc
+averiguar|to find out
+extinguir|to extinguish
+surgir|to arise
+sumergir|to submerge
+acoger|to welcome
+indicar|to indicate
+publicar|to publish
+pescar|to fish
+aparcar|to park
+atacar|to attack
+educar|to educate
+dedicar|to dedicate
+criticar|to criticize
+chocar|to crash
+identificar|to identify
+masticar|to chew
+picar|to sting, to chop
+ubicar|to locate
+acercar|to bring closer
+arrancar|to start, to pull out
+destacar|to stand out
+convocar|to summon
+complicar|to complicate
+clasificar|to classify
+cargar|to load
+obligar|to force
+pegar|to stick, to hit
+juzgar|to judge
+agregar|to add
+castigar|to punish
+navegar|to sail
+investigar|to investigate
+analizar|to analyze
+aterrizar|to land
+avanzar|to advance
+cazar|to hunt
+gozar|to enjoy
+rechazar|to reject
+rezar|to pray
+lanzar|to launch
+abandonar|to abandon
+aclarar|to clarify
+acostumbrar|to be used to
+adoptar|to adopt
+afectar|to affect
+aguantar|to put up with
+animar|to encourage
+anunciar|to announce
+apoyar|to support
+apreciar|to appreciate
+apuntar|to note down
+asegurar|to assure
+asustar|to scare
+atrapar|to catch
+aumentar|to increase
+brindar|to toast, to offer
+calcular|to calculate
+callar|to keep quiet
+causar|to cause
+citar|to quote
+combinar|to combine
+comentar|to comment
+confirmar|to confirm
+conservar|to keep
+consultar|to consult
+contratar|to hire
+conversar|to talk
+copiar|to copy
+cultivar|to grow
+dañar|to damage
+declarar|to declare
+denunciar|to report
+descansar|to rest
+desarrollar|to develop
+determinar|to determine
+disculpar|to excuse
+diseñar|to design
+disparar|to shoot
+editar|to edit
+eliminar|to eliminate
+empujar|to push
+enfrentar|to face
+engañar|to deceive
+ensayar|to rehearse
+entrenar|to train
+escapar|to escape
+estimar|to estimate
+examinar|to examine
+explorar|to explore
+fallar|to fail
+fijar|to fix, to set
+fumar|to smoke
+generar|to generate
+golpear|to hit
+grabar|to record
+heredar|to inherit
+ignorar|to ignore
+imaginar|to imagine
+informar|to inform
+iniciar|to start
+inventar|to invent
+lamentar|to regret
+liberar|to free
+limitar|to limit
+molestar|to bother
+montar|to ride, to assemble
+negociar|to negotiate
+nombrar|to name
+ocultar|to hide
+operar|to operate
+opinar|to think, to give an opinion
+ordenar|to tidy, to order
+pasear|to stroll
+pelear|to fight
+perdonar|to forgive
+pesar|to weigh
+plantear|to raise (an issue)
+presionar|to press
+procurar|to try
+pronunciar|to pronounce
+quemar|to burn
+reciclar|to recycle
+recuperar|to recover
+reflejar|to reflect
+registrar|to register
+relacionar|to relate
+renunciar|to resign
+reparar|to repair
+representar|to represent
+rescatar|to rescue
+respirar|to breathe
+retirar|to withdraw
+revisar|to check
+rodear|to surround
+saltar|to jump
+señalar|to point out
+solucionar|to solve
+soportar|to bear
+sospechar|to suspect
+sumar|to add up
+superar|to overcome
+tardar|to take (time)
+trasladar|to move
+acceder|to access
+ceder|to give way
+cometer|to commit
+comprometer|to commit
+conceder|to grant
+esconder|to hide
+ofender|to offend
+proceder|to proceed
+prender|to turn on, to light
+pretender|to aim to
+recorrer|to travel around
+socorrer|to help
+suceder|to happen
+toser|to cough
+emprender|to undertake
+someter|to submit
+corresponder|to correspond
+aburrir|to bore
+acudir|to go, to come
+definir|to define
+difundir|to spread
+emitir|to emit
+escupir|to spit
+percibir|to perceive
+persistir|to persist
+residir|to reside
+transmitir|to transmit
+consumir|to consume
+asumir|to assume
+resumir|to summarize
+sacudir|to shake
+levantarse|to get up
+ducharse|to shower
+acostarse|to go to bed|st=ue
+despertarse|to wake up
+vestirse|to get dressed
+sentarse|to sit down
+llamarse|to be called
+irse|to leave, to go away
+quedarse|to stay
+sentirse|to feel
+preocuparse|to worry
+divertirse|to have fun
+casarse|to get married
+enamorarse|to fall in love
+dormirse|to fall asleep
+lavarse|to wash (oneself)
+peinarse|to comb (one's hair)
+afeitarse|to shave
+cepillarse|to brush
+maquillarse|to put on makeup
+quejarse|to complain
+equivocarse|to make a mistake
+acordarse|to remember|st=ue
+ponerse|to put on, to become
+olvidarse|to forget
+alegrarse|to be glad
+enojarse|to get angry
+relajarse|to relax
+mudarse|to move (house)
+prepararse|to get ready
+convertirse|to become
+atreverse|to dare
+despedirse|to say goodbye
+arrepentirse|to regret|st=ie
+caerse|to fall down
+hacerse|to become
+moverse|to move
+abrirse|to open (up)
+acabarse|to run out`;
+const L=s=>s.split(' ');
+const OVR={
+ ser:{pres:L('soy eres es somos sois son'),pret:L('fui fuiste fue fuimos fuisteis fueron'),impf:L('era eras era éramos erais eran'),subj:L('sea seas sea seamos seáis sean')},
+ estar:{pres:L('estoy estás está estamos estáis están'),subj:L('esté estés esté estemos estéis estén')},
+ ir:{pres:L('voy vas va vamos vais van'),pret:L('fui fuiste fue fuimos fuisteis fueron'),impf:L('iba ibas iba íbamos ibais iban'),subj:L('vaya vayas vaya vayamos vayáis vayan')},
+ dar:{pres:L('doy das da damos dais dan'),pret:L('di diste dio dimos disteis dieron'),subj:L('dé des dé demos deis den')},
+ ver:{pres:L('veo ves ve vemos veis ven'),pret:L('vi viste vio vimos visteis vieron'),impf:L('veía veías veía veíamos veíais veían')},
+ saber:{pres:L('sé sabes sabe sabemos sabéis saben'),subj:L('sepa sepas sepa sepamos sepáis sepan')},
+ haber:{pres:L('he has ha hemos habéis han'),subj:L('haya hayas haya hayamos hayáis hayan')},
+ hacer:{pret:L('hice hiciste hizo hicimos hicisteis hicieron')},
+ oír:{pres:L('oigo oyes oye oímos oís oyen')},
+};
+
+/* ---------- conjugation engine ---------- */
+const END={
+  pres:{ar:['o','as','a','amos','áis','an'],er:['o','es','e','emos','éis','en'],ir:['o','es','e','imos','ís','en']},
+  pret:{ar:['é','aste','ó','amos','asteis','aron'],er:['í','iste','ió','imos','isteis','ieron']},
+  impf:{ar:['aba','abas','aba','ábamos','abais','aban'],er:['ía','ías','ía','íamos','íais','ían']},
+  subj:{ar:['e','es','e','emos','éis','en'],er:['a','as','a','amos','áis','an']}};
+const FUT=['é','ás','á','emos','éis','án'],COND=['ía','ías','ía','íamos','íais','ían'];
+const AUX={perf:L('he has ha hemos habéis han'),plup:L('había habías había habíamos habíais habían'),futp:L('habré habrás habrá habremos habréis habrán'),
+  condp:L('habría habrías habría habríamos habríais habrían'),psubj:L('haya hayas haya hayamos hayáis hayan'),plsubj:L('hubiera hubieras hubiera hubiéramos hubierais hubieran')};
+const IRP=L('voy vas va vamos vais van'),RP=L('me te se nos os se');
+const BOOT=[1,1,1,0,0,1],SHIFTERS=['ie','ue','i'];
+const cls=v=>v.root.slice(-2).replace('í','i');
+const base=v=>v.root.slice(0,-2);
+const lastSwap=(s,from,to)=>{const i=s.lastIndexOf(from);return i<0?s:s.slice(0,i)+to+s.slice(i+1)};
+const boot=(s,t)=>t==='ie'?lastSwap(s,'e','ie'):t==='i'?lastSwap(s,'e','i'):t==='ue'?(s.includes('o')?lastSwap(s,'o','ue'):lastSwap(s,'u','ue')):t==='acc'?s.replace(/([iu])([^iu]*)$/,(m,a,r)=>(a==='i'?'í':'ú')+r):s;
+const irShift=(s,t)=>t==='ue'?lastSwap(s,'o','u'):lastSwap(s,'e','i');
+const shifts=v=>cls(v)==='ir'&&SHIFTERS.includes(v.st);
+function fix(stem,end,v){ // spelling changes that keep the sound
+  if(v.plain)return stem+end;
+  const r=v.root;
+  if(/^[eé]/.test(end)){
+    if(r.endsWith('car'))return stem.slice(0,-1)+'qu'+end;
+    if(r.endsWith('gar'))return stem+'u'+end;
+    if(r.endsWith('zar'))return stem.slice(0,-1)+'c'+end;
+    if(r.endsWith('guar'))return stem.slice(0,-1)+'ü'+end;
+  }
+  if(/^[oaá]/.test(end)){
+    if(r.endsWith('guir'))return stem.slice(0,-1)+end;
+    if(/g[ei]r$/.test(r))return stem.slice(0,-1)+'j'+end;
+  }
+  return stem+end;
+}
+function presStem(v,i){const b=base(v);if(v.uy&&BOOT[i])return b+'y';return v.st&&BOOT[i]?boot(b,v.st):b}
+function subjStem(v,i){const b=base(v);if(v.yo)return v.yo.slice(0,-1);return v.st&&BOOT[i]?boot(b,v.st):shifts(v)?irShift(b,v.st):b}
+function participle(v){if(v.part)return v.part;const b=base(v);return b+(cls(v)==='ar'?'ado':/[aeo]$/.test(b)?'ído':'ido')}
+function gerundBare(v){if(v.ger)return v.ger;const b=base(v);if(cls(v)==='ar')return b+'ando';const s=shifts(v)?irShift(b,v.st):b;return s+(/[aeiou]$/.test(s)?'yendo':'iendo')}
+const memo=new Map();
+function bare(v,t){ // forms without reflexive pronouns; imperative slot 0 is null
+  const k=v.inf+(v.plain?'~':'')+t;if(memo.has(k))return memo.get(k);
+  let r;
+  if(v.o&&v.o[t])r=v.o[t];
+  else if(AUX[t])r=AUX[t].map(a=>a+' '+participle(v));
+  else if(t==='prox')r=IRP.map(a=>a+' a '+v.root);
+  else if(t==='isubj'){const s=bare(v,'pret')[5].slice(0,-3),acc=s.slice(0,-1)+({a:'á',e:'é'}[s.at(-1)]||s.at(-1));r=['ra','ras','ra','ramos','rais','ran'].map((e,i)=>(i===3?acc:s)+e)}
+  else if(t==='imp'){const p=bare(v,'pres'),s=bare(v,'subj');r=[null,v.tu||p[2],s[2],v.root==='ir'?'vamos':s[3],v.root.slice(0,-1)+'d',s[5]]}
+  else if(t==='neg'){const s=bare(v,'subj');r=[null,...s.slice(1).map(f=>'no '+f)]}
+  else{
+    const c=cls(v),b=base(v);r=[];
+    for(let i=0;i<6;i++){
+      if(t==='pres')r.push(i===0&&v.yo?v.yo:fix(presStem(v,i),END.pres[c][i],v));
+      else if(t==='pret'){
+        if(v.pret){r.push(v.pret+['e','iste','o','imos','isteis',v.pret.endsWith('j')?'eron':'ieron'][i]);continue}
+        let s=shifts(v)&&(i===2||i===5)?irShift(b,v.st):b,e=END.pret[c==='ar'?'ar':'er'][i];
+        if(c!=='ar'&&/[aeiou]$/.test(s)){if(i===2||i===5)e=e.replace('i','y');else if(/[aeo]$/.test(s))e=e.replace(/^i/,'í')}
+        r.push(fix(s,e,v));
+      }
+      else if(t==='impf')r.push(b+END.impf[c==='ar'?'ar':'er'][i]);
+      else if(t==='fut')r.push((v.fut||v.root)+FUT[i]);
+      else if(t==='cond')r.push((v.fut||v.root)+COND[i]);
+      else if(t==='subj')r.push(v.yo?subjStem(v,i)+END.subj[c==='ar'?'ar':'er'][i]:fix(subjStem(v,i),END.subj[c==='ar'?'ar':'er'][i],v));
+    }
+  }
+  memo.set(k,r);return r;
+}
+/* stress: find the stressed vowel, so attaching a pronoun can add the written accent */
+const VOW='aeiouáéíóúü',STRONG='aeoáéó',ACC={a:'á',e:'é',i:'í',o:'ó',u:'ú'};
+const unacc=s=>s.replace(/[áéíóú]/g,c=>'aeiou'['áéíóú'.indexOf(c)]);
+function stressIdx(w){
+  const a=w.search(/[áéíóú]/);if(a>=0)return a;
+  const nuc=[];let cur=null;
+  for(let i=0;i<w.length;i++){
+    if(!VOW.includes(w[i])){cur=null;continue}
+    if(cur&&!(STRONG.includes(w[i])&&STRONG.includes(w[i-1])))cur.push(i);else nuc.push(cur=[i]);
+  }
+  if(!nuc.length)return -1;
+  const n=/[aeiouns]$/.test(w)&&nuc.length>1?nuc[nuc.length-2]:nuc[nuc.length-1];
+  return n.find(i=>STRONG.includes(w[i]))??n[n.length-1];
+}
+function attach(form,pron,src=form){const idx=stressIdx(src);let w=unacc(form)+pron;if(idx>=0&&stressIdx(w)!==idx)w=w.slice(0,idx)+ACC[w[idx]]+w.slice(idx+1);return w}
+function conj(v,t){ // full forms, with reflexive pronouns
+  const b=bare(v,t);if(!v.refl)return b;
+  return b.map((f,i)=>{
+    if(f==null)return null;
+    if(t==='imp'){
+      if(i===3)return attach(f.slice(0,-1),'nos',f);
+      if(i===4)return v.root==='ir'?'idos':attach(f.slice(0,-1),'os',f);
+      return attach(f,RP[i]);
+    }
+    if(t==='neg')return 'no '+RP[i]+' '+f.slice(3);
+    return RP[i]+' '+f;
+  });
+}
+const gerund=v=>v.refl?attach(gerundBare(v),'se'):gerundBare(v);
+
+/* ---------- build verb objects ---------- */
+const parseFlags=s=>Object.fromEntries((s||'').split(' ').filter(Boolean).map(kv=>{const[k,x]=kv.split('=');return[k,x??true]}));
+const rows=RAW.trim().split('\n').map((l,i)=>{const[inf,en,fl]=l.split('|');return{inf,en,rank:i+1,flags:parseFlags(fl)}});
+const rawBy=Object.fromEntries(rows.map(r=>[r.inf,r]));
+const VERBS=rows.map(r=>{
+  const refl=/se$/.test(r.inf),root=refl?r.inf.slice(0,-2):r.inf;
+  let F=r.flags;if(refl&&!Object.keys(F).length&&rawBy[root])F=rawBy[root].flags;
+  const v={inf:r.inf,en:r.en,rank:r.rank,refl,root};
+  let o=OVR[root];
+  if(F.like){const B=rawBy[F.like].flags,pre=root.slice(0,root.length-F.like.length);
+    for(const k of['yo','pret','fut','part','ger'])if(B[k])v[k]=pre+B[k];
+    if(B.st)v.st=B.st;
+    if(B.tu)v.tu=pre+(/^[^aeiou]*[aeiou]n$/.test(B.tu)?B.tu.replace(/[aeiou](?=n$)/,c=>ACC[c]):B.tu);
+    if(OVR[F.like])o=Object.fromEntries(Object.entries(OVR[F.like]).map(([t,a])=>[t,a.map(f=>pre+f)]));
+  }
+  for(const k of['yo','pret','fut','part','ger','tu','st'])if(F[k])v[k]=F[k];
+  if(F.zc){const b=root.slice(0,-2);v.yo=b.slice(0,-1)+'zco';if(root.endsWith('ducir'))v.pret=b.slice(0,-1)+'j'}
+  if(/[^gq]uir$/.test(root)){v.uy=true;v.yo=root.slice(0,-2)+'yo'}
+  if(o)v.o=o;
+  return v;
+});
+const verbBy=inf=>VERBS.find(v=>v.inf===inf);
+const plainOf=v=>({inf:v.root,root:v.root,plain:true});
+/* tags for filters and badges */
+for(const v of VERBS){
+  const P=plainOf(v),diff=t=>bare(v,t).some((f,i)=>f!==bare(P,t)[i]);
+  v.irrPart=participle(v)!==participle(P);
+  v.irrGer=gerundBare(v)!==gerundBare(P);
+  v.stem=!!v.st;
+  v.irregular=!!(v.o||v.yo||v.pret||v.fut||v.tu||v.uy);
+  const flagged=v.irregular||v.stem;
+  v.spelling=!flagged&&['pres','pret','subj'].some(diff);
+  v.regular=!v.irregular&&!v.stem&&!v.spelling&&!v.irrPart&&!v.irrGer;
+  v.g=v.irregular?'irr':v.stem?'stem':v.spelling?'spell':cls(v)==='ar'?'ar':'erir';
+}
+
+// Sentence questions: s holds ___ where the verb goes, t is a tense key for T()/tn()
+const SENT = [
+  {t:'Presente', v:'saber', a:'sé', s:'Yo no ___ nadar muy bien.', en:'I can’t swim very well.', note:'Saber has an irregular yo form: sé, with an accent to tell it apart from se.'},
+  {t:'Presente', v:'salir', a:'salgo', s:'Cada mañana yo ___ de casa a las ocho.', en:'Every morning I leave home at eight.', note:'Salir adds a -g- in the yo form: salgo, but sales, sale.'},
+  {t:'Presente', v:'volver', a:'vuelven', s:'Mis padres ___ del trabajo muy tarde.', en:'My parents get back from work very late.', note:'Volver changes o→ue when the stem is stressed: vuelvo, vuelven, but volvemos.'},
+  {t:'Presente', v:'decir', a:'dice', s:'Ella siempre ___ la verdad.', en:'She always tells the truth.', note:'Decir changes e→i and has a -g- in the yo form: digo, dices, dice.'},
+  {t:'Pretérito', v:'ir', a:'fuimos', s:'Ayer nosotros ___ al cine.', en:'Yesterday we went to the cinema.', note:'Ir and ser share the same pretérito: fui, fue, fuimos.'},
+  {t:'Pretérito', v:'poder', a:'pude', s:'Anoche yo no ___ dormir.', en:'Last night I couldn’t sleep.', note:'Poder switches to the stem pud-, with an unstressed -e: pude.'},
+  {t:'Pretérito', v:'poner', a:'pusiste', s:'¿Dónde ___ tú las llaves?', en:'Where did you put the keys?', note:'Poner switches to the stem pus-: puse, pusiste, puso.'},
+  {t:'Pretérito', v:'hacer', a:'hicieron', s:'El año pasado ellos ___ un viaje a México.', en:'Last year they took a trip to Mexico.', note:'Hacer uses the stem hic-: hice, hicimos, hicieron (but hizo).'},
+  {t:'Pretérito', v:'traer', a:'trajo', s:'Mi hermana me ___ un regalo de Lisboa.', en:'My sister brought me a present from Lisbon.', note:'Traer takes the stem traj-: traje, trajo, and trajeron (no i after j).'},
+  {t:'Imperfecto', v:'ser', a:'era', s:'Cuando yo ___ niño, vivíamos en el campo.', en:'When I was a child, we lived in the countryside.', note:'Ser is one of three irregular imperfectos: era, eras, era.'},
+  {t:'Imperfecto', v:'ir', a:'íbamos', s:'Antes nosotros ___ a la playa todos los veranos.', en:'We used to go to the beach every summer.', note:'Ir is irregular in the imperfecto: iba, ibas, íbamos. Note the accent.'},
+  {t:'Imperfecto', v:'ver', a:'veía', s:'Desde la ventana se ___ el mar.', en:'You could see the sea from the window.', note:'Ver keeps its e in the imperfecto: veía, veías, veía.'},
+  {t:'Futuro', v:'hacer', a:'hará', s:'Mañana ___ mucho calor.', en:'It will be very hot tomorrow.', note:'Hacer shortens to har- in the futuro: haré, hará.'},
+  {t:'Futuro', v:'decir', a:'diré', s:'Yo te lo ___ cuando llegue.', en:'I’ll tell you when I get there.', note:'Decir shortens to dir- in the futuro: diré, dirás, dirá.'},
+  {t:'Futuro', v:'tener', a:'tendréis', s:'¿___ vosotros tiempo el sábado?', en:'Will you all have time on Saturday?', note:'Tener adds a -d- in the futuro: tendré, tendréis.'},
+  {t:'Condicional', v:'salir', a:'saldría', s:'Yo en tu lugar no ___ con este tiempo.', en:'If I were you, I wouldn’t go out in this weather.', note:'Salir adds a -d- in the condicional: saldría, saldrías.'},
+  {t:'Condicional', v:'poder', a:'podría', s:'¿___ usted ayudarme con la maleta?', en:'Could you help me with the suitcase?', note:'Poder drops its e in the condicional: podría.'},
+  {t:'Condicional', v:'querer', a:'querríamos', s:'Nosotros ___ una mesa para cuatro, por favor.', en:'We would like a table for four, please.', note:'Querer drops its e, which leaves a double r: querría, querríamos.'},
+  {t:'Subj. pres.', v:'tener', a:'tengas', s:'Espero que tú ___ un buen viaje.', en:'I hope you have a good trip.', note:'The subjuntivo is built on the yo form tengo: tenga, tengas.'},
+  {t:'Subj. pres.', v:'llegar', a:'lleguemos', s:'Es importante que nosotros ___ a tiempo.', en:'It’s important that we arrive on time.', note:'Spelling change: g becomes gu before e to keep the hard sound: lleguemos.'},
+  {t:'Subj. pres.', v:'saber', a:'sepan', s:'No creo que ellos ___ la respuesta.', en:'I don’t think they know the answer.', note:'Saber has the irregular subjuntivo stem sep-: sepa, sepan.'},
+  {t:'Imperativo', v:'venir', a:'ven', s:'___ aquí ahora mismo, Pablo.', en:'Come here right now, Pablo.', note:'The tú command of venir is short: ven.'},
+  {t:'Imperativo', v:'poner', a:'pon', s:'___ la mesa, por favor.', en:'Set the table, please.', note:'Poner has a short tú command: pon.'},
+  {t:'Imperativo', v:'hacer', a:'hagas', s:'No ___ ruido, que el bebé está durmiendo.', en:'Don’t make any noise, the baby’s sleeping.', note:'Negative tú commands use the subjuntivo: no hagas.'}
+];
+const KIND = {set:{bank:BANK, n:5}, sent:{bank:SENT, n:5}, test:{bank:SENT, n:10, pass:8}};
+
+const S = {screen:'levels', qs:[], i:0, answer:'', status:'typing', res:[], last:null, mood:0, tl:'es', kind:'set', verb:null, vq:''};
+try { if (localStorage.getItem('conjuga-tl') === 'en') S.tl = 'en'; } catch(e){}
+const EN = {'Presente':'Present','Pretérito':'Preterite','Imperfecto':'Imperfect','Futuro':'Future','Condicional':'Conditional','Subj. pres.':'Pres. subj.','Imperativo':'Imperative','Indicativo':'Indicative','Subjuntivo':'Subjunctive','Afirmativo':'Affirmative','Negativo':'Negative','Perfecto':'Present perfect'};
+const tn = k => S.tl === 'en' ? EN[k] : k;
+const T = k => `<span lang="${S.tl}">${tn(k)}</span>`;
+S.theme = 'system';
+try { S.theme = localStorage.getItem('conjuga-theme') || 'system'; } catch(e){}
+const applyTheme = () => { const r = document.documentElement; if (S.theme === 'system') delete r.dataset.theme; else r.dataset.theme = S.theme; };
+applyTheme();
+const themeHtml = () => `<div class="tl" role="group" aria-label="Theme">${[['system','System'],['light','Light'],['dark','Dark']].map(([v, l]) => `<button data-theme-set="${v}" aria-pressed="${S.theme===v}">${l}</button>`).join('')}</div>`;
+const tlHtml = () => `<div class="tl" role="group" aria-label="Tense names">${[['es','Español'],['en','English']].map(([v, l]) => `<button data-tl="${v}" aria-pressed="${S.tl===v}" lang="${v}">${l}</button>`).join('')}</div>`;
+let timer;
+const app = document.getElementById('app');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const strip = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+function diff(you, ok){
+  let p = 0; while (p < you.length && p < ok.length && you[p] === ok[p]) p++;
+  let s = 0; while (s < you.length - p && s < ok.length - p && you[you.length-1-s] === ok[ok.length-1-s]) s++;
+  const cut = (w, cls) => esc(w.slice(0,p)) + `<span class="${cls}">${esc(w.slice(p, w.length - s))}</span>` + esc(w.slice(w.length - s));
+  return {you: cut(you,'bad'), ok: cut(ok,'irr')};
+}
+
+function go(screen){ clearTimeout(timer); if (screen === 'verb') S.verb = null; S.screen = screen; render(); }
+function start(kind = 'set'){
+  clearTimeout(timer);
+  const k = KIND[kind] || KIND.set;
+  S.qs = k.bank.slice().sort(() => Math.random() - .5).slice(0, k.n);
+  Object.assign(S, {screen:'drill', i:0, answer:'', status:'typing', res:[], kind: KIND[kind] ? kind : 'set'});
+  render();
+}
+function check(){
+  const q = S.qs[S.i], typed = S.answer.trim().toLowerCase();
+  if (!typed) { const inp = app.querySelector('#ans'); inp && (inp.classList.remove('shake'), void inp.offsetWidth, inp.classList.add('shake')); return; }
+  S.status = typed === q.a ? 'right' : strip(typed) === strip(q.a) ? 'close' : 'wrong';
+  S.res.push({ok: S.status !== 'wrong', typed, q});
+  if (navigator.vibrate && navigator.userActivation?.hasBeenActive !== false) try { navigator.vibrate(S.status === 'wrong' ? [30,40,30] : 15); } catch(e){}
+  render();
+  if (S.status === 'right') timer = setTimeout(next, 900);
+}
+function next(){
+  clearTimeout(timer);
+  if (S.i + 1 >= S.qs.length){ S.last = S.res.filter(r => r.ok).length + ' / ' + S.qs.length; S.screen = 'results'; }
+  else { S.i++; S.answer = ''; S.status = 'typing'; }
+  render();
+}
+
+let formIndex = null;
+function verbListHtml(){
+  const s = strip(S.vq.trim().toLowerCase());
+  const row = v => `<button class="vrow" data-verb="${esc(v.inf)}"><b class="d" lang="es">${esc(v.inf)}</b><span class="muted">${esc(v.en)}</span>${v.irregular ? '<span class="tag irr">Irregular</span>' : v.stem ? '<span class="tag">Stem</span>' : ''}</button>`;
+  if (!s) {
+    let html = '', last = '';
+    for (const v of VERBS.slice().sort((a, b) => a.inf.localeCompare(b.inf, 'es'))) {
+      const l = strip(v.inf[0]).toUpperCase();
+      if (l !== last) { last = l; html += `<h2 class="d letter">${l}</h2>`; }
+      html += row(v);
+    }
+    return `<p class="muted" style="font-size:13px;margin-top:10px">${VERBS.length} verbs</p>` + html;
+  }
+  if (!formIndex) { // every conjugated form, so "fui" finds ir and ser
+    formIndex = new Map();
+    const add = (f, v) => { const k = strip(f.split(' ').pop()); formIndex.has(k) || formIndex.set(k, new Set()); formIndex.get(k).add(v); };
+    for (const v of VERBS) { for (const t of ['pres','pret','impf','fut','cond','subj','isubj','imp']) for (const f of conj(v, t)) f && add(f, v); add(gerund(v), v); add(participle(v), v); }
+  }
+  const exact = [...(formIndex.get(s) || [])];
+  const named = VERBS.filter(v => !exact.includes(v) && (strip(v.inf).includes(s) || v.en.toLowerCase().includes(s)))
+    .sort((a, b) => (strip(b.inf).startsWith(s) - strip(a.inf).startsWith(s)) || a.rank - b.rank);
+  return (exact.length ? `<h2 class="letter" style="font-size:13px">Exact form matches</h2>${exact.map(row).join('')}` : '')
+    + (named.length ? `<h2 class="letter" style="font-size:13px">Verbs and meanings</h2>${named.map(row).join('')}` : '')
+    || `<p class="muted" style="margin-top:16px">Nothing matches “${esc(S.vq)}”. Try the infinitive.</p>`;
+}
+
+function navHtml(cur){
+  const b = (id, label, icon) => `<button data-go="${id}" ${cur===id?'aria-current="page"':''}><span class="pill">${ICON[icon]}</span>${label}</button>`;
+  return `<nav aria-label="Main">${b('levels','Levels','levels')}${b('today','Practice','practice')}${b('verb','Verbs','verbs')}${b('progress','Progress','prog')}</nav>`;
+}
+
+const PATH = [['Presente','hablo · I speak'],['Pretérito','hablé · I spoke'],['Imperfecto','hablaba · I used to speak'],['Futuro','hablaré · I will speak'],
+  ['Condicional','hablaría · I would speak'],['Perfecto','he hablado · I have spoken'],['Subj. pres.','que hable · that I speak']];
+const GROUPS = ['Regular -ar','Regular -er / -ir','Stem-changers','Spelling changes','Irregulars'];
+const STARS = [3,3,2,3,1, 2,1]; // example data: stars earned on the first levels
+
+const VIEWS = {
+  levels(){
+    const total = PATH.length * GROUPS.length, done = STARS.length;
+    const star = s => `<span class="stars" aria-label="${s} of 3 stars">${'★'.repeat(s)}<i>${'★'.repeat(3 - s)}</i></span>`;
+    return `<div class="scroll"><div class="top" style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><div><h1 class="d">Your path</h1>
+        <p class="muted" style="margin-top:4px;font-size:14px">${done} / ${total} levels · example data</p></div>
+        <button class="ib" data-go="settings" aria-label="Settings">${ICON.gear}</button></div>
+      <div class="bar" style="margin:12px 20px 0"><i style="width:${done/total*100}%"></i></div>
+      ${PATH.map(([name, ex], ti) => `<section class="card" style="margin:16px 16px 0;padding:16px">
+        <div style="display:flex;align-items:baseline;gap:10px"><h2 class="d" style="font-size:22px;flex:1">${T(name)}</h2><span class="muted" lang="es" style="font-size:13px;font-style:italic">${ex}</span></div>
+        <div class="lvls">${GROUPS.map((g, gi) => { const k = ti * GROUPS.length + gi, open = k <= done;
+          return `<button class="lvl" data-act="start" ${open ? '' : 'disabled'}><span class="n">Level ${k + 1}</span><b>${g}</b>${open ? star(STARS[k] || 0) : '<span class="muted" style="font-size:13px">Locked</span>'}</button>`; }).join('')}</div></section>`).join('')}
+      </div>${navHtml('levels')}`;
+  },
+  today(){
+    return `<div class="scroll">
+      <div class="top" style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><div><p class="muted" style="font-size:14px">Friday, 6 November</p><h1 class="d">Practice</h1></div><button class="ib" data-go="settings" aria-label="Settings">${ICON.gear}</button></div>
+      <section class="card" style="margin:24px 16px 0;padding:20px;display:flex;flex-direction:column;gap:6px">
+        <h2 class="d" style="font-size:26px">Today's set</h2>
+        <p class="muted">5 questions · ${T('Pretérito').toLowerCase()} irregulars</p>
+        <p style="margin-top:8px;font-size:14px;color:var(--soft)">Type each form and press Enter. Accent keys sit above the answer box.</p>
+        <button class="pri" data-act="start" style="margin-top:14px;height:56px;border-radius:28px;font-size:17px">Start</button>
+      </section>
+      <section class="card" style="margin:16px 16px 0;padding:20px;display:flex;flex-direction:column;gap:6px">
+        <h2 class="d" style="font-size:22px">Sentences</h2>
+        <p class="muted">Fill the missing verb in a real sentence · mixed tenses</p>
+        <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+          <button class="pri" data-act="start" data-kind="sent" style="flex:1">5 questions</button>
+          <button class="sec" data-act="start" data-kind="test" style="flex:1">Level-up test</button></div>
+        <p class="muted" style="font-size:13px;margin-top:4px">Level-up test: 10 sentences, pass with 8.</p>
+      </section>
+      ${S.last ? `<p class="muted" style="margin:14px 20px 0;font-size:14px">Last run: ${S.last}</p>` : ''}
+      <button class="card" data-verb="tener" style="margin:16px 16px 0;width:calc(100% - 32px);border:0;padding:18px 20px;display:flex;justify-content:space-between;align-items:flex-end;text-align:left;color:var(--ink)">
+        <span><span class="muted" style="font-size:13px;display:block">Verb of the day</span><span class="d" lang="es" style="font-size:40px;font-weight:700;display:block;line-height:1.1">tener</span><span class="muted">to have</span></span>
+        <span style="text-align:right"><span class="muted" style="font-size:13px;display:block">tú · ${T('Pretérito').toLowerCase()}</span><span class="d" lang="es" style="font-size:26px;font-weight:600">t<span class="irr">uv</span>iste</span></span>
+      </button>
+    </div>${navHtml('today')}`;
+  },
+  drill(){
+    const q = S.qs[S.i], n = S.qs.length;
+    const segs = S.qs.map((_, k) => `<div class="seg ${S.res[k] ? (S.res[k].ok ? 'ok' : 'no') : k === S.i ? 'now' : ''}"></div>`).join('');
+    let bottom;
+    if (S.status === 'typing'){
+      bottom = `<div style="display:flex;gap:6px;padding:0 12px 8px">${['á','é','í','ó','ú','ñ'].map(c => `<button class="acc" data-acc="${c}" aria-label="Insert ${c}">${c}</button>`).join('')}</div>
+      <form class="dock" data-act="check"><label for="ans" class="sr">Your answer</label>
+        <input id="ans" lang="es" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type the form" value="${esc(S.answer)}">
+        <button class="pri" type="submit">Check</button></form>`;
+    } else if (S.status === 'right'){
+      bottom = `<div class="right">${ICON.check}<span class="d pop" lang="es" style="font-size:30px;font-weight:700">${esc(q.a)}</span></div>`;
+    } else {
+      const r = S.res[S.i], d = diff(r.typed, q.a), close = S.status === 'close';
+      bottom = `<section class="sheet" aria-live="polite">
+        <h2 class="d" style="font-size:22px;color:${close ? 'var(--irr)' : 'var(--bad)'}">${close ? 'Correct, mind the accent' : 'Not quite'}</h2>
+        <div class="diff" lang="es"><span class="muted" lang="en" style="font-size:14px">You wrote</span><span class="d" style="font-size:28px;font-weight:600">${d.you}</span>
+        <span class="muted" lang="en" style="font-size:14px">Correct</span><span class="d" style="font-size:28px;font-weight:700">${d.ok}</span></div>
+        <p class="note">${close ? 'Counted as right. The accent marks the stress, so it is worth getting.' : esc(q.note)}</p>
+        <button class="pri" data-act="next" id="nextbtn">Next</button></section>`;
+    }
+    return `<div style="display:flex;align-items:center;gap:8px;padding:16px 12px 0 4px">
+        <button class="ib" data-go="today" aria-label="Leave">${ICON.x}</button>
+        <div class="segs" style="flex:1;grid-template-columns:repeat(${n},minmax(0,1fr))">${segs}</div>
+        <span class="muted" style="font-size:13px;width:36px;text-align:right">${S.i + 1}/${n}</span></div>
+      <div style="padding:12px 20px 0"><span class="chip">${T(q.t || 'Pretérito')}</span></div>
+      <div style="flex:1"></div>
+      ${q.s ? `<div style="padding:0 24px 20px" lang="es"><p class="muted" lang="en" style="font-size:14px;margin-bottom:8px">Fill in the verb</p>
+        <p class="d" style="font-size:30px;font-weight:600;line-height:1.25">${esc(q.s).replace('___', `<span style="color:var(--accent);font-weight:700">${S.status === 'typing' ? '___' : esc(q.s.indexOf('___') < 2 ? q.a[0].toUpperCase() + q.a.slice(1) : q.a)}</span> <span class="muted" style="font-weight:500">(${esc(q.v)})</span>`)}</p>
+        <p class="muted" lang="en" style="font-size:15px;margin-top:8px">${esc(q.en)}</p></div>`
+      : `<div style="padding:0 24px 20px" lang="es"><div class="muted" style="font-size:20px">${q.p}</div>
+        <div class="d" style="font-size:60px;font-weight:700;line-height:1">${q.v}</div>
+        <div class="muted" lang="en" style="font-size:16px;margin-top:6px">${q.en}</div></div>`}
+      ${bottom}`;
+  },
+  results(){
+    const score = S.res.filter(r => r.ok).length, n = S.qs.length, pass = KIND[S.kind].pass;
+    const misses = S.res.filter(r => !r.ok).map(r => { const d = diff(r.typed, r.q.a);
+      return `<div class="card" lang="es" style="padding:14px 18px;border-radius:20px"><div class="muted" style="font-size:13px">${r.q.s ? esc(r.q.s) + ' (' + esc(r.q.v) + ')' : r.q.p + ' · ' + r.q.v}</div>
+      <div class="d" style="font-size:24px;font-weight:700">${d.ok}</div><div class="d muted" style="font-size:16px"><span lang="en">you wrote </span>${d.you}</div></div>`; }).join('');
+    return `<div class="scroll"><section style="padding:56px 24px 0">
+        <div class="d" style="font-size:80px;font-weight:800;line-height:1">${score}<span class="muted" style="font-weight:500">/${n}</span></div>
+        <p class="muted" style="font-size:16px;margin-top:6px">${S.kind === 'test' ? `Level-up test · pass mark ${pass}/${n}` : S.kind === 'sent' ? 'Sentences · mixed tenses' : `${T('Pretérito')} · irregular stems`}</p>
+        <div class="segs" style="grid-template-columns:repeat(${n},minmax(0,1fr));margin-top:20px">${S.res.map(r => `<div class="seg ${r.ok?'ok':'no'}" style="height:14px;border-radius:7px"></div>`).join('')}</div>
+        <p style="margin-top:16px;font-size:17px">${pass ? (score >= pass ? '<b style="color:var(--ok)">Passed.</b> You’re ready for the next level.' : `<b style="color:var(--bad)">Not yet.</b> You need ${pass} to pass. Practise a few sets and try again.`) : score === n ? 'Perfect run.' : score >= n - 1 ? 'Strong run. One form to tighten up.' : 'These forms come back in tomorrow’s review.'}</p></section>
+      ${misses ? `<section style="margin:24px 16px 0;display:flex;flex-direction:column;gap:8px"><h2 class="muted" style="font-size:14px;margin:0 4px 4px">Your mistakes</h2>${misses}</section>` : ''}
+      </div>
+      <div style="padding:16px 16px 24px;display:flex;gap:12px;border-top:1px solid var(--line)">
+        <button class="sec" style="flex:1" data-act="start" data-kind="${S.kind}">Go again</button><button class="pri" style="flex:1" data-go="today">Continue</button></div>`;
+  },
+  verb(){
+    const v = S.verb && verbBy(S.verb);
+    if (!v) return `<div class="scroll"><div class="top"><h1 class="d">Verbs</h1></div>
+      <div style="padding:14px 16px 0"><input type="search" id="vq" class="search" lang="es" placeholder="Search a verb, a meaning or a form" aria-label="Search verbs" value="${esc(S.vq)}" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+      <div id="vl" style="padding:0 16px">${verbListHtml()}</div></div>${navHtml('verb')}`;
+    const P = ['yo','nosotros','tú','vosotros','él / ella','ellos'], ORDER = [0,3,1,4,2,5];
+    const reg = {...plainOf(v), refl: v.refl};
+    const cell = (t, i) => { const f = conj(v, t)[i], r = conj(reg, t)[i];
+      return f == null ? '—' : f === r ? esc(f) : diff(r, f).ok; };
+    const set = [[['Presente','pres'],['Pretérito','pret'],['Imperfecto','impf'],['Futuro','fut'],['Condicional','cond']],
+      [['Presente','subj'],['Imperfecto','isubj']], [['Afirmativo','imp'],['Negativo','neg']]][S.mood];
+    const tables = set.map(([name, t]) => `<section class="card" style="margin:16px 16px 0;padding:16px 18px 8px;border-radius:20px">
+      <div style="display:flex;align-items:baseline;gap:8px"><h2 style="font-size:18px;flex:1">${T(name)}</h2>
+      <button data-act="start" style="border:0;background:none;color:var(--accent);font-weight:700;font-size:14px;padding:8px 0">Practise</button></div>
+      <div class="formgrid" lang="es">${ORDER.map((i, k) => `<div><div class="muted" style="font-size:12px">${P[k]}</div><div class="d" style="font-size:21px;font-weight:600">${cell(t, i)}</div></div>`).join('')}</div></section>`).join('');
+    const kind = v.irregular ? 'Irregular' : v.stem ? 'Stem-changing' : v.spelling ? 'Spelling change' : 'Regular';
+    const top = [10,100,200,500].find(n => v.rank <= n);
+    return `<div style="display:flex;align-items:center;padding:12px 12px 0 4px"><button class="ib" data-verb="" aria-label="All verbs">${ICON.back}</button></div>
+      <div class="scroll"><header style="padding:8px 24px 0" lang="es">
+        <h1 class="d" style="font-size:52px;font-weight:700;line-height:1;overflow-wrap:anywhere">${esc(v.inf)}</h1>
+        <p lang="en" style="margin-top:6px;font-size:17px">${esc(v.en)}</p>
+        <p class="muted" lang="en" style="margin-top:6px;font-size:14px">${kind}${v.st && v.st !== 'acc' ? ` · stem ${{ie:'e→ie',ue:'o→ue',i:'e→i'}[v.st]}` : ''}${top ? ` · Top ${top}` : ''}</p>
+        <p style="margin-top:10px;font-size:14px;color:var(--soft)">${esc(gerund(v))} · ${esc(participle(v))} · <span lang="en">changed letters look like</span> <span class="irr">this</span></p></header>
+      <div class="tabs" role="tablist" lang="es">${['Indicativo','Subjuntivo','Imperativo'].map((m, k) => `<button role="tab" data-mood="${k}" aria-selected="${S.mood===k}">${T(m)}</button>`).join('')}</div>
+      ${tables}</div>${navHtml('verb')}`;
+  },
+  settings(){
+    return `<div style="display:flex;align-items:center;gap:8px;padding:16px 12px 0 4px">
+        <button class="ib" data-go="today" aria-label="Back"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+        <h1 class="d" style="font-size:24px;font-weight:700">Settings</h1></div>
+      <div class="scroll"><section class="card" style="margin:20px 16px 0;padding:18px 20px;display:flex;flex-direction:column;gap:12px">
+        <div><h2 style="font-size:16px">Tense names</h2><p class="muted" style="font-size:14px;margin-top:2px">How tenses and moods are labelled, e.g. ${S.tl === 'en' ? '<span lang="en">Preterite</span>' : '<span lang="es">Pretérito</span>'}. Verb forms stay in Spanish.</p></div>
+        ${tlHtml()}</section>
+      <section class="card" style="margin:12px 16px 0;padding:18px 20px;display:flex;flex-direction:column;gap:12px">
+        <div><h2 style="font-size:16px">Theme</h2><p class="muted" style="font-size:14px;margin-top:2px">System follows your phone's light or dark setting.</p></div>
+        ${themeHtml()}</section></div>`;
+  },
+  progress(){
+    const cols = ['yo','tú','él','nos.','vos.','ellos'];
+    const data = [['Presente',[98,96,97,94,88,95]],['Pretérito',[90,84,88,80,41,79]],['Imperfecto',[95,93,94,90,76,92]],['Futuro',[88,85,86,82,70,80]],['Condicional',[80,78,81,74,62,70]],['Subj. pres.',[72,66,70,61,48,58]],['Imperativo',[null,74,69,64,52,60]]];
+    const cls = v => v == null ? 'h0' : v >= 90 ? 'h4' : v >= 80 ? 'h3' : v >= 65 ? 'h2' : 'h1';
+    const grid = `<span></span>${cols.map(c => `<span class="muted" style="font-size:11px;text-align:center">${c}</span>`).join('')}` +
+      data.map(([name, vals]) => `<span style="font-size:12px;font-weight:700;align-self:center">${T(name)}</span>` +
+        vals.map((v, k) => `<button class="cell ${cls(v)}" data-act="start" aria-label="${tn(name)}, ${cols[k]}: ${v == null ? 'not used' : v + '%'}">${v == null ? '–' : v}</button>`).join('')).join('');
+    const mastery = [['Top 100 verbs',82,100],['Top 200 verbs',121,200],['Top 500 verbs',164,500]].map(([n, a, b]) =>
+      `<div><div style="display:flex;justify-content:space-between;font-size:14px"><span>${n}</span><span class="muted">${a} / ${b}</span></div><div class="bar"><i style="width:${Math.round(a/b*100)}%"></i></div></div>`).join('');
+    return `<div class="scroll"><div class="top"><h1 class="d">Progress</h1><p class="muted" style="margin-top:4px;font-size:13px">Example data</p></div>
+      <section class="card" style="margin:16px 12px 0;padding:16px 12px 14px">
+        <h2 style="font-size:16px;margin:0 4px">Accuracy by tense and person</h2>
+        <p class="muted" style="margin:2px 4px 12px;font-size:13px">Tap a cell to practise it.</p>
+        <div class="heat" lang="es">${grid}</div></section>
+      <button data-act="start" style="margin:12px 12px 0;width:calc(100% - 24px);border:0;padding:0 8px 0 18px;min-height:60px;border-radius:20px;background:var(--irr-soft);display:flex;align-items:center;gap:10px;color:var(--ink);text-align:left">
+        <span style="flex:1;font-size:14px">Weakest: <b><span lang="es">vosotros</span>, ${T('Pretérito').toLowerCase()}</b> · 41%</span>
+        <span class="pri" style="height:44px;display:flex;align-items:center;padding:0 16px;font-size:14px">Practise</span></button>
+      <section style="margin:20px 20px 0;display:flex;flex-direction:column;gap:12px"><h2 style="font-size:16px">Verbs mastered</h2>${mastery}</section>
+      </div>${navHtml('progress')}`;
+  }
+};
+
+function render(){
+  app.innerHTML = VIEWS[S.screen]();
+  const inp = app.querySelector('#ans');
+  if (inp){ inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); inp.addEventListener('input', e => S.answer = e.target.value); }
+  const nb = app.querySelector('#nextbtn'); if (nb) nb.focus();
+  const vq = app.querySelector('#vq');
+  if (vq) vq.addEventListener('input', e => { S.vq = e.target.value; app.querySelector('#vl').innerHTML = verbListHtml(); });
+}
+
+app.addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.dataset.go) return go(t.dataset.go);
+  if (t.dataset.themeSet) { S.theme = t.dataset.themeSet; try { localStorage.setItem('conjuga-theme', S.theme); } catch(e){} applyTheme(); return render(); }
+  if (t.dataset.tl) { S.tl = t.dataset.tl; try { localStorage.setItem('conjuga-tl', S.tl); } catch(e){} return render(); }
+  if (t.dataset.verb !== undefined) { S.verb = t.dataset.verb || null; S.mood = 0; S.screen = 'verb'; render(); app.querySelector('.scroll').scrollTop = 0; return; }
+  if (t.dataset.mood) { S.mood = +t.dataset.mood; return render(); }
+  if (t.dataset.acc) { S.answer += t.dataset.acc; return render(); }
+  if (t.dataset.act === 'start') return start(t.dataset.kind);
+  if (t.dataset.act === 'next') return next();
+});
+app.addEventListener('submit', e => { e.preventDefault(); check(); });
+render();
+</script>
