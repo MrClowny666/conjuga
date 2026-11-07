@@ -23,3 +23,10 @@ Decided 2026-11-07: `conjuga.html` is the one app. The prototype's design and fe
 
 - [x] Sentence quiz: fill the missing verb in a short Spanish sentence (English translation underneath), 5-question set and a 10-question level-up test (pass mark 8) on the Practice tab.
 - [x] Grow the sentence bank: now 846 sentences (was 24) across all 16 tenses, 9 for every tense and person (5 persons for commands). Every sentence is tagged with its person and every answer is checked against the conjugation engine. Sentence answers now count towards the Progress grid and Accuracy by tense. Vosotros sentences are skipped when vosotros is turned off.
+
+## Hints & tips
+
+- [x] Tips tab: 12 expandable cards (SER/ESTAR, POR/PARA, reflexive pronouns, personal a, false friends, small words, verb pairs, preterite/imperfect, subjunctive, grammar traps, pronunciation, Spain vs. Latin America).
+- [ ] Mini quiz per tip (fill the blank: ser/estar, por/para, ir/irse).
+- [ ] Link tips from the matching tense on the path screen.
+- [ ] Tip of the day.

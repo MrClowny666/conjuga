@@ -49,7 +49,7 @@ h1,h2,h3{font-family:var(--display);letter-spacing:-.02em;text-wrap:balance;marg
 .pill.gold{background:color-mix(in srgb,var(--gold) 22%,transparent)}
 main{padding-block:16px 110px}
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--sunk);padding-bottom:env(safe-area-inset-bottom,0px)}
-.tabs .wrap{display:grid;grid-template-columns:repeat(4,1fr)}
+.tabs .wrap{display:grid;grid-template-columns:repeat(5,1fr)}
 .tabs button{background:none;border:0;padding:12px 0 14px;font-size:12px;font-weight:700;color:var(--soft);display:flex;flex-direction:column;align-items:center;gap:4px}
 .tabs button[aria-selected="true"]{color:var(--ink)}
 .tabs svg{width:56px;height:32px;padding:5px 17px;box-sizing:border-box;border-radius:16px}
@@ -66,6 +66,10 @@ main{padding-block:16px 110px}
 .deep summary{cursor:pointer;color:var(--blue);font-weight:600;width:max-content}
 .deep h4{margin:12px 0 2px;font-size:14px}
 .deep p{margin:0;color:var(--ink);line-height:1.5}
+.tip summary{list-style:none;cursor:pointer}
+.tip summary::-webkit-details-marker{display:none}
+.tip summary h2{font-size:20px}
+.tip[open] summary{margin-bottom:4px}
 .levels{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:10px}
 .lvl{background:var(--surface);color:var(--ink);border:1px solid var(--edge);border-radius:var(--r);padding:12px;text-align:left;display:flex;flex-direction:column;gap:4px;min-height:84px}
 .lvl:not(:disabled):hover{border-color:var(--blue)}
@@ -213,6 +217,7 @@ mark{background:none;color:var(--irr);font-weight:700;text-decoration:underline 
   <button role="tab" data-tab="learn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5l8 4 8-4v14l-8 4-8-4z"/></svg>Levels</button>
   <button role="tab" data-tab="practice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>Practice</button>
   <button role="tab" data-tab="verbs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h11l3 3v13H5z"/><path d="M9 10h6M9 14h6"/></svg>Verbs</button>
+  <button role="tab" data-tab="tips"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 21h4M12 3a6 6 0 00-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0012 3z"/></svg>Tips</button>
   <button role="tab" data-tab="stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Progress</button>
 </div></nav>
 
@@ -1026,6 +1031,83 @@ const DEEP={
   ['How it is built','<b>no</b> + present subjunctive for every person, including tú: <i>no hables, no comas, no vayas</i>.'],
   ['Pronouns','Unlike affirmative commands, pronouns go before the verb: <i>Dímelo</i> → <i>No me lo digas</i>.']]};
 const deep=id=>DEEP[id]?`<details class="deep"><summary>More about this tense</summary>${DEEP[id].map(([h,p])=>`<h4>${h}</h4><p>${p}</p>`).join('')}</details>`:'';
+/* ---------- Hints & tips (Tips tab): [title, one-line summary, [[heading, html], ...]] ---------- */
+const TIPS=[
+ ['SER vs. ESTAR','Two verbs for "to be"',[
+  ['SER: what something is','Identity, origin, profession, personality, material, time and dates, and events: <i>Soy Ana. Es de México. Es médico. Son las tres. La fiesta es en mi casa.</i>'],
+  ['ESTAR: how or where something is','Location, temporary states and moods, and the progressive: <i>Estoy en casa. Está cansada. Estamos comiendo.</i>'],
+  ['Same adjective, different meaning','<i>ser listo</i> (clever) / <i>estar listo</i> (ready) · <i>ser aburrido</i> (boring) / <i>estar aburrido</i> (bored) · <i>ser malo</i> (bad) / <i>estar malo</i> (ill) · <i>ser rico</i> (rich) / <i>estar rico</i> (tasty) · <i>ser verde</i> (green) / <i>estar verde</i> (unripe)'],
+  ['Watch out','Location of a thing uses ESTAR (<i>el libro está aquí</i>), but where an event takes place uses SER (<i>el concierto es aquí</i>). Death is ESTAR: <i>está muerto</i>.']]],
+ ['POR vs. PARA','Both can mean "for"',[
+  ['PARA: towards a goal','Purpose (<i>estudio para aprender</i>), destination (<i>salgo para Madrid</i>), deadline (<i>para el lunes</i>), recipient (<i>es para ti</i>), opinion (<i>para mí, es fácil</i>).'],
+  ['POR: cause, route and exchange','Reason (<i>gracias por todo</i>), through or along (<i>paseo por el parque</i>), length of time (<i>por dos horas</i>), exchange (<i>lo compré por 10 euros</i>), means (<i>por teléfono</i>), on behalf of (<i>lo hago por ti</i>), and the passive (<i>escrito por Cervantes</i>).'],
+  ['Quick test','If you can say "in order to" or point at a goal, use PARA. If you can say "because of", "through" or "in exchange for", use POR.'],
+  ['Set phrases with POR','<i>por favor, por fin</i> (at last), <i>por eso</i> (that is why), <i>por ejemplo, por supuesto</i> (of course), <i>por cierto</i> (by the way)']]],
+ ['Reflexive pronouns','me, te, se, nos, os, se',[
+  ['The pronouns','yo <b>me</b> · tú <b>te</b> · él/ella/usted <b>se</b> · nosotros <b>nos</b> · vosotros <b>os</b> · ellos/ustedes <b>se</b>'],
+  ['Where they go','Before a conjugated verb: <i>me levanto</i>. Attached to an infinitive, gerund or positive command: <i>voy a levantarme, estoy duchándome, ¡levántate!</i> With an infinitive or gerund you may also put it first: <i>me voy a levantar</i>. Negative commands put it first: <i>¡no te levantes!</i>'],
+  ['Accent trap','Adding the pronoun can move the stress, so an accent appears: <i>duchando → duchándome, levanta → levántate</i>. Nosotros and vosotros commands drop a letter: <i>levantémonos, levantaos</i>.'],
+  ['What they do','Doing it to yourself (<i>me lavo</i>), each other (<i>nos queremos</i>), getting or becoming (<i>enfadarse, cansarse, casarse, ponerse nervioso</i>), and daily routine (<i>despertarse, ducharse, vestirse, acostarse</i>).'],
+  ['Body parts and clothes','Use the article, not the possessive: <i>me lavo <b>las</b> manos</i>, <i>se puso <b>la</b> chaqueta</i>.'],
+  ['Accidents','<i>se</i> + the person it happened to: <i>se me olvidó</i> (I forgot), <i>se me cayó</i> (I dropped it), <i>se te rompió</i> (you broke it, by accident).'],
+  ['Impersonal se','<i>se habla español</i> (Spanish is spoken), <i>se venden pisos</i> (flats for sale), <i>¿cómo se dice...?</i> (how do you say...?)'],
+  ['Doing it completely','<i>comerse, beberse, leerse</i>: <i>me comí toda la pizza</i> (I ate the whole pizza).'],
+  ['Meaning changes with se','<i>ir</i> go / <i>irse</i> leave · <i>dormir</i> sleep / <i>dormirse</i> fall asleep · <i>quedar</i> meet up / <i>quedarse</i> stay · <i>llamar</i> call / <i>llamarse</i> be called · <i>parecer</i> seem / <i>parecerse a</i> look like · <i>poner</i> put / <i>ponerse</i> put on, become · <i>despedir</i> fire / <i>despedirse</i> say goodbye · <i>acordar</i> agree / <i>acordarse de</i> remember · <i>negar</i> deny / <i>negarse a</i> refuse · <i>fijar</i> fix / <i>fijarse en</i> notice'],
+  ['Always reflexive','<i>quejarse</i> (complain), <i>arrepentirse</i> (regret), <i>atreverse</i> (dare), <i>darse cuenta</i> (realise), <i>jactarse</i> (brag)'],
+  ['Watch out','The pronoun matches the subject, even on an infinitive: <i>quiero acostar<b>me</b></i>, not <i>acostarse</i>. <i>Me llamo</i> is just "my name is", not "I call myself".']]],
+ ['Personal a','veo a María, not veo María',[
+  ['The rule','When the direct object is a specific person, put <i>a</i> in front: <i>veo a María, llamo a mi madre, conozco al profesor</i>. Things do not take it: <i>veo la casa</i>.'],
+  ['Pets and places','Pets you care about usually get it: <i>paseo a mi perro</i>. Places do not: <i>visito Madrid</i>.'],
+  ['Pronouns for people','<i>alguien, nadie, quien</i> take it: <i>¿Ves a alguien? No veo a nadie. ¿A quién buscas?</i>'],
+  ['Not with tener','<i>Tengo dos hermanos</i>, not <i>a dos hermanos</i>. Also left out when the person is not specific: <i>busco un médico</i> (any doctor) vs. <i>busco a mi médico</i>.'],
+  ['a + el = al','<i>a el</i> always joins up: <i>veo al chico</i>. Not with the pronoun <i>él</i>: <i>lo veo a él</i>.'],
+  ['Watch out','English has nothing like it, so it is easy to drop. If you can answer "who?" rather than "what?", you probably need it.']]],
+ ['False friends','Look English, mean something else',[
+  ['Classic traps','<i>embarazada</i> pregnant (embarrassed = <i>avergonzado</i>) · <i>actualmente</i> currently (actually = <i>en realidad</i>) · <i>librería</i> bookshop (library = <i>biblioteca</i>) · <i>constipado</i> has a cold (constipated = <i>estreñido</i>) · <i>éxito</i> success (exit = <i>salida</i>)'],
+  ['More','<i>carpeta</i> folder (carpet = <i>alfombra</i>) · <i>recordar</i> remember (record = <i>grabar</i>) · <i>realizar</i> carry out (realise = <i>darse cuenta</i>) · <i>asistir</i> attend (assist = <i>ayudar</i>) · <i>sensible</i> sensitive (sensible = <i>sensato</i>) · <i>introducir</i> insert (introduce a person = <i>presentar</i>)'],
+  ['Even more','<i>ropa</i> clothes · <i>sopa</i> soup · <i>fábrica</i> factory (fabric = <i>tela</i>) · <i>decepción</i> disappointment · <i>compromiso</i> commitment · <i>molestar</i> bother · <i>excitado</i> aroused (excited = <i>emocionado</i>)']]],
+ ['Small words, big fluency','ya, ni, según, aunque...',[
+  ['Ya','Already (<i>ya comí</i>), now (<i>¡ya!</i>), or "I get it" (<i>ya, ya</i>). <i>Ya no</i> = no longer. <i>Ya voy</i> = coming!'],
+  ['Todavía / aún','Still or yet: <i>todavía no</i> (not yet). Note <i>aún</i> (still) vs. <i>aun</i> (even).'],
+  ['Ni','Neither / nor: <i>ni frío ni calor</i>. <i>Ni idea</i> = no idea. <i>Ni siquiera</i> = not even.'],
+  ['Según','According to (<i>según el médico</i>), or on its own: "it depends" (<i>¿Vienes? – Según.</i>).'],
+  ['Aunque','Although / even if. A fact takes the indicative (<i>aunque llueve, salgo</i>); a possibility takes the subjunctive (<i>aunque llueva, saldré</i>).'],
+  ['Sino vs. pero','After a negative, "but rather" is <i>sino</i>: <i>no es rojo sino azul</i>.'],
+  ['Hasta','Until, or even: <i>hasta mi abuela lo sabe</i>.'],
+  ['Conversation glue','<i>pues</i> (well), <i>bueno</i> (OK, well), <i>o sea</i> (I mean), <i>es que</i> (the thing is), <i>a ver</i> (let\'s see), <i>vale</i> (OK, Spain), <i>igual</i> (maybe)'],
+  ['Verb + infinitive helpers','<i>acabar de</i> (have just: <i>acabo de llegar</i>) · <i>volver a</i> (again: <i>vuelve a llamar</i>) · <i>soler</i> (usually: <i>suelo correr</i>)']]],
+ ['Mixed-up verb pairs','saber/conocer, pedir/preguntar...',[
+  ['SABER vs. CONOCER','<i>saber</i>: facts and skills (<i>sé nadar</i>). <i>conocer</i>: people, places, being familiar (<i>conozco Madrid</i>).'],
+  ['PEDIR vs. PREGUNTAR','<i>pedir</i>: ask for something (<i>pido un café</i>). <i>preguntar</i>: ask a question (<i>pregunto la hora</i>).'],
+  ['LLEVAR vs. TRAER','<i>llevar</i>: take there. <i>traer</i>: bring here.'],
+  ['TENER QUE / HAY QUE / DEBER','<i>tengo que</i>: I have to. <i>hay que</i>: one has to (general). <i>debo</i>: I should (moral). <i>debe de estar</i>: he must be (a guess).'],
+  ['GUSTAR-style verbs','The thing liked is the subject: <i>me gusta el libro, me gustan los libros</i>. Same pattern: <i>encantar, doler, faltar, importar, interesar</i>.']]],
+ ['Preterite vs. imperfect','Two past tenses',[
+  ['Preterite','A finished event, a specific moment, or a sequence: <i>ayer comí paella, de repente sonó el teléfono</i>.'],
+  ['Imperfect','Background, habits and descriptions: <i>cuando era niño, siempre jugaba fuera; hacía sol</i>.'],
+  ['Together','The imperfect sets the scene, the preterite interrupts it: <i>Leía cuando llamaste.</i>'],
+  ['Trigger words','Preterite: <i>ayer, anoche, el lunes, de repente, una vez</i>. Imperfect: <i>siempre, a menudo, mientras, todos los días, de niño</i>.']]],
+ ['When to use the subjunctive','WEIRDO',[
+  ['The triggers','<b>W</b>ishes (<i>quiero que vengas</i>), <b>E</b>motions (<i>me alegra que estés aquí</i>), <b>I</b>mpersonal phrases (<i>es importante que estudies</i>), <b>R</b>ecommendations (<i>te sugiero que descanses</i>), <b>D</b>oubt (<i>dudo que sea verdad</i>), <b>O</b>jalá (<i>ojalá llueva</i>).'],
+  ['Two subjects','The subjunctive usually needs a change of subject. Same subject: infinitive. <i>Quiero ir</i> vs. <i>quiero que vayas</i>.'],
+  ['Cuando + future','A future action after <i>cuando</i> takes the subjunctive: <i>cuando llegues, llámame</i>.']]],
+ ['Grammar traps','Small rules that catch everyone',[
+  ['Double negatives are correct','<i>No tengo nada. No vino nadie.</i>'],
+  ['Adjective position','<i>un gran hombre</i> (a great man) / <i>un hombre grande</i> (a big man) · <i>un viejo amigo</i> (long-time) / <i>un amigo viejo</i> (elderly) · <i>pobre chico</i> (unlucky) / <i>chico pobre</i> (poor)'],
+  ['Gender exceptions','<i>el día, el mapa, el problema, el idioma</i> · <i>la mano, la foto, la moto</i> · <i>el agua</i> (feminine, but <i>el</i> before a stressed a-)'],
+  ['Accents that change meaning','<i>tú</i> you / <i>tu</i> your · <i>él</i> he / <i>el</i> the · <i>sí</i> yes / <i>si</i> if · <i>sé</i> I know / <i>se</i> · <i>más</i> more / <i>mas</i> but · <i>qué, cómo, dónde</i> in questions']]],
+ ['Pronunciation and spelling','Sounds and letters',[
+  ['B and V','Sound the same.'],
+  ['H','Always silent: <i>hola, hay</i>.'],
+  ['LL and Y','Sound the same in most places.'],
+  ['C and Z','"th" in most of Spain, "s" in Latin America: <i>gracias, zapato</i>.'],
+  ['Stress','Words ending in a vowel, n or s stress the second-to-last syllable; others stress the last. Anything else needs a written accent: <i>café, árbol, teléfono</i>.'],
+  ['Spelling changes in verbs','To keep the sound: <i>buscar → busqué, llegar → llegué, empezar → empecé, coger → cojo</i>.']]],
+ ['Spain vs. Latin America','Same language, different habits',[
+  ['You (plural)','Spain: <i>vosotros</i> (friends) and <i>ustedes</i> (formal). Latin America: <i>ustedes</i> for both.'],
+  ['Vos','Used for <i>tú</i> in Argentina, Uruguay and much of Central America: <i>vos tenés, vos sos</i>.'],
+  ['Past tense','Spain uses <i>he comido</i> for things done today; Latin America mostly says <i>comí</i>.'],
+  ['Words','computer: <i>ordenador / computadora</i> · car: <i>coche / carro, auto</i> · phone: <i>móvil / celular</i> · juice: <i>zumo / jugo</i>. <i>Coger</i> (to take) is rude in much of Latin America: use <i>tomar</i> or <i>agarrar</i>.']]]];
 const MOODS=[
  {es:'El Indicativo',en:'Indicative mood',desc:'For facts, events and things believed to be true.',groups:[['Simple tenses',['pres','prox','pret','impf','fut','cond']],['Compound tenses',['perf','plup','futp','condp']]]},
  {es:'El Subjuntivo',en:'Subjunctive mood',desc:'For wishes, doubts, emotions and possibilities.',groups:[['Simple tenses',['subj','isubj']],['Compound tenses',['psubj','plsubj']]]},
@@ -1268,6 +1350,10 @@ const VIEWS={
    vl.querySelectorAll('[data-star]').forEach(b=>b.onclick=()=>{toggleFav(b.dataset.star);b.setAttribute('aria-pressed',S.fav.includes(b.dataset.star));document.getElementById('fm').textContent=`★ My verbs (${S.fav.length})`});
   };
   vq.oninput=draw;draw();
+ },
+ tips(){
+  view.innerHTML=`<h1 style="font-size:26px">Hints &amp; tips</h1><div class="stack" style="margin-top:12px">`+
+   TIPS.map(([h,sub,parts])=>`<details class="tense deep tip"><summary><h2>${h}</h2><span class="tense-sub">${sub}</span></summary>${parts.map(([t,p])=>`<h4>${t}</h4><p>${p}</p>`).join('')}</details>`).join('')+`</div>`;
  },
  stats(){
   const stars=Object.values(S.lv).reduce((a,b)=>a+b,0),avg=S.quizzes?Math.round(S.scoreSum/S.quizzes):0;
