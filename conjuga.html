@@ -2647,8 +2647,9 @@ function quiz(qs,opt){
       if(exact&&S.pause!=='always'){fb.innerHTML=`<div class="fb ok">¡Correcto!</div>`;phase='wait';setTimeout(()=>{if(phase==='wait')next()},mode==='mc'?900:650);return}
       fb.innerHTML=`<div class="fb ok">${exact?'¡Correcto!':'Correct, but mind the accent:'} <span class="c">${exact?'':cur.ans}</span></div>`;
     }else{
-      const d=diagnose(cur,got);
-      fb.innerHTML=`<div class="fb bad"><div>That's incorrect…</div>
+      // near miss = within 2 letters and not some other real form (those get a specific diagnosis instead)
+      const d0=diagnose(cur,got),near=got.length>2&&lev(strip(got),strip(cur.ans))<=2&&!(d0&&/^(Right|Wrong|Regular)/.test(d0[0])),d=near&&d0&&d0[0]==='Not a real verb.'?null:d0;
+      fb.innerHTML=`<div class="fb bad"><div>${near?'So close! Just a spelling slip – check the highlighted letters.':"That's incorrect…"}</div>
         <div class="cmp"><div>✓ <span class="c">${hl(cur.ans,got)}</span> <button class="speak" id="sa" aria-label="Hear it">${ICON.speak.replace('<svg','<svg width="20" height="20"')}</button></div>
         <div>✗ <span class="c wrongc">${hl(got,cur.ans)}</span></div>${c?`<div class="muted small"><i>${english(cur.v,cur.t,cur.p)}</i></div>`:''}</div>
         ${d?`<p class="diag"><b>${d[0]}</b> ${d[1]}</p>`:''}${c&&d&&/tense/.test(d[0])?`<p class="small muted" style="margin:0">${T[cur.t].use}</p>`:''}</div>`;
