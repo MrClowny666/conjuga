@@ -21,14 +21,14 @@
 [data-theme="dark"]{
   --bg:#121316; --surface:#1C1E23; --sunk:#24272D; --ink:#EDEBE6; --muted:#A3A7B0; --soft:#C4C7CE; --line:#2C2F36; --edge:#6B707A; --track:#363A42;
   --blue:#8AA8FF; --blue-ink:#0E1630; --blue-soft:#26345E; --blue-hover:#A9C0FF; --gold:#F2B544; --ok:#4FD08F; --ok-soft:#163324; --bad:#FF7A6E; --bad-soft:#3A1C1A; --irr:#F2B544; --irr-soft:#3A2C12; --stage:#0B0C0E; --scrim:rgba(0,0,0,.6); color-scheme:dark}
-/* Sunset: warm blush paper, plum accent */
+/* Sunset: peach paper, magenta accent */
 [data-theme="sunset"]{
-  --bg:#FBF0EA; --surface:#FFFFFF; --sunk:#F3E2D9; --ink:#22161A; --muted:#6B5257; --soft:#4A363B; --line:#EBD9D0; --edge:#9A7F78; --track:#E3CFC5;
-  --blue:#8A2D63; --blue-ink:#FFFFFF; --blue-soft:#F3D9E6; --blue-hover:#6C2049; --gold:#C27A12; --ok:#1C7046; --ok-soft:#E2F1E7; --bad:#B4322A; --bad-soft:#F9E0DC; --irr:#9A5300; --irr-soft:#F8E2C6; --stage:#EADBD2; --scrim:rgba(40,15,25,.5); color-scheme:light}
-/* Ocean: deep sea-green night, teal accent, coral-orange irregulars */
+  --bg:#FCE1CF; --surface:#FFF5EE; --sunk:#F8D0BA; --ink:#2A1418; --muted:#6E4148; --soft:#4F2A31; --line:#F0C6AE; --edge:#A06A5E; --track:#F2C0A5;
+  --blue:#A3195B; --blue-ink:#FFFFFF; --blue-soft:#F7CCDD; --blue-hover:#7E1146; --gold:#B86A00; --ok:#17683F; --ok-soft:#DCEFDD; --bad:#B02A1E; --bad-soft:#F9D6CE; --irr:#8E4A00; --irr-soft:#FBDDB6; --stage:#F4CDB6; --scrim:rgba(60,15,30,.5); color-scheme:light}
+/* Ocean: deep sea blue, teal accent, coral-orange irregulars */
 [data-theme="ocean"]{
-  --bg:#0B1A22; --surface:#12252F; --sunk:#1A3039; --ink:#E6F1F2; --muted:#9BB4BA; --soft:#C0D3D6; --line:#22404A; --edge:#4F7480; --track:#2A4A55;
-  --blue:#3FBFB3; --blue-ink:#04201D; --blue-soft:#134440; --blue-hover:#7FE3DA; --gold:#F5C451; --ok:#6EE7A0; --ok-soft:#123A2A; --bad:#FF8A7A; --bad-soft:#3D1E1E; --irr:#FFB36B; --irr-soft:#3A2914; --stage:#061016; --scrim:rgba(0,8,12,.65); color-scheme:dark}
+  --bg:#0D3048; --surface:#123D5A; --sunk:#184A69; --ink:#E9F6FA; --muted:#A7C6D3; --soft:#CBE0E8; --line:#215676; --edge:#5A8EAA; --track:#22597A;
+  --blue:#5CE0D2; --blue-ink:#032824; --blue-soft:#14595F; --blue-hover:#9AF0E6; --gold:#FFD166; --ok:#7CF0AE; --ok-soft:#124A3A; --bad:#FF9C8C; --bad-soft:#4A2630; --irr:#FFB877; --irr-soft:#4A3624; --stage:#082234; --scrim:rgba(0,10,20,.65); color-scheme:dark}
 /* Contrast: black and white with a yellow accent and cyan irregulars */
 [data-theme="contrast"]{
   --bg:#000000; --surface:#0D0D0D; --sunk:#1A1A1A; --ink:#FFFFFF; --muted:#D0D0D0; --soft:#E6E6E6; --line:#5A5A5A; --edge:#B0B0B0; --track:#3A3A3A;
@@ -87,6 +87,7 @@ input[type=search],.answer{width:100%;box-sizing:border-box;border:2px solid var
 .row{display:flex;justify-content:space-between;gap:10px;align-items:center}
 .switch{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0}
 .switch input{width:22px;height:22px;accent-color:var(--blue);flex:none}
+.switch select{max-width:55%;font:inherit;padding:6px;border-radius:8px;border:1px solid var(--edge);background:var(--surface);color:inherit}
 .big{font-family:var(--display);font-size:34px;font-weight:800;font-variant-numeric:tabular-nums}
 .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .kpis .card{padding:12px;text-align:center}
@@ -1075,7 +1076,11 @@ applyTheme();
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch{}};
 const today=()=>new Date().toISOString().slice(0,10);
 function bumpStreak(){const d=today();if(S.last===d)return;const y=new Date(Date.now()-864e5).toISOString().slice(0,10);S.streak=S.last===y?S.streak+1:1;S.last=d}
-function speak(txt,force){if(!(S.tts||force)||!('speechSynthesis'in window))return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(txt);u.lang='es-ES';speechSynthesis.speak(u)}catch{}}
+// Spanish voices, best first: downloaded Premium/Enhanced/neural voices beat the default compact one.
+const esVoices=()=>{try{const sc=v=>(/premium|enhanced|natural|neural|google|siri/i.test(v.name)?2:0)+(/^es[-_]ES/i.test(v.lang)?1:0)-(/^(eddy|flo|grandma|grandpa|reed|rocko|sandy|shelley)\b/i.test(v.name)?3:0);
+  return speechSynthesis.getVoices().filter(v=>/^es/i.test(v.lang)).sort((a,b)=>sc(b)-sc(a))}catch{return[]}};
+function speak(txt,force){if(!(S.tts||force)||!('speechSynthesis'in window))return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(txt),vs=esVoices(),v=vs.find(x=>x.voiceURI===S.voice)||vs[0];
+  u.lang=v?v.lang:'es-ES';if(v)u.voice=v;speechSynthesis.speak(u)}catch{}}
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 const persons=()=>[0,1,2,3,4,5].filter(i=>S.vos||i!==4);
@@ -1241,10 +1246,12 @@ function settingsHtml(all){
   return `<div class="switch"><span>Theme<br><span class="muted small">System follows your phone's light or dark setting.</span></span></div><div class="themes" role="group" aria-label="Theme">${THEMES.map(([v,l])=>`<button data-theme-set="${v}" aria-pressed="${S.theme===v}"><span class="tprev" aria-hidden="true">${(v==='system'?['light','dark']:[v]).map(t=>`<span data-theme="${t}"><i></i><b></b></span>`).join('')}</span><span>${l}</span></button>`).join('')}</div>`+sw('vos','Include vosotros','Turn off for Latin American Spanish. Also applies to quizzes.')+sw('hidePro','Hide Spanish pronouns','In the verb tables')+
    sw('esNames','Use Spanish tense names','El Pretérito Perfecto instead of Present perfect')+sw('expand','Expand all tenses by default')+
    (all?sw('strict','Check accents','Count "hablo" for "habló" as wrong')+sw('typo','Check for typos','Warn about a likely typo before marking an answer wrong')+
-    sw('auto','Auto-check answers','Submit as soon as you have typed the right answer')+sw('pauseAlways','Pause on correct answers','Show the review after right answers too')+sw('tts','Read quiz answers aloud'):'');
+    sw('auto','Auto-check answers','Submit as soon as you have typed the right answer')+sw('pauseAlways','Pause on correct answers','Show the review after right answers too')+sw('tts','Read quiz answers aloud'):'')+`<label class="switch" for="s-voice"><span>Voice<br><span class="muted small">For a more natural voice, download a Premium or Enhanced Spanish voice in your device's Spoken Content settings.</span></span><select id="s-voice"></select></label>`;
 }
 function bindSettings(after){for(const k of['vos','hidePro','esNames','expand','strict','tts','typo','auto']){const el=document.getElementById('s-'+k);if(el)el.onchange=e=>{S[k]=e.target.checked;save();after()}}
   document.querySelectorAll('[data-theme-set]').forEach(b=>b.onclick=()=>{S.theme=b.dataset.themeSet;save();applyTheme();document.querySelectorAll('[data-theme-set]').forEach(x=>x.setAttribute('aria-pressed',S.theme===x.dataset.themeSet))});
+  const vo=document.getElementById('s-voice');if(vo){const fill=()=>{vo.innerHTML='<option value="">Automatic (best available)</option>'+esVoices().map(v=>`<option value="${v.voiceURI.replace(/"/g,'&quot;')}">${v.name.replace(/</g,'&lt;')} (${v.lang})</option>`).join('');vo.value=S.voice||'';if(vo.value!==(S.voice||''))vo.value=''};
+    fill();try{speechSynthesis.addEventListener('voiceschanged',fill)}catch{}vo.onchange=()=>{S.voice=vo.value;save();speak('Hola, ¿qué tal?',true)}}
   const pa=document.getElementById('s-pauseAlways');if(pa)pa.onchange=e=>{S.pause=e.target.checked?'always':'never';save();after()}}
 
 /* ---------- sheets and modals ---------- */
