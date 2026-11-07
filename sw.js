@@ -1,6 +1,6 @@
 // Cache-first service worker: everything the app needs is precached, so it runs offline after the first visit.
 // Bump VERSION whenever any of these files change, so phones fetch the new copies.
-const VERSION = 'conjuga-v5';
+const VERSION = 'conjuga-v6';
 const FILES = [
   'conjuga.html',
   'manifest.webmanifest',

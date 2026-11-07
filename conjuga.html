@@ -1613,9 +1613,21 @@ function closeSheet(){sheetStack=[];sheet.hidden=true;modal.hidden=true;document
 function settingsSheet(){
   open(`<div class="qtop"><button class="x" aria-label="Back" id="cx">←</button><h1 style="font-size:26px">Settings</h1></div>
   <div class="card">${settingsHtml(true)}</div>
+  <div class="card stack"><h3>Backup</h3><p class="muted small" style="margin:0">Progress lives only on this device. Save a backup file before clearing browser data or changing phone.${S.backedUp?` Last backup: ${S.backedUp}.`:''}</p>
+   <button class="btn" id="bk-save">Save backup file</button><button class="btn ghost" id="bk-load">Restore from file</button><input type="file" id="bk-file" accept=".json,application/json" hidden><p class="muted small" id="bk-msg" role="status" style="margin:0"></p></div>
   <button class="btn ghost" id="reset">Reset all progress</button><p class="muted small" id="resetMsg" hidden>Tap again to confirm. This clears levels, XP, saved verbs and mistakes.</p>`);
   document.getElementById('cx').onclick=closeSheet;
   bindSettings(()=>{VIEWS[tab]();header()}); // keep the view underneath in step (tense names, vosotros)
+  const msg=t=>document.getElementById('bk-msg').textContent=t;
+  document.getElementById('bk-save').onclick=()=>{S.backedUp=today();save();
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({conjuga:1,saved:S.backedUp,data:S})],{type:'application/json'}));
+    a.download=`conjuga-backup-${S.backedUp}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);msg('Backup saved to your downloads.')};
+  const fi=document.getElementById('bk-file');document.getElementById('bk-load').onclick=()=>fi.click();
+  fi.onchange=async()=>{const f=fi.files[0];fi.value='';if(!f)return;let d;
+    try{d=JSON.parse(await f.text()).data}catch{}
+    if(!d||typeof d!=='object'||Array.isArray(d)||typeof d.lv!=='object'||typeof d.xp!=='number')return msg('That file isn’t a Conjuga backup.');
+    if(!confirm(`Replace your current progress with the backup from ${d.backedUp||'this file'}? This can’t be undone.`))return;
+    S=Object.assign(fresh(),d);S.cq=Object.assign(fresh().cq,S.cq);save();applyTheme();header();settingsSheet();document.getElementById('bk-msg').textContent='Progress restored.'};
   const r=document.getElementById('reset');r.onclick=()=>{if(r.dataset.arm){S=fresh();save();applyTheme();settingsSheet()}else{r.dataset.arm=1;r.textContent='Yes, reset everything';document.getElementById('resetMsg').hidden=false}};
 }
 document.getElementById('gear').innerHTML=ICON.gear;document.getElementById('gear').onclick=settingsSheet;

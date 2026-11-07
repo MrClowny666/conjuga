@@ -37,6 +37,7 @@ Decided 2026-11-07: `conjuga.html` is the one app. The prototype's design and fe
 
 - [x] Conjuga is an installable PWA: `manifest.webmanifest`, icons in `icons/`, a cache-first service worker (`sw.js`) and self-hosted fonts in `fonts/`. No external requests. After the first visit it runs fully offline.
 - [x] Progress and settings stay in `localStorage` (key `conjuga-v1`, format unchanged). The app calls `navigator.storage.persist()` so the browser doesn't evict it.
+- [x] Backup in Settings: "Save backup file" downloads `conjuga-backup-YYYY-MM-DD.json`; "Restore from file" checks the file, asks before replacing progress, then loads it. The card shows the date of the last backup.
 
 ### Hosting on GitHub Pages
 
