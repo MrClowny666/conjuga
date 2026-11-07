@@ -26,7 +26,7 @@ Decided 2026-11-07: `conjuga.html` is the one app. The prototype's design and fe
 
 ## Hints & tips
 
-- [x] Tips tab: 12 expandable cards (SER/ESTAR, POR/PARA, reflexive pronouns, personal a, false friends, small words, verb pairs, preterite/imperfect, subjunctive, grammar traps, pronunciation, Spain vs. Latin America).
-- [ ] Mini quiz per tip (fill the blank: ser/estar, por/para, ir/irse).
+- [x] Tips tab: 14 expandable cards (SER/ESTAR, POR/PARA, reflexive pronouns, possessives (tables), yo/me/mí/mi (tables), personal a, false friends, small words, verb pairs, preterite/imperfect, subjunctive, grammar traps, pronunciation, Spain vs. Latin America).
+- [x] Quiz per tip: "Quiz yourself" button in each card, up to 8 multiple-choice questions with a note on wrong answers. Tip answers do not touch verb stats or Smart review.
 - [ ] Link tips from the matching tense on the path screen.
 - [ ] Tip of the day.

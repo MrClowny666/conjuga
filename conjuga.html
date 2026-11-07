@@ -69,6 +69,8 @@ main{padding-block:16px 110px}
 .tip summary{list-style:none;cursor:pointer}
 .tip summary::-webkit-details-marker{display:none}
 .tip summary h2{font-size:20px}
+.tip td:first-child{width:auto}
+.tip table{font-size:14px;margin-top:4px}
 .tip[open] summary{margin-bottom:4px}
 .levels{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:10px}
 .lvl{background:var(--surface);color:var(--ink);border:1px solid var(--edge);border-radius:var(--r);padding:12px;text-align:left;display:flex;flex-direction:column;gap:4px;min-height:84px}
@@ -1055,6 +1057,20 @@ const TIPS=[
   ['Meaning changes with se','<i>ir</i> go / <i>irse</i> leave · <i>dormir</i> sleep / <i>dormirse</i> fall asleep · <i>quedar</i> meet up / <i>quedarse</i> stay · <i>llamar</i> call / <i>llamarse</i> be called · <i>parecer</i> seem / <i>parecerse a</i> look like · <i>poner</i> put / <i>ponerse</i> put on, become · <i>despedir</i> fire / <i>despedirse</i> say goodbye · <i>acordar</i> agree / <i>acordarse de</i> remember · <i>negar</i> deny / <i>negarse a</i> refuse · <i>fijar</i> fix / <i>fijarse en</i> notice'],
   ['Always reflexive','<i>quejarse</i> (complain), <i>arrepentirse</i> (regret), <i>atreverse</i> (dare), <i>darse cuenta</i> (realise), <i>jactarse</i> (brag)'],
   ['Watch out','The pronoun matches the subject, even on an infinitive: <i>quiero acostar<b>me</b></i>, not <i>acostarse</i>. <i>Me llamo</i> is just "my name is", not "I call myself".']]],
+ ['Possessives','mi, tu, su... and mío, tuyo, suyo',[
+  ['Short form: before the noun','<table><tr><td></td><td><b>one thing</b></td><td><b>more than one</b></td></tr><tr><td>yo</td><td>mi</td><td>mis</td></tr><tr><td>tú</td><td>tu</td><td>tus</td></tr><tr><td>él / ella / usted</td><td>su</td><td>sus</td></tr><tr><td>nosotros</td><td>nuestro / nuestra</td><td>nuestros / nuestras</td></tr><tr><td>vosotros</td><td>vuestro / vuestra</td><td>vuestros / vuestras</td></tr><tr><td>ellos / ustedes</td><td>su</td><td>sus</td></tr></table>'],
+  ['Long (stressed) form: after the noun or alone','<table><tr><td></td><td><b>one thing</b></td><td><b>more than one</b></td></tr><tr><td>yo</td><td>mío / mía</td><td>míos / mías</td></tr><tr><td>tú</td><td>tuyo / tuya</td><td>tuyos / tuyas</td></tr><tr><td>él / ella / usted</td><td>suyo / suya</td><td>suyos / suyas</td></tr><tr><td>nosotros</td><td>nuestro / nuestra</td><td>nuestros / nuestras</td></tr><tr><td>vosotros</td><td>vuestro / vuestra</td><td>vuestros / vuestras</td></tr><tr><td>ellos / ustedes</td><td>suyo / suya</td><td>suyos / suyas</td></tr></table>'],
+  ['They agree with the thing, not the owner','<i>nuestra casa</i> (casa is feminine), <i>mis libros</i> (books are plural), even if the owner is one man. Only <i>nuestro</i>, <i>vuestro</i> and the long forms change for masculine and feminine.'],
+  ['Where the long form goes','After the noun: <i>un amigo mío</i> (a friend of mine). After <i>ser</i>: <i>es mío</i> (it\'s mine). With an article, to stand for the noun: <i>mi casa y la tuya</i> (my house and yours).'],
+  ['Su can mean a lot','<i>su casa</i> can be his, her, your (usted) or their house. If it is unclear, say <i>la casa de él / de ella / de usted / de ellos</i>.'],
+  ['Watch out','<i>tu</i> (your) has no accent; <i>tú</i> (you) does. Body parts use the article, not the possessive: <i>me duele la cabeza</i>, not <i>mi cabeza</i>. Set phrases: <i>¡Dios mío!</i>, <i>muy señor mío</i>.']]],
+ ['yo, me, mí, mi','Four words for "I", "me" and "my"',[
+  ['Which one when','<table><tr><td><b>yo</b></td><td>I, the subject: <i>yo hablo</i> (often left out: <i>hablo</i>)</td></tr><tr><td><b>me</b></td><td>me, before the verb: <i>me ve</i> (he sees me), <i>me da el libro</i> (he gives me the book), <i>me llamo</i></td></tr><tr><td><b>mí</b></td><td>me, after a preposition: <i>para mí, de mí, a mí</i></td></tr><tr><td><b>mi</b></td><td>my, before a noun: <i>mi casa, mis libros</i></td></tr></table>'],
+  ['The same pattern for every person','<table><tr><td></td><td><b>object</b></td><td><b>after a preposition</b></td><td><b>my, your...</b></td></tr><tr><td>yo</td><td>me</td><td>mí</td><td>mi</td></tr><tr><td>tú</td><td>te</td><td>ti</td><td>tu</td></tr><tr><td>él / ella / usted</td><td>lo, la, le, se</td><td>él, ella, usted</td><td>su</td></tr><tr><td>nosotros</td><td>nos</td><td>nosotros</td><td>nuestro</td></tr><tr><td>vosotros</td><td>os</td><td>vosotros</td><td>vuestro</td></tr><tr><td>ellos / ustedes</td><td>los, las, les, se</td><td>ellos, ustedes</td><td>su</td></tr></table>'],
+  ['A mí me gusta','Both are right together: <i>me</i> is required, <i>a mí</i> adds emphasis ("I like it"). <i>A mí gusta</i> on its own is wrong.'],
+  ['Con + mí = conmigo','<i>conmigo</i> (with me) and <i>contigo</i> (with you). Never <i>con mí</i> or <i>con ti</i>.'],
+  ['Exceptions that take yo and tú','<i>entre tú y yo</i> (between you and me), <i>según tú</i>, <i>excepto yo</i>, <i>menos yo</i>, <i>incluso yo</i>.'],
+  ['Watch out','<i>mí</i> (me) has an accent; <i>mi</i> (my) does not. <i>ti</i> never has one.']]],
  ['Personal a','veo a María, not veo María',[
   ['The rule','When the direct object is a specific person, put <i>a</i> in front: <i>veo a María, llamo a mi madre, conozco al profesor</i>. Things do not take it: <i>veo la casa</i>.'],
   ['Pets and places','Pets you care about usually get it: <i>paseo a mi perro</i>. Places do not: <i>visito Madrid</i>.'],
@@ -1108,6 +1124,123 @@ const TIPS=[
   ['Vos','Used for <i>tú</i> in Argentina, Uruguay and much of Central America: <i>vos tenés, vos sos</i>.'],
   ['Past tense','Spain uses <i>he comido</i> for things done today; Latin America mostly says <i>comí</i>.'],
   ['Words','computer: <i>ordenador / computadora</i> · car: <i>coche / carro, auto</i> · phone: <i>móvil / celular</i> · juice: <i>zumo / jugo</i>. <i>Coger</i> (to take) is rude in much of Latin America: use <i>tomar</i> or <i>agarrar</i>.']]]];
+/* Tip quizzes, one line per question: sentence with ___|English|answer|wrong options (comma separated)|note shown when wrong. "—" means "leave it blank". */
+const TIPQ={
+'SER vs. ESTAR':`Mi hermana ___ médica.|My sister is a doctor.|es|está|Professions use SER.
+Madrid ___ en España.|Madrid is in Spain.|está|es|Where something is uses ESTAR.
+Hoy ___ muy cansado.|Today I am very tired.|estoy|soy|A temporary state uses ESTAR.
+___ las tres de la tarde.|It is three in the afternoon.|Son|Están|Telling the time uses SER.
+La fiesta ___ en mi casa.|The party is at my house.|es|está|Where an event takes place uses SER.
+La sopa ___ muy rica.|The soup is really tasty.|está|es|estar rico = tasty; ser rico = wealthy.
+Nosotros ___ de Argentina.|We are from Argentina.|somos|estamos|Origin uses SER.
+¿Ya ___ listo? Nos vamos.|Are you ready yet? We're leaving.|estás|eres|estar listo = ready; ser listo = clever.`,
+'POR vs. PARA':`Gracias ___ tu ayuda.|Thanks for your help.|por|para|A reason or cause uses POR.
+Este regalo es ___ ti.|This present is for you.|para|por|The recipient uses PARA.
+Estudio ___ aprobar el examen.|I study to pass the exam.|para|por|"In order to" uses PARA.
+Paseamos ___ el parque.|We walk through the park.|por|para|"Through" or "along" uses POR.
+Necesito el informe ___ el lunes.|I need the report by Monday.|para|por|A deadline uses PARA.
+Lo compré ___ diez euros.|I bought it for ten euros.|por|para|An exchange uses POR.
+Hablamos ___ teléfono.|We talk on the phone.|por|para|The means of doing something uses POR.
+___ mí, es la mejor película.|For me, it's the best film.|Para|Por|An opinion uses PARA.`,
+'Reflexive pronouns':`Todos los días ___ levanto a las siete.|Every day I get up at seven.|me|te,se|The subject is yo, so the pronoun is me.
+¿A qué hora ___ acuestas?|What time do you go to bed?|te|me,se|The subject is tú, so the pronoun is te.
+Voy a duchar___ ahora.|I'm going to shower now.|me|se,te|The pronoun matches the subject (yo), even on an infinitive.
+Mis padres ___ casaron en 1990.|My parents got married in 1990.|se|nos,os|ellos takes se.
+Nosotros ___ vemos mañana.|We'll see each other tomorrow.|nos|se,os|"Each other" for nosotros is nos.
+¡No ___ preocupes!|Don't worry!|te|se,me|Negative commands put the pronoun before the verb.
+Me lavo ___ manos.|I wash my hands.|las|mis,sus|Body parts take the article, not the possessive.
+___ me olvidaron las llaves.|I forgot my keys.|Se|Te,Me|Accidents: se + the person it happened to.`,
+'Possessives':`___ libros están en la mesa.|My books are on the table.|Mis|Mi,Míos|More than one thing, so mis.
+Es ___ casa.|It's our house.|nuestra|nuestro,nuestras|nuestro agrees with casa, which is feminine.
+¿Dónde están ___ llaves?|Where are your keys? (tú)|tus|tu,tuyas|Before the noun, use the short form: tus.
+Este coche es ___.|This car is mine.|mío|mi,mía|After ser, use the long form; coche is masculine.
+Un amigo ___ vive aquí.|A friend of mine lives here.|mío|mi,mía|After the noun, use the long form.
+Mi casa es grande. ¿Y la ___?|My house is big. What about yours?|tuya|tu,tuyo|The article + long form stands for casa, so it is feminine.
+María vive con ___ hermano.|María lives with her brother.|su|sus,suya|One brother, so su.
+Ellos venden ___ coches.|They sell their cars.|sus|su,suyos|More than one car, so sus.
+Es ___ problema, no el mío.|It's your problem, not mine.|tu|tú,tuyo|tu (your) has no accent; tú means "you".`,
+'yo, me, mí, mi':`___ hablo español.|I speak Spanish.|Yo|Me,Mí|The subject (I) is yo.
+Ana ___ llama cada día.|Ana calls me every day.|me|mí,yo|Me as an object before the verb is me.
+Este regalo es para ___.|This present is for me.|mí|mi,me|After a preposition, use mí (with an accent).
+___ casa es pequeña.|My house is small.|Mi|Mí,Me|"My" is mi, with no accent.
+A ___ me gusta el chocolate.|I like chocolate.|mí|mi,yo|a mí + me gusta: mí after the preposition a.
+¿Vienes ___?|Are you coming with me?|conmigo|con mí,con me|con + mí becomes conmigo.
+___ duele la cabeza.|My head hurts.|Me|Mi,Yo|doler works like gustar: me duele.
+Entre tú y ___.|Between you and me.|yo|mí,me|entre takes yo and tú.
+Él ___ ve.|He sees you. (tú)|te|ti,tu|You as an object before the verb is te.
+Es para ___.|It's for you. (tú)|ti|te,tú|After a preposition, use ti (no accent).`,
+'Personal a':`Veo ___ María en el parque.|I see María in the park.|a|—|A specific person as the object takes a.
+Veo ___ casa desde aquí.|I can see the house from here.|—|a|Things do not take the personal a.
+Llamo ___ mi madre cada domingo.|I call my mother every Sunday.|a|—|A specific person as the object takes a.
+Tengo ___ dos hermanos.|I have two brothers.|—|a|tener normally drops the personal a.
+¿Conoces ___ profesor nuevo?|Do you know the new teacher?|al|a el,—|a + el always joins up as al.
+No veo ___ nadie.|I don't see anyone.|a|—|alguien and nadie take the personal a.
+Visitamos ___ Madrid en verano.|We visit Madrid in summer.|—|a|Places do not take the personal a.
+Busco ___ un médico, cualquiera.|I'm looking for a doctor, any doctor.|—|a|No specific person, so no a.`,
+'False friends':`embarazada|What does it mean?|pregnant|embarrassed,annoyed|Embarrassed is avergonzado.
+actualmente|What does it mean?|currently|actually,actively|Actually is en realidad.
+librería|What does it mean?|bookshop|library,bookcase|A library is a biblioteca.
+constipado|What does it mean?|has a cold|constipated,tired|Constipated is estreñido.
+éxito|What does it mean?|success|exit,excitement|An exit is a salida.
+carpeta|What does it mean?|folder|carpet,curtain|A carpet is an alfombra.
+realizar|What does it mean?|to carry out|to realise,to relax|To realise is darse cuenta.
+asistir|What does it mean?|to attend|to assist,to insist|To assist is ayudar.
+sensible|What does it mean?|sensitive|sensible,reasonable|Sensible is sensato.
+recordar|What does it mean?|to remember|to record,to repeat|To record is grabar.`,
+'Small words, big fluency':`No es rojo ___ azul.|It isn't red but blue.|sino|pero,ni|After a negative, "but rather" is sino.
+___ comí, gracias.|I've already eaten, thanks.|Ya|Todavía,Ni|ya = already.
+No tengo ___ idea.|I have no idea.|ni|ya,sino|ni idea = no idea.
+___ el médico, necesito descansar.|According to the doctor, I need to rest.|Según|Aunque,Hasta|según = according to.
+___ llueva mañana, saldré.|Even if it rains tomorrow, I'll go out.|Aunque|Según,Ya|aunque + subjunctive = even if.
+Acabo ___ llegar.|I have just arrived.|de|a,que|acabar de + infinitive = to have just done.
+Mi abuelo ___ caminar por las mañanas.|My grandad usually walks in the mornings.|suele|vuelve,acaba|soler + infinitive = usually do.
+___ mi abuela lo sabe.|Even my grandma knows it.|Hasta|Ni,Ya|hasta can mean "even".`,
+'Mixed-up verb pairs':`No ___ nadar.|I can't swim (I don't know how).|sé|conozco|Skills use saber.
+¿___ a mi hermano?|Do you know my brother?|Conoces|Sabes|People use conocer.
+Voy a ___ un café.|I'm going to order a coffee.|pedir|preguntar|Asking for something is pedir.
+Le voy a ___ la hora.|I'm going to ask him the time.|preguntar|pedir|Asking a question is preguntar.
+¿Me ___ un vaso de agua?|Can you bring me a glass of water?|traes|llevas|Bringing here is traer.
+___ estudiar para el examen.|I have to study for the exam.|Tengo que|Hay que|A personal obligation is tener que.
+En la biblioteca ___ hablar bajo.|In the library you have to speak quietly.|hay que|tengo que|A general rule is hay que.
+Me ___ los libros.|I like books.|gustan|gusta|The thing liked is the subject: books are plural.
+Me ___ la cabeza.|My head hurts.|duele|duelen,duelo|doler works like gustar: la cabeza is the subject.`,
+'Preterite vs. imperfect':`Ayer ___ paella.|Yesterday I ate paella.|comí|comía|A finished event at a set time uses the preterite.
+De niño, siempre ___ en la calle.|As a child, I always played in the street.|jugaba|jugué|Habits in the past use the imperfect.
+___ la tele cuando sonó el teléfono.|I was watching TV when the phone rang.|Veía|Vi|The background action uses the imperfect.
+De repente ___ la luz.|Suddenly the power went off.|se fue|se iba|de repente points to the preterite.
+___ sol y hacía calor.|It was sunny and hot.|Hacía|Hizo|Descriptions use the imperfect.
+El lunes ___ a Madrid.|On Monday I went to Madrid.|fui|iba|A single completed trip uses the preterite.
+Todos los veranos ___ a la playa.|Every summer we went to the beach.|íbamos|fuimos|todos los veranos is a habit: imperfect.`,
+'When to use the subjunctive':`Quiero que ___ a mi fiesta.|I want you to come to my party.|vengas|vienes,venir|A wish about someone else takes the subjunctive.
+Quiero ___ a la fiesta.|I want to go to the party.|ir|vaya,voy|Same subject, so use the infinitive.
+Ojalá ___ mañana.|I hope it rains tomorrow.|llueva|llueve|ojalá always takes the subjunctive.
+Dudo que ___ verdad.|I doubt it's true.|sea|es|Doubt takes the subjunctive.
+Es importante que ___ cada día.|It's important that you study every day.|estudies|estudias|Impersonal phrases take the subjunctive.
+Cuando ___ a casa, llámame.|When you get home, call me.|llegues|llegas|cuando + a future action takes the subjunctive.
+Creo que ___ razón.|I think you are right.|tienes|tengas|creo que states a belief, so it takes the indicative.`,
+'Grammar traps':`No tengo ___.|I don't have anything.|nada|algo|Double negatives are correct in Spanish.
+Es ___ problema difícil.|It's a hard problem.|un|una|problema is masculine.
+Me duele ___ mano.|My hand hurts.|la|el|mano is feminine.
+___ agua está fría.|The water is cold.|El|La|agua is feminine but takes el before a stressed a-.
+Es un ___ hombre.|He is a great man.|gran|grande|Before the noun, grande becomes gran and means "great".
+___ no vienes, me voy.|If you don't come, I'm leaving.|Si|Sí|si = if; sí = yes.
+Es ___ libro.|It's your book.|tu|tú|tu = your; tú = you.`,
+'Pronunciation and spelling':`Ayer ___ las llaves.|Yesterday I looked for the keys. (buscar)|busqué|buscé|c becomes qu before e to keep the hard sound.
+___ a las ocho.|I arrived at eight. (llegar)|Llegué|Llegé|g becomes gu before e to keep the hard sound.
+___ a trabajar el lunes.|I started work on Monday. (empezar)|Empecé|Empezé|z becomes c before e.
+Siempre ___ el autobús.|I always take the bus. (coger)|cojo|cogo|g becomes j before o to keep the soft sound.
+Me gusta el ___.|I like coffee.|café|cafe|Ends in a vowel but stresses the last syllable, so it needs an accent.
+Hay un ___ en el jardín.|There's a tree in the garden.|árbol|arbol|Ends in l but stresses the second-to-last syllable, so it needs an accent.
+¿Dónde está mi ___?|Where is my phone?|teléfono|telefono|Stress before the second-to-last syllable always needs an accent.`,
+'Spain vs. Latin America':`¿___ venís a la fiesta?|Are you all coming to the party? (Spain, friends)|Vosotros|Ustedes|venís is the vosotros form.
+¿Ustedes ___ a la fiesta?|Are you all coming to the party? (Latin America)|vienen|venís|ustedes takes the ellos form.
+Vos ___ razón.|You are right. (Argentina)|tenés|tienes|vos has its own forms: tenés, sos, hablás.
+Vos ___ muy amable.|You are very kind. (Argentina)|sos|eres|vos has its own forms: tenés, sos, hablás.
+computer, in Spain|Pick the word|ordenador|computadora,carro|Latin America says computadora.
+phone, in Mexico|Pick the word|celular|móvil,coche|Spain says móvil.
+car, in Spain|Pick the word|coche|carro,zumo|Much of Latin America says carro or auto.
+juice, in Spain|Pick the word|zumo|jugo,celular|Latin America says jugo.`};
+const tipQs=title=>shuffle(TIPQ[title].split('\n').map(l=>{const[s,en,ans,w,note]=l.split('|');return{kind:'tip',tip:title,s,en,ans,opts:[ans,...w.split(',')],note}})).slice(0,8);
 const MOODS=[
  {es:'El Indicativo',en:'Indicative mood',desc:'For facts, events and things believed to be true.',groups:[['Simple tenses',['pres','prox','pret','impf','fut','cond']],['Compound tenses',['perf','plup','futp','condp']]]},
  {es:'El Subjuntivo',en:'Subjunctive mood',desc:'For wishes, doubts, emotions and possibilities.',groups:[['Simple tenses',['subj','isubj']],['Compound tenses',['psubj','plsubj']]]},
@@ -1353,7 +1486,8 @@ const VIEWS={
  },
  tips(){
   view.innerHTML=`<h1 style="font-size:26px">Hints &amp; tips</h1><div class="stack" style="margin-top:12px">`+
-   TIPS.map(([h,sub,parts])=>`<details class="tense deep tip"><summary><h2>${h}</h2><span class="tense-sub">${sub}</span></summary>${parts.map(([t,p])=>`<h4>${t}</h4><p>${p}</p>`).join('')}</details>`).join('')+`</div>`;
+   TIPS.map(([h,sub,parts])=>`<details class="tense deep tip"><summary><h2>${h}</h2><span class="tense-sub">${sub}</span></summary>${parts.map(([t,p])=>`<h4>${t}</h4>${p.startsWith('<table')?p:`<p>${p}</p>`}`).join('')}${TIPQ[h]?`<button class="btn" style="margin-top:16px" data-tq="${h}">Quiz yourself</button>`:''}</details>`).join('')+`</div>`;
+  view.querySelectorAll('[data-tq]').forEach(b=>b.onclick=()=>quiz(tipQs(b.dataset.tq),{mode:'mc',title:b.dataset.tq}));
  },
  stats(){
   const stars=Object.values(S.lv).reduce((a,b)=>a+b,0),avg=S.quizzes?Math.round(S.scoreSum/S.quizzes):0;
@@ -2395,6 +2529,7 @@ function build(ts,vs,n,o={}){
   return out;
 }
 function choices(x){ // four options: the answer plus plausible wrong ones
+  if(x.kind==='tip')return shuffle([...x.opts]);
   const set=new Set([x.ans]);
   if(x.kind==='sent'){const w=x.ans.split(' ').length;for(const f of shuffle(TT.flatMap(t=>conj(x.v,t.id)).filter(f=>f&&f.split(' ').length===w)))if(set.size<4)set.add(f)}
   else if(x.kind==='conj'){
@@ -2411,6 +2546,7 @@ function choices(x){ // four options: the answer plus plausible wrong ones
 }
 function diagnose(x,got){
   const g=strip(got);
+  if(x.kind==='tip')return['Not quite.',x.note];
   if(x.kind==='sent')return['Not quite.',x.note||steps(x.v,x.t,x.p).join(' ')];
   if(x.kind==='mean'){const v=VERBS.find(v=>strip(v.inf)===g);return v?['Wrong verb.',`${v.inf} means "${v.en}".`]:['Not a real verb.','That spelling does not match any verb in the dictionary.']}
   const hits=[];for(const t of TT)conj(x.v,t.id).forEach((f,i)=>{if(f&&strip(f)===g&&!(t.id===x.t&&i===x.p))hits.push([t.id,i])});
@@ -2430,6 +2566,7 @@ function showSteps(v,t,i){
   document.getElementById('mc').onclick=closeModal;
 }
 function recordAnswer(x,ok){
+  if(x.kind==='tip')return;
   if(x.kind==='conj'||x.kind==='sent'&&x.p!=null){const st=S.st[x.t]||(S.st[x.t]={c:0,n:0});st.n++;if(ok)st.c++;const k=x.t+'|'+x.p,sp=S.stp[k]||(S.stp[k]={c:0,n:0});sp.n++;if(ok)sp.c++}
   const vs=S.vs[x.v.inf]||(S.vs[x.v.inf]={c:0,n:0});vs.n++;if(ok)vs.c++;
   if(x.kind!=='conj')return;
@@ -2441,7 +2578,7 @@ function quiz(qs,opt){
   if(!qs.length)return;
   const mode=opt.mode||'type';
   let i=0,total=qs.length,okN=0,badN=0,cur,phase,typoUsed;
-  const mistakes=[],covered=[...new Set(qs.map(x=>x.v))];
+  const mistakes=[],covered=[...new Set(qs.map(x=>x.v).filter(Boolean))];
   const exit=()=>opt.back?opt.back():closeSheet();
   open(`<div class="qtop"><button class="x" aria-label="Quit" id="cx">×</button><div class="prog"><i id="pb" style="width:0"></i></div>
     <span class="small tally"><span class="muted" id="pc"></span> <span class="okc">✓<b id="okn">0</b></span> <span class="badc">✗<b id="badn">0</b></span></span></div>
@@ -2453,7 +2590,8 @@ function quiz(qs,opt){
     if(i>=total)return finish();
     cur=qs[i];phase='ask';typoUsed=false;tally();fb.innerHTML='';
     const c=cur.kind==='conj',gloss=c?english(cur.v,cur.t,cur.p):'';
-    $('pr').innerHTML=cur.kind==='sent'?`<span class="tchip">${tn(cur.t)}</span><div class="inf" style="font-size:26px;line-height:1.3">${cur.s.replace('___',`<span style="color:var(--blue)">___</span> <span class="muted" style="font-weight:600">(${cur.v.inf})</span>`)}</div><div class="en">${cur.en}</div>`
+    $('pr').innerHTML=cur.kind==='tip'?`<span class="tchip">${cur.tip}</span><div class="inf" style="font-size:26px;line-height:1.3">${cur.s.replace('___','<span style="color:var(--blue)">___</span>')}</div><div class="en">${cur.en}</div>${cur.opts.includes('—')?'<div class="muted small">— means nothing goes in the gap</div>':''}`
+      :cur.kind==='sent'?`<span class="tchip">${tn(cur.t)}</span><div class="inf" style="font-size:26px;line-height:1.3">${cur.s.replace('___',`<span style="color:var(--blue)">___</span> <span class="muted" style="font-weight:600">(${cur.v.inf})</span>`)}</div><div class="en">${cur.en}</div>`
       :c?`<span class="tchip">${tn(cur.t)}</span>${opt.hideInf?'':`<div class="inf">${cur.v.inf}</div>`}${opt.hideEn?'':`<div class="en">${gloss}</div>`}<div class="who">${SUBJ.has(cur.t)?'que ':''}${cur.who} …</div>`
       :`<span class="tchip">Meaning</span><div class="inf" style="font-size:30px">${cur.v.en}</div>${cur.v.refl?'<div class="en">reflexive</div>':''}`;
     if(mode==='type'){
@@ -2513,11 +2651,11 @@ function quiz(qs,opt){
       <p class="muted" style="margin:0">${opt.title} – ${okN} of ${total} correct</p><p style="margin:0;font-size:18px">${msg}</p>
       ${opt.level?starHtml(stars):''}<span class="pill gold">🔥 ${S.streak} day streak</span>
       ${opt.level&&!stars?'<p class="muted small" style="margin:0">Score 60% or more to unlock the next level.</p>':''}</div>
-      ${mistakes.length?`<section class="stack"><h2 style="font-size:20px">Your mistakes</h2>${mistakes.map((m,k)=>`<div class="card mist"><div class="row"><span class="muted small">${m.x.kind==='conj'?`${m.x.who} (${m.x.v.inf.toUpperCase()}) · ${tn(m.x.t)}`:m.x.kind==='sent'?`${m.x.s} (${m.x.v.inf})`:m.x.v.en}</span>${m.x.kind==='conj'?`<button class="speak" data-ms="${k}" aria-label="Steps">${ICON.steps.replace('<svg','<svg width="20" height="20"')}</button>`:''}</div>
+      ${mistakes.length?`<section class="stack"><h2 style="font-size:20px">Your mistakes</h2>${mistakes.map((m,k)=>`<div class="card mist"><div class="row"><span class="muted small">${m.x.kind==='conj'?`${m.x.who} (${m.x.v.inf.toUpperCase()}) · ${tn(m.x.t)}`:m.x.kind==='sent'?`${m.x.s} (${m.x.v.inf})`:m.x.kind==='tip'?m.x.s:m.x.v.en}</span>${m.x.kind==='conj'?`<button class="speak" data-ms="${k}" aria-label="Steps">${ICON.steps.replace('<svg','<svg width="20" height="20"')}</button>`:''}</div>
         <div>✓ <b>${hl(m.x.ans,m.got)}</b> ${m.got?`&nbsp; ✗ <span class="wrongc">${hl(m.got,m.x.ans)}</span>`:''}</div></div>`).join('')}
         <p class="muted small" style="margin:0">${mistakes.filter(m=>m.x.kind==='conj').length?'These forms are in your Smart review and come back until you get them right twice.':''}</p></section>`:''}
-      <section><div class="row"><h2 style="font-size:20px">Verbs covered</h2><span class="muted small">Star to add to My verbs</span></div>
-      <div>${covered.map(v=>`<div class="vrow"><button class="star" data-star="${v.inf}" aria-pressed="${S.fav.includes(v.inf)}" aria-label="Save ${v.inf}">★</button><button class="open" data-v="${v.inf}"><b>${v.inf}</b><span class="m">${v.en}</span></button></div>`).join('')}</div></section>
+      ${covered.length?`<section><div class="row"><h2 style="font-size:20px">Verbs covered</h2><span class="muted small">Star to add to My verbs</span></div>
+      <div>${covered.map(v=>`<div class="vrow"><button class="star" data-star="${v.inf}" aria-pressed="${S.fav.includes(v.inf)}" aria-label="Save ${v.inf}">★</button><button class="open" data-v="${v.inf}"><b>${v.inf}</b><span class="m">${v.en}</span></button></div>`).join('')}</div></section>`:''}
       <div class="spacer"></div>
       ${nextLvl?'<button class="btn" id="nx">Next level</button>':''}
       ${mistakes.length?`<button class="btn ${nextLvl?'ghost':''}" id="rq">Quiz my mistakes</button>`:''}
