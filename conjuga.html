@@ -61,6 +61,7 @@ main{padding-block:16px 110px}
 .tense-head{display:flex;align-items:baseline;gap:12px}
 .tense-head h2{font-size:21px;flex:1}
 .tense-head .ex{font-size:13px;color:var(--muted);font-style:italic}
+.tense-sub{font-size:14px;color:var(--muted);margin:4px 0 0}
 .levels{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:10px}
 .lvl{background:var(--surface);color:var(--ink);border:1px solid var(--edge);border-radius:var(--r);padding:12px;text-align:left;display:flex;flex-direction:column;gap:4px;min-height:84px}
 .lvl:not(:disabled):hover{border-color:var(--blue)}
@@ -1120,7 +1121,7 @@ const VIEWS={
   const done=LEVELS.filter(l=>S.lv[l.id]).length;
   view.innerHTML=`<div class="row"><h1 style="font-size:26px">Your path</h1><span class="muted small">${done} / ${LEVELS.length} levels</span></div>
   <div class="meter" style="margin-top:8px"><i style="width:${done/LEVELS.length*100}%"></i></div>`+
-  TENSES.map(t=>`<section class="tense"><div class="tense-head"><h2>${t.name}</h2><span class="ex">${t.ex}</span></div><div class="levels">`+
+  TENSES.map(t=>`<section class="tense"><div class="tense-head"><h2>${t.name}</h2><span class="ex">${t.ex}</span></div><p class="tense-sub"><b>${T[t.id].en}:</b> ${T[t.id].use}</p><div class="levels">`+
    LEVELS.map((l,i)=>[l,i]).filter(([l])=>l.t===t).map(([l,i])=>{
      const open=i===0||S.lv[LEVELS[i-1].id];const s=S.lv[l.id]||0;
      return `<button class="lvl" data-lvl="${i}" ${open?'':'disabled'}><span class="n">Level ${i+1}</span><span class="g">${l.g.name}</span>${open?starHtml(s):'<span class="muted small">Locked</span>'}</button>`}).join('')+
