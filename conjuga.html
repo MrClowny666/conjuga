@@ -983,6 +983,7 @@ const groupVerbs=g=>VERBS.filter(v=>!v.refl&&v.g===g).slice(0,20);
 /* ---------- English glosses ---------- */
 const EN_IRR={have:['had','had'],do:['did','done'],undo:['undid','undone'],make:['made','made'],go:['went','gone'],say:['said','said'],tell:['told','told'],give:['gave','given'],see:['saw','seen'],know:['knew','known'],put:['put','put'],leave:['left','left'],let:['let','let'],find:['found','found'],come:['came','come'],think:['thought','thought'],take:['took','taken'],drink:['drank','drunk'],feel:['felt','felt'],begin:['began','begun'],write:['wrote','written'],lose:['lost','lost'],understand:['understood','understood'],get:['got','gotten'],read:['read','read'],fall:['fell','fallen'],hear:['heard','heard'],win:['won','won'],bring:['brought','brought'],split:['split','split'],run:['ran','run'],show:['showed','shown'],forget:['forgot','forgotten'],eat:['ate','eaten'],sleep:['slept','slept'],sell:['sold','sold'],buy:['bought','bought'],teach:['taught','taught'],sing:['sang','sung'],swim:['swam','swum'],drive:['drove','driven'],build:['built','built'],cost:['cost','cost'],fly:['flew','flown'],hurt:['hurt','hurt'],wake:['woke','woken'],choose:['chose','chosen'],catch:['caught','caught'],grow:['grew','grown'],send:['sent','sent'],break:['broke','broken'],sit:['sat','sat'],wear:['wore','worn'],become:['became','become'],keep:['kept','kept'],hold:['held','held'],spend:['spent','spent'],flee:['fled','fled'],lend:['lent','lent'],throw:['threw','thrown'],fight:['fought','fought'],sweep:['swept','swept'],sew:['sewed','sewn'],steal:['stole','stolen'],draw:['drew','drawn'],cut:['cut','cut'],hit:['hit','hit'],set:['set','set'],hide:['hid','hidden'],mean:['meant','meant'],lead:['led','led'],meet:['met','met'],pay:['paid','paid'],bite:['bit','bitten'],freeze:['froze','frozen'],shine:['shone','shone'],shoot:['shot','shot'],spit:['spat','spat'],shake:['shook','shaken'],bet:['bet','bet'],fit:['fit','fit'],hang:['hung','hung'],light:['lit','lit'],overcome:['overcame','overcome'],undertake:['undertook','undertaken'],withdraw:['withdrew','withdrawn'],forgive:['forgave','forgiven'],arise:['arose','arisen'],redo:['redid','redone'],ride:['rode','ridden'],deal:['dealt','dealt'],seek:['sought','sought']};
 const DBL=new Set(L('stop hug rob admit prefer refer occur permit omit commit regret control chat plan drop shop beg skip trip scrub submit emit transmit'));
+const ENLAB=['I','you','he / she / you (formal)','we','you all','they / you all (formal)'];
 const EP=['I','you','s/he','we','you all','they'],BE=L('am are is are are are'),WAS=L('was were was were were were');
 function enParts(m){m=m.split(',')[0].replace(/\(.*?\)/g,'').trim().replace(/^to /,'');const w=m.split(' ');return{h:w[0],tail:w.length>1?' '+w.slice(1).join(' '):''}}
 function enPast(h){if(EN_IRR[h])return EN_IRR[h];const p=h.endsWith('e')?h+'d':/[^aeiou]y$/.test(h)?h.slice(0,-1)+'ied':DBL.has(h)?h+h.at(-1)+'ed':h+'ed';return[p,p]}
@@ -1066,7 +1067,7 @@ const norm=s=>s.trim().toLowerCase().replace(/\s+/g,' ');
 /* ---------- state ---------- */
 const KEY='conjuga-v1';
 const fresh=()=>({lv:{},xp:0,streak:0,last:'',st:{},miss:[],vos:true,strict:false,tts:true,pt:['pres'],pg:['ar','erir','stem','spell','irr'],
-  fav:[],vf:{pop:0,end:'all',refl:'include',irr:[]},favOnly:false,hidePro:false,esNames:false,expand:true,
+  fav:[],vf:{pop:0,end:'all',refl:'include',irr:[]},favOnly:false,hidePro:false,enPro:false,esNames:false,expand:true,
   typo:true,auto:false,pause:'never',theme:'system',stp:{},days:{},quizzes:0,scoreSum:0,vs:{},missOk:{},
   cq:{what:'conj',how:'type',tenses:['pres'],pron:[0,1,2,3,4,5],verbs:'top100',n:10,hideInf:false,hideEn:false,irrOnly:false}});
 let S;try{S=Object.assign(fresh(),JSON.parse(localStorage.getItem(KEY)||'{}'))}catch{S=fresh()}
@@ -1297,7 +1298,7 @@ function filterSheet(){
 }
 
 function endingsTable(t){
-  const P=persons(),lab=i=>LAB[i];
+  const P=persons(),lab=i=>LAB[i]+(S.enPro?`<span style="display:block;font-style:italic;font-weight:400;font-size:12px;color:color-mix(in srgb,var(--blue) 40%,var(--muted));margin-top:2px">${ENLAB[i]}</span>`:'');
   if(AUX[t])return `<table><tr><td>Pronoun</td><td><b>haber</b></td><td><b>+ participle</b></td></tr>${P.map(i=>`<tr><td>${lab(i)}</td><td>${AUX[t][i]}</td><td>-ado / -ido</td></tr>`).join('')}</table>`;
   const cols={pres:[END.pres.ar,END.pres.er,END.pres.ir],pret:[END.pret.ar,END.pret.er,END.pret.er],impf:[END.impf.ar,END.impf.er,END.impf.er],subj:[END.subj.ar,END.subj.er,END.subj.er],fut:[FUT,FUT,FUT],cond:[COND,COND,COND]}[t];
   if(!cols)return '';
@@ -1307,18 +1308,28 @@ const FORM_NOTE={pres:'Remove -ar, -er or -ir and add the present ending.',pret:
   impf:'Remove the infinitive ending and add the imperfect ending. -er and -ir verbs share endings.',fut:'Keep the whole infinitive and add the ending. All three groups share endings.',
   cond:'Keep the whole infinitive and add the ending. All three groups share endings.',perf:'Conjugate haber in the present, then add the past participle.',
   subj:'Take the yo present form, drop the -o, and add the "opposite" ending: -ar verbs take e, -er and -ir verbs take a.'};
+const PEX={ // one example per person, verb in *...*
+ pres:[['Yo *hablo* con mi madre cada domingo.','I talk to my mother every Sunday.'],['Tú *trabajas* en una oficina.','You work in an office.'],['Él *come* fruta todas las mañanas.','He eats fruit every morning.'],['Nosotros *vivimos* cerca del parque.','We live near the park.'],['Vosotros *estudiáis* inglés.','You all study English.'],['Ellos *juegan* al tenis los sábados.','They play tennis on Saturdays.']],
+ pret:[['Yo *compré* pan ayer.','I bought bread yesterday.'],['Tú *llegaste* tarde a la reunión.','You arrived late to the meeting.'],['Ella *escribió* una carta el lunes.','She wrote a letter on Monday.'],['Nosotros *vimos* la película anoche.','We saw the film last night.'],['Vosotros *bebisteis* todo el café.','You all drank all the coffee.'],['Ellos *salieron* a las diez.','They left at ten.']],
+ impf:[['Yo *leía* mucho de niño.','I used to read a lot as a child.'],['Tú *vivías* en Sevilla entonces.','You lived in Seville back then.'],['Él siempre *llevaba* gafas.','He always wore glasses.'],['Nosotros *íbamos* a la playa cada verano.','We used to go to the beach every summer.'],['Vosotros *estabais* cansados.','You all were tired.'],['Ellas *cantaban* mientras cocinaban.','They were singing while they cooked.']],
+ fut:[['Yo te *llamaré* mañana.','I will call you tomorrow.'],['Tú *aprenderás* rápido.','You will learn quickly.'],['Ella *viajará* a Perú en mayo.','She will travel to Peru in May.'],['Nosotros *cenaremos* a las nueve.','We will have dinner at nine.'],['Vosotros *tendréis* tiempo.','You all will have time.'],['Ellos *vendrán* el sábado.','They will come on Saturday.']],
+ cond:[['Yo *viviría* en la costa.','I would live on the coast.'],['¿Tú *vendrías* conmigo?','Would you come with me?'],['Usted *debería* descansar.','You (formal) should rest.'],['Nosotros *compraríamos* un coche nuevo.','We would buy a new car.'],['Vosotros *podríais* ayudar.','You all could help.'],['Ellos *preferirían* quedarse.','They would prefer to stay.']],
+ perf:[['Yo *he terminado* el libro.','I have finished the book.'],['Tú *has comido* demasiado.','You have eaten too much.'],['Él *ha salido* temprano hoy.','He has left early today.'],['Nosotros *hemos visto* esa película.','We have seen that film.'],['Vosotros *habéis hecho* un buen trabajo.','You all have done a good job.'],['Ellas *han vuelto* de Italia.','They have come back from Italy.']],
+ subj:[['Mi madre quiere que yo *estudie* más.','My mother wants me to study more.'],['Espero que tú *vengas* a la fiesta.','I hope you come to the party.'],['Es importante que ella *duerma* bien.','It is important that she sleeps well.'],['Ojalá que nosotros *ganemos*.','I hope we win.'],['Quiero que vosotros *habléis* más despacio.','I want you all to speak more slowly.'],['Dudo que ellos *lleguen* a tiempo.','I doubt they will arrive on time.']]};
 function intro(l){
   const sample=groupVerbs(l.g.id).slice(0,2),t=T[l.t.id];
   open(`<div class="qtop"><button class="x" aria-label="Close" id="cx">×</button><span class="muted small">Level ${LEVELS.indexOf(l)+1}</span></div>
   <div><span class="tag">${tn(l.t.id)}</span><h1 style="font-size:30px;margin-top:8px">${l.g.name}</h1><p class="muted" style="margin-bottom:0">${l.t.ex}. Read the two short lessons, then conjugate 10 forms. Score 6 or more to unlock the next level.</p></div>
   <section class="card stack"><h2 style="font-size:20px">Usage</h2><p style="margin:0">${t.use}</p>
-   <table>${t.ex.map(([es,en])=>`<tr><td style="color:var(--ink);width:50%">${es}</td><td class="muted">${en}</td></tr>`).join('')}</table></section>
-  <section class="card stack"><h2 style="font-size:20px">Formation</h2><p style="margin:0">${FORM_NOTE[l.t.id]}</p><div style="overflow-x:auto">${endingsTable(l.t.id)}</div></section>
+   <table>${t.ex.map(([es,en])=>`<tr><td style="color:var(--ink);width:50%">${es}</td><td class="muted">${en}</td></tr>`).join('')}</table>
+   ${PEX[l.t.id]?`<h3 style="margin:4px 0 0">One for each pronoun</h3><table>${persons().map(i=>{const[es,en]=PEX[l.t.id][i];return `<tr><td class="muted small" style="white-space:nowrap">${LAB[i]}</td><td style="color:var(--ink)">${es.replace(/\*(.+?)\*/g,'<b>$1</b>')}</td><td class="muted">${en}</td></tr>`}).join('')}</table>`:''}</section>
+  <section class="card stack"><div class="row"><h2 style="font-size:20px">Formation</h2><button class="chip" id="enp" aria-pressed="${S.enPro}">English pronouns</button></div><p style="margin:0">${FORM_NOTE[l.t.id]}</p><div style="overflow-x:auto" id="formTbl">${endingsTable(l.t.id)}</div></section>
   <div class="grid2">${sample.map(v=>`<div class="card"><h3>${v.inf} <span class="muted small">${v.en}</span></h3>${table(v,l.t.id)}</div>`).join('')}</div>
   <div class="spacer"></div><div class="row"><button class="btn ghost" id="fl">Flash cards: meanings</button><button class="btn" id="st">Start level</button></div>`);
   document.getElementById('cx').onclick=closeSheet;
   document.getElementById('fl').onclick=()=>quiz(groupVerbs(l.g.id).slice(0,10).map(qm),{title:'Meanings',mode:'flash',back:()=>intro(l)});
   document.getElementById('st').onclick=()=>quiz(build([l.t.id],groupVerbs(l.g.id),10),{title:l.g.name,level:l});
+  const enp=document.getElementById('enp');enp.onclick=()=>{S.enPro=!S.enPro;save();enp.setAttribute('aria-pressed',S.enPro);document.getElementById('formTbl').innerHTML=endingsTable(l.t.id)};
 }
 function verbSheet(v){
   const collapsed=new Set(S.expand?[]:TT.map(t=>t.id));
