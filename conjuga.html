@@ -62,6 +62,10 @@ main{padding-block:16px 110px}
 .tense-head h2{font-size:21px;flex:1}
 .tense-head .ex{font-size:13px;color:var(--muted);font-style:italic}
 .tense-sub{font-size:14px;color:var(--muted);margin:4px 0 0}
+.deep{font-size:14px;margin-top:6px}
+.deep summary{cursor:pointer;color:var(--blue);font-weight:600;width:max-content}
+.deep h4{margin:12px 0 2px;font-size:14px}
+.deep p{margin:0;color:var(--ink);line-height:1.5}
 .levels{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:10px}
 .lvl{background:var(--surface);color:var(--ink);border:1px solid var(--edge);border-radius:var(--r);padding:12px;text-align:left;display:flex;flex-direction:column;gap:4px;min-height:84px}
 .lvl:not(:disabled):hover{border-color:var(--blue)}
@@ -966,6 +970,62 @@ const TT=[
  {id:'neg',es:'El Imperativo Negativo',en:'Negative commands',use:'Telling someone not to do something: "no" plus the present subjunctive.',ex:[['No hables tan alto.',"Don't speak so loudly."]]},
 ];
 const T=Object.fromEntries(TT.map(t=>[t.id,t]));
+/* ---------- Detailed tense notes (the "More about this tense" dropdown) ---------- */
+const DEEP={
+ pres:[['When to use it','Routines and habits (<i>trabajo los lunes</i>), facts that are always true (<i>el agua hierve a 100 grados</i>), and what is happening right now (<i>¿qué haces?</i> – what are you doing?). Spanish also uses it for the near future when there is a time word: <i>mañana salgo temprano</i> (I am leaving early tomorrow).'],
+  ['Presente vs. estar + -ando / -iendo','English needs "I am eating" for something in progress; Spanish usually just says <i>como</i>. Use <i>estoy comiendo</i> only to stress that it is happening at this very moment: <i>No puedo hablar, estoy comiendo</i> (I can\'t talk, I\'m eating right now).'],
+  ['Watch out','"How long have you lived here?" uses the present in Spanish: <i>¿Cuánto tiempo hace que vives aquí?</i> – <i>Vivo aquí desde 2020</i>.']],
+ prox:[['When to use it','Plans and intentions, and things that are clearly about to happen: <i>Mira las nubes, va a llover</i> (Look at the clouds, it is going to rain). This is the most common way to talk about the future in everyday speech.'],
+  ['Futuro próximo vs. futuro simple','<i>Voy a comer</i> feels like a plan or something already decided. <i>Comeré</i> sounds more distant, formal, or like a promise or prediction. In conversation, <i>ir a</i> is much more common.'],
+  ['How it is built','Present of <b>ir</b> (voy, vas, va, vamos, vais, van) + <b>a</b> + infinitive. Only <i>ir</i> changes; the second verb never does.']],
+ pret:[['When to use it','Finished actions with a clear start or end in the past: what happened, once, or a set number of times. <i>Ayer fui al cine</i>, <i>Viví en Roma tres años</i>, <i>Llamé dos veces</i>.'],
+  ['Pretérito vs. imperfecto','Think of a film. The <b>pretérito</b> moves the story forward: the events, one after another (<i>entré, vi a Ana y la saludé</i>). The <b>imperfecto</b> is the background scenery: what things were like or what was going on (<i>hacía sol, la gente paseaba</i>).'],
+  ['Clue words','<i>ayer, anoche, el año pasado, una vez, de repente, en 2010, hace tres días</i> usually point to the pretérito.'],
+  ['Meaning shifts','Some verbs change meaning: <i>conocí</i> = I met (for the first time), <i>supe</i> = I found out, <i>quise</i> = I tried, <i>no quise</i> = I refused.']],
+ impf:[['When to use it','Three main jobs: (1) <b>past habits</b> – what you used to do (<i>de niño nadaba cada día</i>); (2) <b>description</b> – time, age, weather, feelings, how things looked (<i>eran las diez, tenía frío</i>); (3) <b>actions in progress</b> when something else happened (<i>leía cuando sonó el teléfono</i>).'],
+  ['Hablaba vs. estaba hablando','Both can mean "I was speaking". <i>Hablaba</i> is the default and also covers "I used to speak". <i>Estaba hablando</i> (imperfect of estar + -ando) only means "was in the middle of speaking" and zooms in on that moment: <i>Estaba hablando por teléfono cuando entraste</i>. If you mean a habit, you must use <i>hablaba</i>: <i>Siempre hablaba con mi abuela los domingos</i>, never <i>estaba hablando</i>.'],
+  ['Imperfecto vs. pretérito','Imperfecto has no clear end: it sets the scene. Pretérito is a completed event. <i>Llovía</i> (it was raining – background) vs. <i>llovió mucho ayer</i> (it rained a lot – a finished event).'],
+  ['Clue words','<i>siempre, a menudo, cada día, todos los veranos, de niño, mientras, antes</i> usually point to the imperfecto.']],
+ fut:[['When to use it','Predictions, promises and more formal statements about the future: <i>Te llamaré</i> (I will call you), <i>Lloverá mañana</i>.'],
+  ['Guessing about now','The future also expresses probability in the present: <i>¿Qué hora será?</i> (I wonder what time it is), <i>Tendrá unos 30 años</i> (He must be about 30).'],
+  ['Futuro vs. ir a','For plans already decided, <i>voy a</i> + infinitive is more natural in conversation. The futuro simple sounds more certain, formal or distant.'],
+  ['How it is built','Add the endings to the whole infinitive: <i>hablar → hablaré</i>. The same endings work for -ar, -er and -ir. Irregulars change the stem only (<i>tener → tendr-</i>, <i>hacer → har-</i>).']],
+ cond:[['When to use it','What would happen in a situation: <i>Con más dinero, viajaría</i>. Polite requests and advice: <i>¿Podrías ayudarme?</i>, <i>Deberías descansar</i>.'],
+  ['Guessing about the past','Like the future guesses about now, the conditional guesses about the past: <i>Serían las diez cuando llegó</i> (It must have been about ten when he arrived).'],
+  ['With "si" clauses','<i>Si tuviera tiempo, iría</i> – the "if" part uses the imperfect subjunctive, the result uses the conditional. Never put the conditional right after <i>si</i>.'],
+  ['How it is built','Same stems as the future (including the irregular ones) + the -ía endings from the imperfect: <i>hablaría, tendría, haría</i>.']],
+ perf:[['When to use it','Past actions connected to the present: in a time period that is not over yet (<i>hoy, esta semana, este año</i>), life experiences (<i>¿Has estado en México?</i>) and recent news (<i>¡He aprobado!</i>).'],
+  ['Perfecto vs. pretérito','<i>Hoy he comido paella</i> (today is not over) vs. <i>Ayer comí paella</i> (yesterday is finished). In Spain this split is quite strict. In most of Latin America the pretérito is used for both: <i>Hoy comí paella</i>.'],
+  ['How it is built','Present of <b>haber</b> (he, has, ha, hemos, habéis, han) + past participle (<i>-ado / -ido</i>). The participle never changes, and nothing goes between <i>haber</i> and the participle: <i>Lo he visto</i>, not <i>he lo visto</i>.']],
+ plup:[['When to use it','An action that was already done before another past moment: <i>Cuando llegué, la película ya había empezado</i> (the film had already started).'],
+  ['How it is built','Imperfect of <b>haber</b> (había, habías, había, habíamos, habíais, habían) + past participle.'],
+  ['Clue words','<i>ya</i> (already), <i>nunca antes</i> (never before), <i>todavía no</i> (not yet) often appear with it.']],
+ futp:[['When to use it','Something that will be finished by a future point: <i>Para las ocho habré terminado</i>.'],
+  ['Guessing about the recent past','Very common for guesses: <i>Habrá perdido el autobús</i> (He must have missed the bus).'],
+  ['How it is built','Future of <b>haber</b> (habré, habrás, habrá…) + past participle.']],
+ condp:[['When to use it','What would have happened but did not: <i>Yo lo habría hecho</i> (I would have done it).'],
+  ['With "si" clauses','Pairs with the past perfect subjunctive for regrets about the past: <i>Si hubiera estudiado, habría aprobado</i> (If I had studied, I would have passed).'],
+  ['How it is built','Conditional of <b>haber</b> (habría, habrías…) + past participle.']],
+ subj:[['When to use it','After a main clause with <i>que</i> that expresses wishing, emotion, doubt, need or influence over someone else – remember <b>WEIRDO</b>: Wishes, Emotions, Impersonal expressions, Recommendations, Doubt, Ojalá. <i>Quiero que vengas</i>, <i>Me alegra que estés aquí</i>, <i>Es necesario que estudies</i>.'],
+  ['Subjunctive vs. indicative','Indicative states facts or beliefs; subjunctive is for things that are wanted, felt or uncertain. <i>Creo que viene</i> (I think he is coming) vs. <i>No creo que venga</i> (I don\'t think he is coming).'],
+  ['Same subject? Use the infinitive','If both parts share the subject, skip <i>que</i>: <i>Quiero ir</i> (I want to go), but <i>Quiero que tú vayas</i> (I want you to go).'],
+  ['With future time','After <i>cuando, en cuanto, hasta que</i> about the future: <i>Cuando llegues, llámame</i>.'],
+  ['How it is built','Take the yo form of the present, drop the -o and switch the vowel: -ar verbs take -e endings, -er/-ir verbs take -a endings. <i>hablo → hable</i>, <i>tengo → tenga</i>.']],
+ isubj:[['When to use it','The same triggers as the present subjunctive, but when the main verb is in the past or conditional: <i>Quería que vinieras</i>. Also for unreal or unlikely "if" situations: <i>Si fuera rico…</i>'],
+  ['-ra or -se?','Two equal forms: <i>hablara</i> and <i>hablase</i>. The -ra form is more common, especially in Latin America. This app uses -ra.'],
+  ['How it is built','Take the ellos form of the pretérito, drop -ron and add -ra, -ras, -ra, -ramos, -rais, -ran: <i>tuvieron → tuviera</i>. The nosotros form gets an accent: <i>tuviéramos</i>.']],
+ psubj:[['When to use it','Subjunctive triggers about something that is (or may be) already done: <i>Espero que hayas llegado bien</i> (I hope you have arrived safely), <i>No creo que lo haya visto</i>.'],
+  ['How it is built','Present subjunctive of <b>haber</b> (haya, hayas, haya, hayamos, hayáis, hayan) + past participle.']],
+ plsubj:[['When to use it','Regrets and things that did not happen in the past: <i>Ojalá hubiera ido</i> (I wish I had gone). In "if" clauses about the past: <i>Si me hubieras llamado, habría venido</i>.'],
+  ['How it is built','Imperfect subjunctive of <b>haber</b> (hubiera, hubieras…) + past participle.']],
+ imp:[['When to use it','Direct instructions, orders, invitations and advice: <i>Ven aquí</i>, <i>Pasa, por favor</i>.'],
+  ['Tú vs. usted','The regular tú command looks like the él form of the present: <i>habla, come</i>. Usted, ustedes and nosotros commands use the present subjunctive: <i>hable, coman, hablemos</i> (let\'s talk).'],
+  ['Pronouns','Object and reflexive pronouns stick to the end, often adding an accent: <i>dime, siéntate, dámelo</i>.'],
+  ['Common irregulars (tú)','<i>di, haz, ve, pon, sal, sé, ten, ven</i>.']],
+ neg:[['When to use it','Telling someone not to do something: <i>No toques eso</i>.'],
+  ['How it is built','<b>no</b> + present subjunctive for every person, including tú: <i>no hables, no comas, no vayas</i>.'],
+  ['Pronouns','Unlike affirmative commands, pronouns go before the verb: <i>Dímelo</i> → <i>No me lo digas</i>.']]};
+const deep=id=>DEEP[id]?`<details class="deep"><summary>More about this tense</summary>${DEEP[id].map(([h,p])=>`<h4>${h}</h4><p>${p}</p>`).join('')}</details>`:'';
 const MOODS=[
  {es:'El Indicativo',en:'Indicative mood',desc:'For facts, events and things believed to be true.',groups:[['Simple tenses',['pres','prox','pret','impf','fut','cond']],['Compound tenses',['perf','plup','futp','condp']]]},
  {es:'El Subjuntivo',en:'Subjunctive mood',desc:'For wishes, doubts, emotions and possibilities.',groups:[['Simple tenses',['subj','isubj']],['Compound tenses',['psubj','plsubj']]]},
@@ -1122,7 +1182,7 @@ const VIEWS={
   const done=LEVELS.filter(l=>S.lv[l.id]).length;
   view.innerHTML=`<div class="row"><h1 style="font-size:26px">Your path</h1><span class="muted small">${done} / ${LEVELS.length} levels</span></div>
   <div class="meter" style="margin-top:8px"><i style="width:${done/LEVELS.length*100}%"></i></div>`+
-  TENSES.map(t=>`<section class="tense"><div class="tense-head"><h2>${tn(t.id)}</h2><span class="ex">${t.ex}</span></div><p class="tense-sub"><b>${S.esNames?T[t.id].en:T[t.id].es}:</b> ${T[t.id].use}</p><div class="levels">`+
+  TENSES.map(t=>`<section class="tense"><div class="tense-head"><h2>${tn(t.id)}</h2><span class="ex">${t.ex}</span></div><p class="tense-sub"><b>${S.esNames?T[t.id].en:T[t.id].es}:</b> ${T[t.id].use}</p>${deep(t.id)}<div class="levels">`+
    LEVELS.map((l,i)=>[l,i]).filter(([l])=>l.t===t).map(([l,i])=>{
      const open=i===0||S.lv[LEVELS[i-1].id];const s=S.lv[l.id]||0;
      return `<button class="lvl" data-lvl="${i}" ${open?'':'disabled'}><span class="n">Level ${i+1}</span><span class="g">${l.g.name}</span>${open?starHtml(s):'<span class="muted small">Locked</span>'}</button>`}).join('')+
@@ -1320,7 +1380,7 @@ function intro(l){
   const sample=groupVerbs(l.g.id).slice(0,2),t=T[l.t.id];
   open(`<div class="qtop"><button class="x" aria-label="Close" id="cx">×</button><span class="muted small">Level ${LEVELS.indexOf(l)+1}</span></div>
   <div><span class="tag">${tn(l.t.id)}</span><h1 style="font-size:30px;margin-top:8px">${l.g.name}</h1><p class="muted" style="margin-bottom:0">${l.t.ex}. Read the two short lessons, then conjugate 10 forms. Score 6 or more to unlock the next level.</p></div>
-  <section class="card stack"><h2 style="font-size:20px">Usage</h2><p style="margin:0">${t.use}</p>
+  <section class="card stack"><h2 style="font-size:20px">Usage</h2><p style="margin:0">${t.use}</p>${deep(t.id)}
    <table>${t.ex.map(([es,en])=>`<tr><td style="color:var(--ink);width:50%">${es}</td><td class="muted">${en}</td></tr>`).join('')}</table>
    ${PEX[l.t.id]?`<h3 style="margin:4px 0 0">One for each pronoun</h3><table>${persons().map(i=>{const[es,en]=PEX[l.t.id][i];return `<tr><td class="muted small" style="white-space:nowrap">${LAB[i]}</td><td style="color:var(--ink)">${es.replace(/\*(.+?)\*/g,'<b>$1</b>')}</td><td class="muted">${en}</td></tr>`}).join('')}</table>`:''}</section>
   <section class="card stack"><h2 style="font-size:20px">Formation</h2><p style="margin:0">${FORM_NOTE[l.t.id]}</p><div style="overflow-x:auto">${endingsTable(l.t.id)}</div></section>
@@ -1359,7 +1419,7 @@ function verbSheet(v){
     body.querySelectorAll('[data-say]').forEach(b=>b.onclick=()=>{const[t,i]=b.dataset.say.split('|');speak(conj(v,t)[i],true)});
     body.querySelectorAll('[data-sayw]').forEach(b=>b.onclick=()=>speak(b.dataset.sayw,true));
     body.querySelectorAll('[data-info]').forEach(b=>b.onclick=()=>{const t=T[b.dataset.info];
-      popModal(`<h2 style="font-size:22px">${t.es}</h2><p class="muted" style="margin:0"><i>In English: ${t.en}</i></p><p style="margin:0"><b>Usage:</b> ${t.use}</p>
+      popModal(`<h2 style="font-size:22px">${t.es}</h2><p class="muted" style="margin:0"><i>In English: ${t.en}</i></p><p style="margin:0"><b>Usage:</b> ${t.use}</p>${deep(t.id)}
       <ol class="ol">${t.ex.map(([es,en])=>`<li><span class="ex-es">${es}</span><br><span class="muted">${en}</span></li>`).join('')}</ol>
       <div class="row"><button class="btn ghost" id="mq">Quiz ${v.inf} in this tense</button><button class="btn" id="mc">Close</button></div>`);
       document.getElementById('mc').onclick=closeModal;document.getElementById('mq').onclick=()=>{closeModal();quiz(build([t.id],[v],6),{title:v.inf,back:()=>verbSheet(v)})}});
