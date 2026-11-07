@@ -22,4 +22,4 @@ Decided 2026-11-07: `conjuga.html` is the one app. The prototype's design and fe
 ## Practice modes
 
 - [x] Sentence quiz: fill the missing verb in a short Spanish sentence (English translation underneath), 5-question set and a 10-question level-up test (pass mark 8) on the Practice tab.
-- [ ] Grow the sentence bank: there are 24, so repeats show after a few runs. Aim for about 8 to 10 per tense and person (roughly 300 to 400 in all), or use templates with a verb slot so one sentence covers many verbs. Tag each sentence with its person so results can feed the Progress grid.
+- [x] Grow the sentence bank: now 400 sentences (was 24) across all 16 tenses. The seven level-path tenses and affirmative commands have 6 to 8 per person; the other eight tenses have 2 per person. Every sentence is tagged with its person and every answer is checked against the conjugation engine. Sentence answers now count towards the Progress grid and Accuracy by tense. Vosotros sentences are skipped when vosotros is turned off.
