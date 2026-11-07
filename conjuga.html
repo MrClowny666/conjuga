@@ -1162,8 +1162,8 @@ const VIEWS={
    document.getElementById('go').onclick=()=>quiz(make(),{title:C.what==='conj'?(C.tenses.length===1?tn(C.tenses[0]):'Custom quiz'):'Meanings',mode:C.how,hideInf:C.what==='conj'&&C.hideInf,hideEn:C.what==='conj'&&C.hideEn});
    document.getElementById('todaySet').onclick=()=>quiz(build(['pret'],VERBS.filter(v=>v.irregular&&!v.refl&&v.rank<=150),5),{title:`${cap(tns('pret'))} irregulars`});
    document.getElementById('vod').onclick=()=>verbSheet(vd);
-   document.getElementById('sent5').onclick=()=>quiz(shuffle(SENT).slice(0,5).map(qs_),{title:'Sentences'});
-   document.getElementById('sentTest').onclick=()=>quiz(shuffle(SENT).slice(0,10).map(qs_),{title:'Level-up test',pass:8});
+   document.getElementById('sent5').onclick=()=>quiz(weightedPick(sentPool(),5,s=>COMMON_T.has(s.t)?3:1).map(qs_),{title:'Sentences'});
+   document.getElementById('sentTest').onclick=()=>quiz(shuffle(sentPool()).slice(0,10).map(qs_),{title:'Level-up test',pass:8});
    document.getElementById('rev').onclick=()=>quiz(shuffle(S.miss).slice(0,15).map(k=>{const[inf,t,p]=k.split('|');const v=verbBy(inf);return v&&T[t]&&conj(v,t)[+p]?q(v,t,+p):null}).filter(Boolean),{title:'Smart review'});
   };draw();
  },
@@ -1357,34 +1357,870 @@ const WHO={0:['yo'],1:['tú'],2:['él','ella','usted'],3:['nosotros','nosotras']
 function q(v,t,p){return{kind:'conj',v,t,p,who:t==='imp'||t==='neg'?IMPLAB[p].toLowerCase():pick(WHO[p]),ans:conj(v,t)[p]}}
 const qm=v=>({kind:'mean',v,ans:v.inf});
 const vod=()=>{const l=VERBS.filter(v=>v.irregular&&!v.refl&&v.rank<=60);return l[Math.floor(Date.now()/864e5)%l.length]};
-/* ---------- sentence questions (kept in step with mockups/conjuga-prototype.html) ---------- */
+/* ---------- sentence questions ----------
+   p is the person index used everywhere else (0 yo, 1 tú, 2 él/ella/usted, 3 nosotros, 4 vosotros, 5 ellos/ellas/ustedes;
+   for imp and neg, 2 is usted and 5 ustedes). Hand-written entries carry a note; the rest fall back to the conjugation steps. */
 const SENT=[
-  {t:'pres', v:'saber', a:'sé', s:'Yo no ___ nadar muy bien.', en:'I can’t swim very well.', note:'Saber has an irregular yo form: sé, with an accent to tell it apart from se.'},
-  {t:'pres', v:'salir', a:'salgo', s:'Cada mañana yo ___ de casa a las ocho.', en:'Every morning I leave home at eight.', note:'Salir adds a -g- in the yo form: salgo, but sales, sale.'},
-  {t:'pres', v:'volver', a:'vuelven', s:'Mis padres ___ del trabajo muy tarde.', en:'My parents get back from work very late.', note:'Volver changes o→ue when the stem is stressed: vuelvo, vuelven, but volvemos.'},
-  {t:'pres', v:'decir', a:'dice', s:'Ella siempre ___ la verdad.', en:'She always tells the truth.', note:'Decir changes e→i and has a -g- in the yo form: digo, dices, dice.'},
-  {t:'pret', v:'ir', a:'fuimos', s:'Ayer nosotros ___ al cine.', en:'Yesterday we went to the cinema.', note:'Ir and ser share the same pretérito: fui, fue, fuimos.'},
-  {t:'pret', v:'poder', a:'pude', s:'Anoche yo no ___ dormir.', en:'Last night I couldn’t sleep.', note:'Poder switches to the stem pud-, with an unstressed -e: pude.'},
-  {t:'pret', v:'poner', a:'pusiste', s:'¿Dónde ___ tú las llaves?', en:'Where did you put the keys?', note:'Poner switches to the stem pus-: puse, pusiste, puso.'},
-  {t:'pret', v:'hacer', a:'hicieron', s:'El año pasado ellos ___ un viaje a México.', en:'Last year they took a trip to Mexico.', note:'Hacer uses the stem hic-: hice, hicimos, hicieron (but hizo).'},
-  {t:'pret', v:'traer', a:'trajo', s:'Mi hermana me ___ un regalo de Lisboa.', en:'My sister brought me a present from Lisbon.', note:'Traer takes the stem traj-: traje, trajo, and trajeron (no i after j).'},
-  {t:'impf', v:'ser', a:'era', s:'Cuando yo ___ niño, vivíamos en el campo.', en:'When I was a child, we lived in the countryside.', note:'Ser is one of three irregular imperfectos: era, eras, era.'},
-  {t:'impf', v:'ir', a:'íbamos', s:'Antes nosotros ___ a la playa todos los veranos.', en:'We used to go to the beach every summer.', note:'Ir is irregular in the imperfecto: iba, ibas, íbamos. Note the accent.'},
-  {t:'impf', v:'ver', a:'veía', s:'Desde la ventana se ___ el mar.', en:'You could see the sea from the window.', note:'Ver keeps its e in the imperfecto: veía, veías, veía.'},
-  {t:'fut', v:'hacer', a:'hará', s:'Mañana ___ mucho calor.', en:'It will be very hot tomorrow.', note:'Hacer shortens to har- in the futuro: haré, hará.'},
-  {t:'fut', v:'decir', a:'diré', s:'Yo te lo ___ cuando llegue.', en:'I’ll tell you when I get there.', note:'Decir shortens to dir- in the futuro: diré, dirás, dirá.'},
-  {t:'fut', v:'tener', a:'tendréis', s:'¿___ vosotros tiempo el sábado?', en:'Will you all have time on Saturday?', note:'Tener adds a -d- in the futuro: tendré, tendréis.'},
-  {t:'cond', v:'salir', a:'saldría', s:'Yo en tu lugar no ___ con este tiempo.', en:'If I were you, I wouldn’t go out in this weather.', note:'Salir adds a -d- in the condicional: saldría, saldrías.'},
-  {t:'cond', v:'poder', a:'podría', s:'¿___ usted ayudarme con la maleta?', en:'Could you help me with the suitcase?', note:'Poder drops its e in the condicional: podría.'},
-  {t:'cond', v:'querer', a:'querríamos', s:'Nosotros ___ una mesa para cuatro, por favor.', en:'We would like a table for four, please.', note:'Querer drops its e, which leaves a double r: querría, querríamos.'},
-  {t:'subj', v:'tener', a:'tengas', s:'Espero que tú ___ un buen viaje.', en:'I hope you have a good trip.', note:'The subjuntivo is built on the yo form tengo: tenga, tengas.'},
-  {t:'subj', v:'llegar', a:'lleguemos', s:'Es importante que nosotros ___ a tiempo.', en:'It’s important that we arrive on time.', note:'Spelling change: g becomes gu before e to keep the hard sound: lleguemos.'},
-  {t:'subj', v:'saber', a:'sepan', s:'No creo que ellos ___ la respuesta.', en:'I don’t think they know the answer.', note:'Saber has the irregular subjuntivo stem sep-: sepa, sepan.'},
-  {t:'imp', v:'venir', a:'ven', s:'___ aquí ahora mismo, Pablo.', en:'Come here right now, Pablo.', note:'The tú command of venir is short: ven.'},
-  {t:'imp', v:'poner', a:'pon', s:'___ la mesa, por favor.', en:'Set the table, please.', note:'Poner has a short tú command: pon.'},
-  {t:'neg', v:'hacer', a:'hagas', s:'No ___ ruido, que el bebé está durmiendo.', en:'Don’t make any noise, the baby’s sleeping.', note:'Negative tú commands use the subjuntivo: no hagas.'}
+  {t:'pres', p:0, v:'saber', a:'sé', s:'Yo no ___ nadar muy bien.', en:'I can’t swim very well.', note:'Saber has an irregular yo form: sé, with an accent to tell it apart from se.'},
+  {t:'pres', p:0, v:'salir', a:'salgo', s:'Cada mañana yo ___ de casa a las ocho.', en:'Every morning I leave home at eight.', note:'Salir adds a -g- in the yo form: salgo, but sales, sale.'},
+  {t:'pres', p:5, v:'volver', a:'vuelven', s:'Mis padres ___ del trabajo muy tarde.', en:'My parents get back from work very late.', note:'Volver changes o→ue when the stem is stressed: vuelvo, vuelven, but volvemos.'},
+  {t:'pres', p:2, v:'decir', a:'dice', s:'Ella siempre ___ la verdad.', en:'She always tells the truth.', note:'Decir changes e→i and has a -g- in the yo form: digo, dices, dice.'},
+  {t:'pret', p:3, v:'ir', a:'fuimos', s:'Ayer nosotros ___ al cine.', en:'Yesterday we went to the cinema.', note:'Ir and ser share the same pretérito: fui, fue, fuimos.'},
+  {t:'pret', p:0, v:'poder', a:'pude', s:'Anoche yo no ___ dormir.', en:'Last night I couldn’t sleep.', note:'Poder switches to the stem pud-, with an unstressed -e: pude.'},
+  {t:'pret', p:1, v:'poner', a:'pusiste', s:'¿Dónde ___ tú las llaves?', en:'Where did you put the keys?', note:'Poner switches to the stem pus-: puse, pusiste, puso.'},
+  {t:'pret', p:5, v:'hacer', a:'hicieron', s:'El año pasado ellos ___ un viaje a México.', en:'Last year they took a trip to Mexico.', note:'Hacer uses the stem hic-: hice, hicimos, hicieron (but hizo).'},
+  {t:'pret', p:2, v:'traer', a:'trajo', s:'Mi hermana me ___ un regalo de Lisboa.', en:'My sister brought me a present from Lisbon.', note:'Traer takes the stem traj-: traje, trajo, and trajeron (no i after j).'},
+  {t:'impf', p:0, v:'ser', a:'era', s:'Cuando yo ___ niño, vivíamos en el campo.', en:'When I was a child, we lived in the countryside.', note:'Ser is one of three irregular imperfectos: era, eras, era.'},
+  {t:'impf', p:3, v:'ir', a:'íbamos', s:'Antes nosotros ___ a la playa todos los veranos.', en:'We used to go to the beach every summer.', note:'Ir is irregular in the imperfecto: iba, ibas, íbamos. Note the accent.'},
+  {t:'impf', p:2, v:'ver', a:'veía', s:'Desde la ventana se ___ el mar.', en:'You could see the sea from the window.', note:'Ver keeps its e in the imperfecto: veía, veías, veía.'},
+  {t:'fut', p:2, v:'hacer', a:'hará', s:'Mañana ___ mucho calor.', en:'It will be very hot tomorrow.', note:'Hacer shortens to har- in the futuro: haré, hará.'},
+  {t:'fut', p:0, v:'decir', a:'diré', s:'Yo te lo ___ cuando llegue.', en:'I’ll tell you when I get there.', note:'Decir shortens to dir- in the futuro: diré, dirás, dirá.'},
+  {t:'fut', p:4, v:'tener', a:'tendréis', s:'¿___ vosotros tiempo el sábado?', en:'Will you all have time on Saturday?', note:'Tener adds a -d- in the futuro: tendré, tendréis.'},
+  {t:'cond', p:0, v:'salir', a:'saldría', s:'Yo en tu lugar no ___ con este tiempo.', en:'If I were you, I wouldn’t go out in this weather.', note:'Salir adds a -d- in the condicional: saldría, saldrías.'},
+  {t:'cond', p:2, v:'poder', a:'podría', s:'¿___ usted ayudarme con la maleta?', en:'Could you help me with the suitcase?', note:'Poder drops its e in the condicional: podría.'},
+  {t:'cond', p:3, v:'querer', a:'querríamos', s:'Nosotros ___ una mesa para cuatro, por favor.', en:'We would like a table for four, please.', note:'Querer drops its e, which leaves a double r: querría, querríamos.'},
+  {t:'subj', p:1, v:'tener', a:'tengas', s:'Espero que tú ___ un buen viaje.', en:'I hope you have a good trip.', note:'The subjuntivo is built on the yo form tengo: tenga, tengas.'},
+  {t:'subj', p:3, v:'llegar', a:'lleguemos', s:'Es importante que nosotros ___ a tiempo.', en:'It’s important that we arrive on time.', note:'Spelling change: g becomes gu before e to keep the hard sound: lleguemos.'},
+  {t:'subj', p:5, v:'saber', a:'sepan', s:'No creo que ellos ___ la respuesta.', en:'I don’t think they know the answer.', note:'Saber has the irregular subjuntivo stem sep-: sepa, sepan.'},
+  {t:'imp', p:1, v:'venir', a:'ven', s:'___ aquí ahora mismo, Pablo.', en:'Come here right now, Pablo.', note:'The tú command of venir is short: ven.'},
+  {t:'imp', p:1, v:'poner', a:'pon', s:'___ la mesa, por favor.', en:'Set the table, please.', note:'Poner has a short tú command: pon.'},
+  {t:'neg', p:1, v:'hacer', a:'hagas', s:'No ___ ruido, que el bebé está durmiendo.', en:'Don’t make any noise, the baby’s sleeping.', note:'Negative tú commands use the subjuntivo: no hagas.'}
 ];
-const qs_=s=>({kind:'sent',v:verbBy(s.v),t:s.t,ans:s.a,s:s.s,en:s.en,note:s.note});
+// tense|person|verb|answer|sentence with ___|English
+const SENT_RAW=`
+pres|0|hablar|hablo|Yo ___ inglés y un poco de francés.|I speak English and a little French.
+pres|0|tener|tengo|Yo ___ dos hermanos mayores.|I have two older brothers.
+pres|0|hacer|hago|Los sábados yo ___ la compra en el mercado.|On Saturdays I do the shopping at the market.
+pres|0|conocer|conozco|Yo no ___ a nadie en esta ciudad.|I don't know anyone in this city.
+pres|0|querer|quiero|Yo ___ un café con leche, por favor.|I'd like a coffee with milk, please.
+pres|0|levantarse|me levanto|Normalmente yo ___ a las siete.|I normally get up at seven.
+pres|1|vivir|vives|¿Dónde ___ tú ahora?|Where do you live now?
+pres|1|poder|puedes|¿___ tú abrir la ventana?|Can you open the window?
+pres|1|trabajar|trabajas|¿Tú ___ los fines de semana?|Do you work at weekends?
+pres|1|preferir|prefieres|¿Qué ___ tú, té o café?|Which do you prefer, tea or coffee?
+pres|1|ser|eres|Tú ___ muy simpático.|You are very nice.
+pres|1|dormir|duermes|¿Cuántas horas ___ tú cada noche?|How many hours do you sleep each night?
+pres|2|comer|come|Mi abuela ___ fruta todos los días.|My grandmother eats fruit every day.
+pres|2|estar|está|Mi padre ___ en la oficina.|My father is at the office.
+pres|2|jugar|juega|Mi hijo ___ al fútbol los martes.|My son plays football on Tuesdays.
+pres|2|empezar|empieza|La película ___ a las nueve.|The film starts at nine.
+pres|2|ir|va|Usted ___ al centro en autobús, ¿verdad?|You go into town by bus, right?
+pres|2|pedir|pide|Ana siempre ___ pescado en este restaurante.|Ana always orders fish at this restaurant.
+pres|3|vivir|vivimos|Nosotros ___ cerca de la playa.|We live near the beach.
+pres|3|cenar|cenamos|En casa nosotros ___ a las nueve.|At home we have dinner at nine.
+pres|3|tener|tenemos|Nosotros no ___ coche.|We don't have a car.
+pres|3|ir|vamos|Los domingos nosotros ___ al parque.|On Sundays we go to the park.
+pres|3|poder|podemos|¿___ nosotros sentarnos aquí?|Can we sit here?
+pres|3|estudiar|estudiamos|Mi amiga y yo ___ juntas en la biblioteca.|My friend and I study together in the library.
+pres|4|querer|queréis|¿___ vosotros venir a la fiesta?|Do you all want to come to the party?
+pres|4|ser|sois|Vosotros ___ mis mejores amigos.|You are my best friends.
+pres|4|hacer|hacéis|¿Qué ___ vosotros esta tarde?|What are you all doing this afternoon?
+pres|4|vivir|vivís|¿Vosotros ___ en el centro?|Do you all live in the centre?
+pres|4|tener|tenéis|¿___ vosotros hambre?|Are you all hungry?
+pres|4|saber|sabéis|¿Vosotros ___ dónde está la estación?|Do you all know where the station is?
+pres|5|llegar|llegan|Los trenes siempre ___ tarde.|The trains always arrive late.
+pres|5|hablar|hablan|Mis primos ___ alemán.|My cousins speak German.
+pres|5|cerrar|cierran|Las tiendas ___ a las ocho.|The shops close at eight.
+pres|5|venir|vienen|Mis abuelos ___ a comer todos los domingos.|My grandparents come for lunch every Sunday.
+pres|5|ser|son|Ustedes ___ muy amables.|You are very kind.
+pres|5|leer|leen|Los niños ___ un cuento antes de dormir.|The children read a story before going to sleep.
+pret|0|comprar|compré|Ayer yo ___ un libro nuevo.|Yesterday I bought a new book.
+pret|0|ir|fui|El sábado pasado yo ___ a un concierto.|Last Saturday I went to a concert.
+pret|0|tener|tuve|Ayer yo ___ un día muy largo.|Yesterday I had a very long day.
+pret|0|llegar|llegué|Anoche yo ___ a casa a las once.|Last night I got home at eleven.
+pret|0|hacer|hice|Ayer yo ___ una tarta de chocolate.|Yesterday I made a chocolate cake.
+pret|0|empezar|empecé|El lunes pasado yo ___ un trabajo nuevo.|Last Monday I started a new job.
+pret|1|ver|viste|¿___ tú el partido anoche?|Did you see the match last night?
+pret|1|llamar|llamaste|¿Por qué no me ___ tú ayer?|Why didn't you call me yesterday?
+pret|1|decir|dijiste|¿Qué le ___ tú ayer a tu jefe?|What did you say to your boss yesterday?
+pret|1|estar|estuviste|¿Dónde ___ tú el fin de semana pasado?|Where were you last weekend?
+pret|1|dormir|dormiste|¿___ tú bien anoche?|Did you sleep well last night?
+pret|1|ser|fuiste|Ayer tú ___ el primero en llegar.|Yesterday you were the first to arrive.
+pret|2|escribir|escribió|Mi madre me ___ una carta la semana pasada.|My mother wrote me a letter last week.
+pret|2|venir|vino|Usted ___ ayer a la reunión, ¿no?|You came to the meeting yesterday, didn't you?
+pret|2|pedir|pidió|Anoche Luis ___ una pizza.|Last night Luis ordered a pizza.
+pret|2|leer|leyó|El mes pasado mi hermano ___ el libro en dos días.|Last month my brother read the book in two days.
+pret|2|nacer|nació|Mi hija ___ en 2019.|My daughter was born in 2019.
+pret|2|dormir|durmió|Ayer el bebé ___ toda la noche.|Yesterday the baby slept all night.
+pret|3|cenar|cenamos|Anoche nosotros ___ en un restaurante italiano.|Last night we had dinner at an Italian restaurant.
+pret|3|ver|vimos|El domingo nosotros ___ una película muy buena.|On Sunday we saw a really good film.
+pret|3|estar|estuvimos|El verano pasado nosotros ___ en Granada.|Last summer we were in Granada.
+pret|3|tener|tuvimos|Ayer nosotros ___ un examen de matemáticas.|Yesterday we had a maths exam.
+pret|3|llegar|llegamos|Ayer nosotros ___ al aeropuerto a las seis de la mañana.|Yesterday we got to the airport at six in the morning.
+pret|3|hacer|hicimos|En 2022 nosotros ___ el Camino de Santiago.|In 2022 we did the Camino de Santiago.
+pret|4|ir|fuisteis|¿Adónde ___ vosotros de vacaciones el año pasado?|Where did you all go on holiday last year?
+pret|4|comer|comisteis|¿Qué ___ vosotros ayer?|What did you all eat yesterday?
+pret|4|venir|vinisteis|¿Por qué no ___ vosotros a la fiesta el sábado?|Why didn't you all come to the party on Saturday?
+pret|4|ver|visteis|¿___ vosotros las noticias anoche?|Did you all see the news last night?
+pret|4|poder|pudisteis|¿___ vosotros encontrar el hotel ayer?|Did you all manage to find the hotel yesterday?
+pret|4|traer|trajisteis|¿Vosotros ___ las bebidas anoche?|Did you all bring the drinks last night?
+pret|5|salir|salieron|Ayer mis amigos ___ muy tarde.|Yesterday my friends went out very late.
+pret|5|decir|dijeron|Ellos no nos ___ nada ayer.|They didn't tell us anything yesterday.
+pret|5|ganar|ganaron|El domingo ellos ___ el partido.|On Sunday they won the match.
+pret|5|estar|estuvieron|Mis padres ___ en Roma el mes pasado.|My parents were in Rome last month.
+pret|5|venir|vinieron|Ustedes ___ en tren ayer, ¿verdad?|You came by train yesterday, right?
+pret|5|construir|construyeron|Los romanos ___ este puente hace dos mil años.|The Romans built this bridge two thousand years ago.
+impf|0|vivir|vivía|De niño yo ___ en un pueblo pequeño.|As a child I lived in a small village.
+impf|0|jugar|jugaba|Antes yo ___ al tenis todos los días.|I used to play tennis every day.
+impf|0|tener|tenía|Cuando yo ___ diez años, me encantaban los dinosaurios.|When I was ten, I loved dinosaurs.
+impf|0|estar|estaba|Yo ___ muy cansado, así que me acosté pronto.|I was very tired, so I went to bed early.
+impf|0|querer|quería|De pequeña yo ___ ser médica.|As a little girl I wanted to be a doctor.
+impf|0|leer|leía|Yo ___ un libro cuando sonó el teléfono.|I was reading a book when the phone rang.
+impf|1|ser|eras|¿Cómo ___ tú de niño?|What were you like as a child?
+impf|1|vivir|vivías|¿Dónde ___ tú antes de mudarte aquí?|Where did you live before you moved here?
+impf|1|ir|ibas|De pequeño, ¿tú ___ al colegio andando?|As a kid, did you use to walk to school?
+impf|1|hacer|hacías|¿Qué ___ tú cuando te llamé?|What were you doing when I called you?
+impf|1|tener|tenías|¿Tú ___ un perro cuando eras pequeño?|Did you have a dog when you were little?
+impf|1|saber|sabías|¿Tú ya ___ la noticia cuando te llamé?|Did you already know the news when I called you?
+impf|2|trabajar|trabajaba|Antes mi abuelo ___ en una fábrica.|My grandfather used to work in a factory.
+impf|2|llover|llovía|___ mucho cuando salimos del cine.|It was raining hard when we left the cinema.
+impf|2|hacer|hacía|Ayer ___ mucho frío en la calle.|It was very cold outside yesterday.
+impf|2|cocinar|cocinaba|Mi madre siempre ___ los domingos.|My mother always used to cook on Sundays.
+impf|2|ser|era|La casa de mis abuelos ___ muy grande.|My grandparents' house was very big.
+impf|2|dormir|dormía|El niño ___ cuando llegamos.|The child was sleeping when we arrived.
+impf|3|ver|veíamos|De niños nosotros ___ dibujos animados cada mañana.|As children we used to watch cartoons every morning.
+impf|3|vivir|vivíamos|Nosotros ___ en Valencia cuando nació mi hermano.|We were living in Valencia when my brother was born.
+impf|3|ser|éramos|Nosotros ___ muy buenos amigos en el colegio.|We were very good friends at school.
+impf|3|pasar|pasábamos|Todos los veranos nosotros ___ un mes en la playa.|Every summer we used to spend a month at the beach.
+impf|3|comer|comíamos|Nosotros ___ cuando llamaron a la puerta.|We were eating when someone knocked at the door.
+impf|3|tener|teníamos|Antes nosotros no ___ internet en casa.|We didn't use to have internet at home.
+impf|4|jugar|jugabais|¿Vosotros ___ en la calle de pequeños?|Did you all use to play in the street as kids?
+impf|4|estar|estabais|¿Dónde ___ vosotros cuando empezó la tormenta?|Where were you all when the storm started?
+impf|4|ir|ibais|¿___ vosotros mucho al cine antes?|Did you all use to go to the cinema a lot?
+impf|4|ser|erais|Vosotros ___ muy traviesos de niños.|You were very naughty as kids.
+impf|4|hablar|hablabais|¿De qué ___ vosotros cuando entré?|What were you all talking about when I came in?
+impf|4|vivir|vivíais|¿Vosotros ___ en Madrid en aquella época?|Were you all living in Madrid back then?
+impf|5|ir|iban|Mis abuelos ___ a misa todos los domingos.|My grandparents used to go to Mass every Sunday.
+impf|5|ser|eran|Las calles ___ muy estrechas en aquel barrio.|The streets were very narrow in that neighbourhood.
+impf|5|estar|estaban|Los niños ___ en el jardín cuando empezó a llover.|The children were in the garden when it started to rain.
+impf|5|ver|veían|Ellos siempre ___ la tele después de cenar.|They always used to watch TV after dinner.
+impf|5|tener|tenían|Antes mis vecinos ___ un gato negro.|My neighbours used to have a black cat.
+impf|5|querer|querían|Ellos ___ ir a la playa, pero llovía.|They wanted to go to the beach, but it was raining.
+fut|0|llamar|llamaré|Yo te ___ mañana por la mañana.|I'll call you tomorrow morning.
+fut|0|tener|tendré|El mes que viene yo ___ más tiempo libre.|Next month I'll have more free time.
+fut|0|hacer|haré|Yo ___ los deberes después de cenar.|I'll do my homework after dinner.
+fut|0|ir|iré|El año que viene yo ___ a Japón.|Next year I'll go to Japan.
+fut|0|poder|podré|Mañana yo no ___ venir a clase.|Tomorrow I won't be able to come to class.
+fut|0|ser|seré|Algún día yo ___ médico.|One day I will be a doctor.
+fut|1|venir|vendrás|¿___ tú a mi cumpleaños el viernes?|Will you come to my birthday on Friday?
+fut|1|saber|sabrás|Tú ___ los resultados mañana.|You'll know the results tomorrow.
+fut|1|ver|verás|Ya ___ tú que todo sale bien.|You'll see, everything will turn out fine.
+fut|1|poner|pondrás|¿Qué te ___ tú para la boda?|What will you wear to the wedding?
+fut|1|salir|saldrás|¿A qué hora ___ tú del trabajo mañana?|What time will you leave work tomorrow?
+fut|1|tener|tendrás|Tú ___ que estudiar más para el examen.|You will have to study more for the exam.
+fut|2|llover|lloverá|Mañana ___ en el norte.|Tomorrow it will rain in the north.
+fut|2|venir|vendrá|Mi hermana ___ a vernos en Navidad.|My sister will come to see us at Christmas.
+fut|2|decir|dirá|El médico le ___ qué hacer.|The doctor will tell you what to do.
+fut|2|salir|saldrá|El tren ___ a las diez en punto.|The train will leave at ten o'clock.
+fut|2|estar|estará|Ana no contesta; ___ en la ducha.|Ana isn't answering; she must be in the shower.
+fut|2|querer|querrá|Usted ___ descansar después del viaje.|You'll want to rest after the trip.
+fut|3|ir|iremos|El verano que viene nosotros ___ a la montaña.|Next summer we'll go to the mountains.
+fut|3|hacer|haremos|Nosotros ___ una fiesta el sábado.|We'll have a party on Saturday.
+fut|3|ver|veremos|Mañana nosotros ___ a tus padres.|Tomorrow we'll see your parents.
+fut|3|tener|tendremos|Pronto nosotros ___ una casa nueva.|Soon we'll have a new house.
+fut|3|salir|saldremos|Mañana nosotros ___ temprano para evitar el tráfico.|Tomorrow we'll leave early to avoid the traffic.
+fut|3|poder|podremos|Con este dinero nosotros ___ viajar más.|With this money we'll be able to travel more.
+fut|4|venir|vendréis|¿___ vosotros a cenar mañana?|Will you all come for dinner tomorrow?
+fut|4|hacer|haréis|¿Qué ___ vosotros este verano?|What will you all do this summer?
+fut|4|poder|podréis|Desde el hotel vosotros ___ ver el mar.|From the hotel you'll all be able to see the sea.
+fut|4|ser|seréis|Vosotros ___ muy felices en vuestra casa nueva.|You'll be very happy in your new house.
+fut|4|llegar|llegaréis|¿A qué hora ___ vosotros mañana?|What time will you all arrive tomorrow?
+fut|4|decir|diréis|¿Les ___ vosotros la verdad mañana?|Will you all tell them the truth tomorrow?
+fut|5|abrir|abrirán|El mes que viene ___ una tienda nueva en mi calle.|Next month they'll open a new shop on my street.
+fut|5|venir|vendrán|Mis primos ___ en agosto.|My cousins will come in August.
+fut|5|tener|tendrán|Ellos ___ mucho trabajo la semana que viene.|They'll have a lot of work next week.
+fut|5|saber|sabrán|Ustedes ___ la respuesta el lunes.|You'll know the answer on Monday.
+fut|5|salir|saldrán|Los resultados ___ la semana que viene.|The results will come out next week.
+fut|5|poner|pondrán|Mañana ellos ___ las decoraciones.|They'll put up the decorations tomorrow.
+cond|0|comprar|compraría|Con más dinero, yo ___ una casa en el campo.|With more money, I would buy a house in the country.
+cond|0|ir|iría|Yo ___ contigo, pero tengo que trabajar.|I would go with you, but I have to work.
+cond|0|decir|diría|Yo no le ___ nada a tu madre.|I wouldn't say anything to your mother.
+cond|0|hacer|haría|Yo en tu lugar ___ lo mismo.|In your place I would do the same.
+cond|0|tener|tendría|Yo ___ cuidado con ese perro.|I would be careful with that dog.
+cond|0|vivir|viviría|Yo ___ junto al mar sin dudarlo.|I would live by the sea without a second thought.
+cond|1|poder|podrías|¿___ tú pasarme la sal?|Could you pass me the salt?
+cond|1|hacer|harías|¿Qué ___ tú con un millón de euros?|What would you do with a million euros?
+cond|1|venir|vendrías|¿___ tú conmigo al médico?|Would you come with me to the doctor?
+cond|1|deber|deberías|Tú ___ dormir más.|You should sleep more.
+cond|1|querer|querrías|¿___ tú vivir en otro país?|Would you like to live in another country?
+cond|1|saber|sabrías|¿___ tú llegar sin mapa?|Would you know how to get there without a map?
+cond|2|ser|sería|Un viaje a Perú ___ perfecto.|A trip to Peru would be perfect.
+cond|2|ayudar|ayudaría|Mi vecino nos ___ con la mudanza.|My neighbour would help us with the move.
+cond|2|importar|importaría|¿Le ___ a usted cerrar la puerta?|Would you mind closing the door?
+cond|2|tener|tendría|Ella ___ unos treinta años cuando la conocí.|She must have been about thirty when I met her.
+cond|2|salir|saldría|Le ___ más barato ir en tren.|It would work out cheaper for you to go by train.
+cond|2|preferir|preferiría|Mi padre ___ quedarse en casa.|My father would prefer to stay at home.
+cond|3|ir|iríamos|Nosotros ___ a la fiesta, pero no tenemos coche.|We would go to the party, but we don't have a car.
+cond|3|poder|podríamos|¿___ nosotros pagar con tarjeta?|Could we pay by card?
+cond|3|vivir|viviríamos|Sin hijos, nosotros ___ en el centro.|Without children, we would live in the centre.
+cond|3|hacer|haríamos|Nosotros ___ el viaje en coche, no en avión.|We would do the trip by car, not by plane.
+cond|3|tener|tendríamos|Con un piso más grande, nosotros ___ más espacio.|With a bigger flat, we would have more space.
+cond|3|deber|deberíamos|Nosotros ___ salir ya.|We should leave now.
+cond|4|poder|podríais|¿___ vosotros hablar más bajo?|Could you all speak more quietly?
+cond|4|hacer|haríais|¿Qué ___ vosotros en mi situación?|What would you all do in my situation?
+cond|4|venir|vendríais|¿___ vosotros a la playa con nosotros?|Would you all come to the beach with us?
+cond|4|deber|deberíais|Vosotros ___ llamar a vuestra abuela.|You should call your grandmother.
+cond|4|estar|estaríais|Vosotros ___ mejor en un hotel.|You'd be better off in a hotel.
+cond|4|querer|querríais|¿___ vosotros algo de beber?|Would you all like something to drink?
+cond|5|ser|serían|Mis padres ___ muy felices aquí.|My parents would be very happy here.
+cond|5|comprar|comprarían|Ellos ___ esa casa si fuera más barata.|They would buy that house if it were cheaper.
+cond|5|poder|podrían|¿___ ustedes esperar un momento?|Could you wait a moment?
+cond|5|decir|dirían|Ellos nunca ___ una mentira.|They would never tell a lie.
+cond|5|saber|sabrían|Mis hermanos ___ arreglar esto.|My brothers would know how to fix this.
+cond|5|tener|tendrían|Los niños ___ hambre, porque se lo comieron todo.|The children must have been hungry, because they ate it all.
+perf|0|terminar|he terminado|Hoy yo ya ___ el trabajo.|I've already finished work today.
+perf|0|ver|he visto|Yo nunca ___ esa película.|I have never seen that film.
+perf|0|hacer|he hecho|Esta mañana yo ___ la cama.|I've made the bed this morning.
+perf|0|estar|he estado|Yo ___ en México dos veces.|I have been to Mexico twice.
+perf|0|perder|he perdido|Yo ___ las llaves otra vez.|I've lost my keys again.
+perf|0|escribir|he escrito|Esta semana yo ___ tres correos a mi jefe.|This week I've written three emails to my boss.
+perf|1|comer|has comido|¿Ya ___ tú?|Have you eaten yet?
+perf|1|decir|has dicho|¿Qué ___ tú? No te he oído.|What did you say? I didn't hear you.
+perf|1|estar|has estado|¿___ tú alguna vez en Argentina?|Have you ever been to Argentina?
+perf|1|leer|has leído|¿___ tú el periódico hoy?|Have you read the paper today?
+perf|1|abrir|has abierto|¿Por qué ___ tú la ventana?|Why have you opened the window?
+perf|1|volver|has vuelto|¿Ya ___ tú de las vacaciones?|Are you back from holiday already?
+perf|2|llamar|ha llamado|Hoy mi madre me ___ tres veces.|My mother has called me three times today.
+perf|2|romper|ha roto|El niño ___ un vaso.|The child has broken a glass.
+perf|2|salir|ha salido|Mi jefe ___ hace un momento.|My boss left a moment ago.
+perf|2|poner|ha puesto|¿Dónde ___ usted mi abrigo?|Where have you put my coat?
+perf|2|empezar|ha empezado|Corre, la película ya ___.|Hurry, the film has already started.
+perf|2|ganar|ha ganado|Este año mi equipo ___ la liga.|My team has won the league this year.
+perf|3|ir|hemos ido|Esta semana nosotros ___ dos veces al gimnasio.|This week we've been to the gym twice.
+perf|3|comprar|hemos comprado|Nosotros ya ___ los billetes.|We have already bought the tickets.
+perf|3|ver|hemos visto|Hoy nosotros ___ a tu hermano en el mercado.|We saw your brother at the market today.
+perf|3|hacer|hemos hecho|Nosotros nunca ___ un viaje tan largo.|We've never made such a long trip.
+perf|3|tener|hemos tenido|Este año nosotros ___ mucha suerte.|We've been very lucky this year.
+perf|3|volver|hemos vuelto|Nosotros ___ hace una hora.|We got back an hour ago.
+perf|4|ver|habéis visto|¿___ vosotros mis gafas?|Have you all seen my glasses?
+perf|4|hacer|habéis hecho|¿Ya ___ vosotros los deberes?|Have you all done your homework yet?
+perf|4|estar|habéis estado|¿___ vosotros alguna vez en Lisboa?|Have you all ever been to Lisbon?
+perf|4|decir|habéis dicho|¿Qué le ___ vosotros a la profesora?|What have you all said to the teacher?
+perf|4|comer|habéis comido|¿Qué ___ vosotros hoy?|What have you all eaten today?
+perf|4|escribir|habéis escrito|¿Ya ___ vosotros la redacción?|Have you all written the essay yet?
+perf|5|llegar|han llegado|Los invitados ya ___.|The guests have already arrived.
+perf|5|abrir|han abierto|Este mes ___ un café nuevo en la esquina.|This month they've opened a new café on the corner.
+perf|5|ver|han visto|¿Ya ___ ustedes el museo?|Have you seen the museum yet?
+perf|5|poner|han puesto|Hoy mis vecinos ___ la música muy alta toda la tarde.|Today my neighbours have played loud music all afternoon.
+perf|5|volver|han vuelto|Mis padres todavía no ___ del viaje.|My parents haven't come back from their trip yet.
+perf|5|descubrir|han descubierto|Este año los científicos ___ un planeta nuevo.|This year scientists have discovered a new planet.
+subj|0|ir|vaya|Mi madre quiere que yo ___ con ella al médico.|My mother wants me to go to the doctor with her.
+subj|0|hacer|haga|El profesor espera que yo ___ los ejercicios.|The teacher expects me to do the exercises.
+subj|0|tener|tenga|Es posible que yo ___ que trabajar el sábado.|I might have to work on Saturday.
+subj|0|llegar|llegue|Te llamo cuando yo ___ a casa.|I'll call you when I get home.
+subj|0|poder|pueda|No creo que yo ___ ir a la boda.|I don't think I can go to the wedding.
+subj|0|saber|sepa|Mis padres no quieren que yo ___ la verdad.|My parents don't want me to know the truth.
+subj|1|venir|vengas|Quiero que tú ___ a mi fiesta.|I want you to come to my party.
+subj|1|estar|estés|Espero que tú ___ bien.|I hope you are well.
+subj|1|decir|digas|No quiero que tú le ___ nada a nadie.|I don't want you to tell anyone anything.
+subj|1|ser|seas|Ojalá tú ___ muy feliz.|I hope you are very happy.
+subj|1|dormir|duermas|Es importante que tú ___ ocho horas.|It's important that you sleep eight hours.
+subj|1|conducir|conduzcas|Prefiero que tú no ___ de noche.|I'd rather you didn't drive at night.
+subj|2|llover|llueva|Ojalá no ___ mañana.|I hope it doesn't rain tomorrow.
+subj|2|venir|venga|Espero que mi hermano ___ pronto.|I hope my brother comes soon.
+subj|2|ser|sea|Dudo que el examen ___ difícil.|I doubt the exam is difficult.
+subj|2|hacer|haga|Ojalá ___ buen tiempo el domingo.|I hope the weather's nice on Sunday.
+subj|2|encontrar|encuentre|Espero que usted ___ lo que busca.|I hope you find what you are looking for.
+subj|2|poner|ponga|Le pido a mi hijo que ___ la mesa.|I ask my son to set the table.
+subj|3|ir|vayamos|Mi padre quiere que nosotros ___ en tren.|My father wants us to go by train.
+subj|3|ver|veamos|Es mejor que nosotros ___ la película en casa.|It's better for us to watch the film at home.
+subj|3|empezar|empecemos|El jefe quiere que nosotros ___ a las ocho.|The boss wants us to start at eight.
+subj|3|tener|tengamos|Ojalá nosotros ___ suerte.|I hope we're lucky.
+subj|3|salir|salgamos|Es necesario que nosotros ___ ahora.|We need to leave now.
+subj|3|pedir|pidamos|El camarero recomienda que nosotros ___ la paella.|The waiter recommends that we order the paella.
+subj|4|venir|vengáis|Quiero que vosotros ___ a cenar el sábado.|I want you all to come to dinner on Saturday.
+subj|4|hacer|hagáis|No quiero que vosotros ___ ruido.|I don't want you all to make any noise.
+subj|4|estar|estéis|Espero que vosotros ___ cómodos aquí.|I hope you're all comfortable here.
+subj|4|traer|traigáis|Es mejor que vosotros ___ algo de abrigo.|You'd all better bring something warm.
+subj|4|saber|sepáis|Quiero que vosotros ___ la verdad.|I want you all to know the truth.
+subj|4|llegar|lleguéis|Avisadme cuando vosotros ___.|Let me know when you all arrive.
+subj|5|ir|vayan|Es mejor que ellos ___ en taxi.|It's better for them to go by taxi.
+subj|5|ser|sean|Espero que las vacaciones ___ largas.|I hope the holidays are long.
+subj|5|poder|puedan|Ojalá mis padres ___ venir.|I hope my parents can come.
+subj|5|entender|entiendan|Dudo que ellos ___ el problema.|I doubt they understand the problem.
+subj|5|tener|tengan|Me alegro de que ustedes ___ tiempo para visitarnos.|I'm glad you have time to visit us.
+subj|5|decir|digan|Es raro que ellos no ___ nada.|It's odd that they don't say anything.
+imp|1|hablar|habla|Pablo, ___ más alto, que no te oigo.|Pablo, speak up, I can't hear you.
+imp|1|comer|come|___ la verdura, hijo.|Eat your vegetables, son.
+imp|1|hacer|haz|___ los deberes antes de cenar, Lucía.|Do your homework before dinner, Lucía.
+imp|1|decir|di|___ la verdad, Marta.|Tell the truth, Marta.
+imp|1|tener|ten|___ cuidado con el perro, Juan.|Be careful with the dog, Juan.
+imp|1|salir|sal|___ de ahí ahora mismo, Carlos.|Get out of there right now, Carlos.
+imp|2|pasar|pase|___ usted, por favor.|Come in, please.
+imp|2|tomar|tome|___ usted asiento, señora.|Take a seat, madam.
+imp|2|firmar|firme|___ usted aquí, por favor.|Sign here, please.
+imp|2|esperar|espere|___ usted un momento, señor.|Wait a moment, sir.
+imp|2|seguir|siga|___ usted todo recto hasta el semáforo.|Go straight on to the traffic lights.
+imp|2|venir|venga|___ usted mañana a las diez.|Come tomorrow at ten.
+imp|3|ir|vamos|¡___ a la playa!|Let's go to the beach!
+imp|3|empezar|empecemos|___ la reunión, que ya es tarde.|Let's start the meeting, it's already late.
+imp|3|comer|comamos|___ algo antes de salir.|Let's eat something before we go out.
+imp|3|bailar|bailemos|¡___ toda la noche!|Let's dance all night!
+imp|3|pedir|pidamos|___ una pizza para cenar.|Let's order a pizza for dinner.
+imp|3|hacer|hagamos|___ una foto todos juntos.|Let's take a photo all together.
+imp|4|venir|venid|Niños, ___ a cenar.|Kids, come to dinner.
+imp|4|abrir|abrid|___ los libros por la página diez, chicos.|Open your books at page ten, everyone.
+imp|4|tener|tened|___ cuidado en la carretera, chicos.|Be careful on the road, guys.
+imp|4|escuchar|escuchad|Chicos, ___ bien lo que digo.|Guys, listen carefully to what I'm saying.
+imp|4|hacer|haced|___ las maletas esta noche, chicos.|Pack your suitcases tonight, guys.
+imp|4|poner|poned|Niños, ___ la mesa, por favor.|Kids, set the table, please.
+imp|5|pasar|pasen|___ ustedes, la cena está lista.|Come in, dinner is ready.
+imp|5|esperar|esperen|___ ustedes aquí, por favor.|Wait here, please.
+imp|5|leer|lean|___ ustedes las instrucciones antes de empezar.|Read the instructions before you start.
+imp|5|venir|vengan|___ ustedes a visitarnos pronto.|Come and visit us soon.
+imp|5|tener|tengan|___ ustedes un buen viaje.|Have a good trip.
+imp|5|seguir|sigan|___ ustedes por esta calle.|Carry on along this street.
+prox|0|estudiar|voy a estudiar|Esta tarde yo ___ en la biblioteca.|This afternoon I'm going to study in the library.
+prox|0|llamar|voy a llamar|Ahora mismo yo ___ a mi madre.|I'm going to call my mother right now.
+prox|1|hacer|vas a hacer|¿Qué ___ tú este fin de semana?|What are you going to do this weekend?
+prox|1|venir|vas a venir|¿___ tú a la cena esta noche?|Are you going to come to dinner tonight?
+prox|2|llover|va a llover|Mira esas nubes: ___.|Look at those clouds: it's going to rain.
+prox|2|cumplir|va a cumplir|Mañana mi hijo ___ diez años.|Tomorrow my son is going to turn ten.
+prox|3|ver|vamos a ver|Esta noche nosotros ___ una película.|Tonight we're going to watch a film.
+prox|3|viajar|vamos a viajar|En julio nosotros ___ a Perú.|In July we're going to travel to Peru.
+prox|4|comer|vais a comer|¿Dónde ___ vosotros hoy?|Where are you all going to eat today?
+prox|4|salir|vais a salir|¿___ vosotros esta noche?|Are you all going out tonight?
+prox|5|casarse|se van a casar|Mis amigos ___ en mayo.|My friends are going to get married in May.
+prox|5|jugar|van a jugar|Los niños ___ en el parque después del colegio.|The kids are going to play in the park after school.
+plup|0|terminar|había terminado|Cuando llegaste, yo ya ___ de cenar.|When you arrived, I had already finished dinner.
+plup|0|ver|había visto|Yo nunca ___ la nieve antes de aquel viaje.|I had never seen snow before that trip.
+plup|1|estar|habías estado|¿___ tú en Italia antes de aquel verano?|Had you been to Italy before that summer?
+plup|1|decir|habías dicho|Tú me ___ que venías a las ocho.|You had told me you were coming at eight.
+plup|2|salir|había salido|Cuando llamé, mi padre ya ___.|When I called, my father had already left.
+plup|2|empezar|había empezado|Cuando llegamos, la clase ya ___.|When we arrived, the class had already started.
+plup|3|comer|habíamos comido|Nosotros ya ___ cuando llegaron los invitados.|We had already eaten when the guests arrived.
+plup|3|comprar|habíamos comprado|Nosotros ya ___ las entradas un mes antes del concierto.|We had already bought the tickets a month before the concert.
+plup|4|hacer|habíais hecho|¿Ya ___ vosotros la reserva cuando os llamé?|Had you all already made the booking when I called you?
+plup|4|ver|habíais visto|¿Vosotros nunca ___ el mar antes de aquel viaje?|Had you all never seen the sea before that trip?
+plup|5|irse|se habían ido|Cuando llegué a la fiesta, mis amigos ya ___.|When I got to the party, my friends had already left.
+plup|5|volver|habían vuelto|Mis padres todavía no ___ cuando me acosté.|My parents still hadn't got back when I went to bed.
+futp|0|terminar|habré terminado|Para las cinco yo ya ___ el informe.|By five I will have finished the report.
+futp|0|leer|habré leído|Antes del viernes yo ___ todo el libro.|By Friday I'll have read the whole book.
+futp|1|llegar|habrás llegado|Mañana a esta hora tú ya ___ a Londres.|By this time tomorrow you will have arrived in London.
+futp|1|olvidar|habrás olvidado|Dentro de un año tú ya lo ___.|A year from now you will have forgotten it.
+futp|2|salir|habrá salido|Ana no contesta; ya ___ de casa.|Ana isn't answering; she must have left home already.
+futp|2|terminar|habrá terminado|Para junio la obra ya ___.|By June the building work will have finished.
+futp|3|cenar|habremos cenado|A las diez nosotros ya ___.|By ten we will have had dinner.
+futp|3|ahorrar|habremos ahorrado|En dos años nosotros ___ suficiente para el viaje.|In two years we will have saved enough for the trip.
+futp|4|hacer|habréis hecho|Para el lunes vosotros ya ___ el proyecto.|By Monday you all will have done the project.
+futp|4|ver|habréis visto|Cuando volváis, vosotros ___ media Europa.|When you come back, you will have seen half of Europe.
+futp|5|llegar|habrán llegado|Para las ocho los invitados ya ___.|By eight the guests will have arrived.
+futp|5|vender|habrán vendido|Para el sábado ellos ya ___ todas las entradas.|By Saturday they will have sold all the tickets.
+condp|0|ir|habría ido|Yo ___ a la fiesta, pero estaba enfermo.|I would have gone to the party, but I was ill.
+condp|0|comprar|habría comprado|Con más dinero, yo ___ el coche rojo.|With more money, I would have bought the red car.
+condp|1|hacer|habrías hecho|¿Qué ___ tú en mi lugar?|What would you have done in my place?
+condp|1|decir|habrías dicho|¿Tú le ___ la verdad?|Would you have told him the truth?
+condp|2|venir|habría venido|Mi hermana ___, pero perdió el tren.|My sister would have come, but she missed the train.
+condp|2|ganar|habría ganado|Con un poco más de suerte, nuestro equipo ___.|With a little more luck, our team would have won.
+condp|3|llegar|habríamos llegado|Sin tráfico, nosotros ___ a tiempo.|Without the traffic, we would have arrived on time.
+condp|3|salir|habríamos salido|Nosotros ___ antes, pero llovía mucho.|We would have left earlier, but it was raining hard.
+condp|4|ver|habríais visto|Desde la torre vosotros ___ toda la ciudad.|From the tower you all would have seen the whole city.
+condp|4|poder|habríais podido|Con el coche vosotros ___ venir antes.|With the car you all could have come earlier.
+condp|5|ayudar|habrían ayudado|Mis amigos me ___, pero no se lo pedí.|My friends would have helped me, but I didn't ask them.
+condp|5|estar|habrían estado|Ellos ___ más cómodos en un hotel.|They would have been more comfortable in a hotel.
+isubj|0|tener|tuviera|Si yo ___ más tiempo, aprendería a tocar la guitarra.|If I had more time, I would learn to play the guitar.
+isubj|0|ser|fuera|Si yo ___ tú, no lo haría.|If I were you, I wouldn't do it.
+isubj|1|poder|pudieras|Si tú ___ vivir en cualquier ciudad, ¿cuál elegirías?|If you could live in any city, which would you choose?
+isubj|1|venir|vinieras|Me gustaría que tú ___ conmigo.|I would like you to come with me.
+isubj|2|hacer|hiciera|Si ___ buen tiempo, iríamos a la playa.|If the weather were good, we would go to the beach.
+isubj|2|decir|dijera|Le pedí a Juan que ___ la verdad.|I asked Juan to tell the truth.
+isubj|3|ganar|ganáramos|Si nosotros ___ la lotería, compraríamos una casa.|If we won the lottery, we would buy a house.
+isubj|3|llegar|llegáramos|El profesor quería que nosotros ___ temprano.|The teacher wanted us to arrive early.
+isubj|4|estudiar|estudiarais|Si vosotros ___ más, aprobaríais.|If you all studied more, you would pass.
+isubj|4|traer|trajerais|Os pedí que ___ algo de postre.|I asked you all to bring something for dessert.
+isubj|5|saber|supieran|Si ellos ___ la verdad, se enfadarían.|If they knew the truth, they would get angry.
+isubj|5|ir|fueran|Les dije a mis hijos que ___ a la cama.|I told my children to go to bed.
+psubj|0|aprobar|haya aprobado|Ojalá yo ___ el examen.|I hope I've passed the exam.
+psubj|0|olvidar|haya olvidado|No creo que yo ___ nada en el hotel.|I don't think I've left anything behind at the hotel.
+psubj|1|terminar|hayas terminado|Me alegro de que tú ___ la carrera.|I'm glad you have finished your degree.
+psubj|1|recibir|hayas recibido|Espero que tú ___ mi mensaje.|I hope you have received my message.
+psubj|2|llegar|haya llegado|Espero que mi hermana ___ bien.|I hope my sister has arrived safely.
+psubj|2|ver|haya visto|No creo que nadie ___ el accidente.|I don't think anyone has seen the accident.
+psubj|3|hacer|hayamos hecho|No creo que nosotros ___ nada malo.|I don't think we've done anything wrong.
+psubj|3|ganar|hayamos ganado|Es increíble que nosotros ___ el campeonato.|It's incredible that we've won the championship.
+psubj|4|divertirse|os hayáis divertido|Espero que vosotros ___ en la fiesta.|I hope you all had fun at the party.
+psubj|4|comer|hayáis comido|Me alegro de que vosotros ___ bien.|I'm glad you all have eaten well.
+psubj|5|salir|hayan salido|Es posible que ellos ya ___.|It's possible they've already left.
+psubj|5|entender|hayan entendido|Dudo que ellos ___ la pregunta.|I doubt they have understood the question.
+plsubj|0|saber|hubiera sabido|Si yo lo ___, te habría llamado.|If I had known, I would have called you.
+plsubj|0|estudiar|hubiera estudiado|Si yo ___ más, habría aprobado.|If I had studied more, I would have passed.
+plsubj|1|venir|hubieras venido|Si tú ___ ayer, habrías conocido a mi hermano.|If you had come yesterday, you would have met my brother.
+plsubj|1|decir|hubieras dicho|Ojalá tú me lo ___ antes.|I wish you had told me earlier.
+plsubj|2|llover|hubiera llovido|Si no ___, habríamos ido a la playa.|If it hadn't rained, we would have gone to the beach.
+plsubj|2|llegar|hubiera llegado|Si el tren ___ a tiempo, no habría perdido la cita.|If the train had arrived on time, I wouldn't have missed the appointment.
+plsubj|3|salir|hubiéramos salido|Si nosotros ___ antes, no habríamos perdido el avión.|If we had left earlier, we wouldn't have missed the plane.
+plsubj|3|comprar|hubiéramos comprado|Ojalá nosotros ___ esa casa.|I wish we had bought that house.
+plsubj|4|ver|hubierais visto|¡Si vosotros ___ la cara que puso!|If only you'd seen the look on his face!
+plsubj|4|llamar|hubierais llamado|Si vosotros me ___, os habría ayudado.|If you had called me, I would have helped you.
+plsubj|5|hacer|hubieran hecho|Si ellos ___ la reserva, ahora tendrían mesa.|If they had made the booking, they would have a table now.
+plsubj|5|escuchar|hubieran escuchado|Ojalá mis hijos me ___.|I wish my children had listened to me.
+neg|1|tocar|toques|No ___ eso, que quema.|Don't touch that, it's hot.
+neg|1|olvidar|olvides|No ___ las llaves, Marta.|Don't forget the keys, Marta.
+neg|2|fumar|fume|Por favor, no ___ aquí, señor.|Please don't smoke here, sir.
+neg|2|preocuparse|se preocupe|No ___ usted, señora, todo va bien.|Don't worry, madam, everything's fine.
+neg|3|llegar|lleguemos|No ___ tarde otra vez.|Let's not be late again.
+neg|3|decir|digamos|No ___ nada a nadie.|Let's not say anything to anyone.
+neg|4|correr|corráis|Niños, no ___ por el pasillo.|Kids, don't run in the corridor.
+neg|4|hacer|hagáis|Chicos, no ___ ruido, que es tarde.|Guys, don't make any noise, it's late.
+neg|5|tocar|toquen|Señores, por favor, no ___ los cuadros.|Please don't touch the paintings, everyone.
+neg|5|preocuparse|se preocupen|No ___ ustedes, llegaremos a tiempo.|Don't worry, we'll get there on time.
+pres|0|beber|bebo|Yo ___ mucha agua cuando hace calor.|I drink a lot of water when it's hot.
+pres|1|tener|tienes|¿Cuántos años ___ tú?|How old are you?
+pres|1|querer|quieres|¿___ tú un poco más de sopa?|Do you want a bit more soup?
+pres|1|conocer|conoces|¿Tú ___ a mi hermana?|Do you know my sister?
+pres|2|tener|tiene|Mi vecina ___ tres gatos.|My neighbour has three cats.
+pres|2|hablar|habla|¿Usted ___ inglés?|Do you speak English?
+pres|3|hablar|hablamos|En casa nosotros ___ español e inglés.|At home we speak Spanish and English.
+pres|3|salir|salimos|Los viernes nosotros ___ a cenar fuera.|On Fridays we go out for dinner.
+pres|3|querer|queremos|Nosotros ___ ver la catedral.|We want to see the cathedral.
+pres|4|ir|vais|¿Adónde ___ vosotros este verano?|Where are you all going this summer?
+pres|4|trabajar|trabajáis|¿Vosotros ___ en la misma empresa?|Do you all work at the same company?
+pres|4|poder|podéis|¿___ vosotros ayudarme un momento?|Can you all help me for a moment?
+pres|5|vivir|viven|Mis tíos ___ en Sevilla.|My aunt and uncle live in Seville.
+pres|5|dormir|duermen|Los gatos ___ casi todo el día.|Cats sleep almost all day.
+pret|0|ver|vi|Anoche yo ___ una serie nueva.|Last night I watched a new series.
+pret|0|perder|perdí|Ayer yo ___ el autobús.|Yesterday I missed the bus.
+pret|1|comprar|compraste|¿Dónde ___ tú esa chaqueta?|Where did you buy that jacket?
+pret|1|ir|fuiste|¿Adónde ___ tú el sábado?|Where did you go on Saturday?
+pret|2|llamar|llamó|Tu madre ___ hace una hora.|Your mother called an hour ago.
+pret|2|ir|fue|Usted ___ a la playa ayer, ¿no?|You went to the beach yesterday, didn't you?
+pret|3|comer|comimos|El domingo nosotros ___ en casa de mis padres.|On Sunday we had lunch at my parents' house.
+pret|3|ir|fuimos|En agosto nosotros ___ a Galicia.|In August we went to Galicia.
+pret|4|llegar|llegasteis|¿A qué hora ___ vosotros anoche?|What time did you all get in last night?
+pret|4|hacer|hicisteis|¿Qué ___ vosotros el fin de semana pasado?|What did you all do last weekend?
+pret|4|decir|dijisteis|¿Qué le ___ vosotros ayer al profesor?|What did you all say to the teacher yesterday?
+pret|5|llegar|llegaron|Anoche los invitados ___ a las nueve.|Last night the guests arrived at nine.
+pret|5|tener|tuvieron|Mis vecinos ___ un bebé el mes pasado.|My neighbours had a baby last month.
+impf|0|ir|iba|Antes yo ___ al trabajo en bici.|I used to go to work by bike.
+impf|0|ser|era|Yo ___ muy tímido de pequeño.|I was very shy as a child.
+impf|1|estar|estabas|¿Dónde ___ tú cuando te llamé?|Where were you when I called you?
+impf|1|jugar|jugabas|¿A qué ___ tú de pequeño?|What did you use to play as a kid?
+impf|1|querer|querías|De niño, ¿qué ___ ser tú de mayor?|As a child, what did you want to be when you grew up?
+impf|2|tener|tenía|Mi abuela ___ un huerto enorme.|My grandmother used to have a huge vegetable garden.
+impf|2|vivir|vivía|Antes mi tía ___ en Londres.|My aunt used to live in London.
+impf|3|ir|íbamos|De pequeños, nosotros siempre ___ al colegio andando.|As kids we always used to walk to school.
+impf|3|jugar|jugábamos|De pequeños, nosotros ___ en el parque cada tarde.|As kids we used to play in the park every afternoon.
+impf|4|tener|teníais|¿Vosotros ___ mascotas de pequeños?|Did you all have pets as kids?
+impf|4|hacer|hacíais|¿Qué ___ vosotros los veranos de niños?|What did you all use to do in the summers as kids?
+impf|4|querer|queríais|¿Vosotros ___ venir con nosotros ayer?|Did you all want to come with us yesterday?
+impf|5|vivir|vivían|Antes mis abuelos ___ en una casa con jardín.|My grandparents used to live in a house with a garden.
+impf|5|jugar|jugaban|Los niños ___ en la calle hasta muy tarde.|The children used to play in the street until very late.
+impf|5|hablar|hablaban|Ellos ___ por teléfono cuando entré.|They were talking on the phone when I came in.
+fut|0|salir|saldré|Mañana yo ___ temprano de casa.|Tomorrow I'll leave home early.
+fut|0|venir|vendré|Yo ___ a verte la semana que viene.|I'll come to see you next week.
+fut|1|ir|irás|¿___ tú a la boda de Laura?|Will you go to Laura's wedding?
+fut|1|hacer|harás|¿Qué ___ tú después de la universidad?|What will you do after university?
+fut|1|poder|podrás|Mañana ___ tú descansar todo el día.|Tomorrow you'll be able to rest all day.
+fut|2|hacer|hará|Usted ___ un buen trabajo, estoy seguro.|You'll do a good job, I'm sure.
+fut|2|tener|tendrá|Mi hermana ___ un bebé en marzo.|My sister will have a baby in March.
+fut|3|venir|vendremos|Nosotros ___ otra vez el año que viene.|We'll come again next year.
+fut|3|decir|diremos|Mañana nosotros les ___ la noticia.|Tomorrow we'll tell them the news.
+fut|3|saber|sabremos|Nosotros ___ el resultado el viernes.|We'll know the result on Friday.
+fut|4|tener|tendréis|Vosotros ___ que esperar un poco.|You'll all have to wait a little.
+fut|4|ir|iréis|¿___ vosotros a la playa mañana?|Will you all go to the beach tomorrow?
+fut|5|hacer|harán|Ellos ___ la comida para la fiesta.|They'll make the food for the party.
+fut|5|ir|irán|Mis padres ___ a Italia en primavera.|My parents will go to Italy in spring.
+fut|5|poder|podrán|Mañana ustedes ___ visitar el castillo.|Tomorrow you'll be able to visit the castle.
+cond|0|querer|querría|Yo ___ hablar con el director, por favor.|I'd like to speak to the director, please.
+cond|0|poder|podría|Yo ___ ayudarte mañana.|I could help you tomorrow.
+cond|1|ir|irías|¿___ tú a vivir a otro país?|Would you go and live in another country?
+cond|1|tener|tendrías|¿___ tú un momento para hablar?|Would you have a moment to talk?
+cond|1|comprar|comprarías|¿Tú ___ un coche eléctrico?|Would you buy an electric car?
+cond|2|deber|debería|Usted ___ descansar más.|You should rest more.
+cond|2|hacer|haría|Mi abuela ___ cualquier cosa por sus nietos.|My grandmother would do anything for her grandchildren.
+cond|3|querer|querríamos|Nosotros ___ reservar una habitación doble.|We would like to book a double room.
+cond|3|comprar|compraríamos|Con más espacio, nosotros ___ un piano.|With more space, we would buy a piano.
+cond|4|ir|iríais|¿___ vosotros a un concierto conmigo?|Would you all go to a concert with me?
+cond|4|tener|tendríais|¿___ vosotros sitio para una persona más?|Would you all have room for one more person?
+cond|4|vivir|viviríais|¿Vosotros ___ en el campo?|Would you all live in the country?
+cond|5|querer|querrían|Mis hijos ___ tener un perro.|My children would like to have a dog.
+cond|5|ir|irían|Ellos ___ con nosotros, pero están enfermos.|They would go with us, but they're ill.
+cond|5|deber|deberían|Ustedes ___ probar la tortilla.|You should try the tortilla.
+perf|0|leer|he leído|Este mes yo ___ dos novelas.|This month I've read two novels.
+perf|0|comer|he comido|Hoy yo ___ demasiado.|I've eaten too much today.
+perf|0|decir|he dicho|Yo ya te lo ___ muchas veces.|I've already told you many times.
+perf|1|ver|has visto|¿___ tú alguna vez una película en versión original?|Have you ever watched a film in the original language?
+perf|1|hacer|has hecho|¿Qué ___ tú hoy?|What have you done today?
+perf|1|poner|has puesto|¿Dónde ___ tú el mando?|Where have you put the remote?
+perf|2|escribir|ha escrito|Este año mi hermana ___ un libro.|My sister has written a book this year.
+perf|2|ver|ha visto|¿___ usted alguna vez un eclipse?|Have you ever seen an eclipse?
+perf|2|hacer|ha hecho|Hoy ___ mucho calor.|It has been very hot today.
+perf|3|terminar|hemos terminado|Nosotros ya ___ la reforma de la cocina.|We've already finished redoing the kitchen.
+perf|3|estar|hemos estado|Nosotros nunca ___ en Asia.|We've never been to Asia.
+perf|3|decir|hemos dicho|Nosotros no le ___ nada a nadie.|We haven't told anyone anything.
+perf|4|volver|habéis vuelto|¿Ya ___ vosotros del viaje?|Are you all back from the trip already?
+perf|4|poner|habéis puesto|¿Dónde ___ vosotros las maletas?|Where have you all put the suitcases?
+perf|4|terminar|habéis terminado|¿Ya ___ vosotros el examen?|Have you all finished the exam yet?
+perf|5|decir|han dicho|¿Qué ___ los médicos esta mañana?|What have the doctors said this morning?
+perf|5|hacer|han hecho|Hoy mis hijos ___ la cena.|My children have made dinner today.
+perf|5|estar|han estado|Este año mis padres ___ en China.|My parents have been to China this year.
+subj|0|ser|sea|Mis padres quieren que yo ___ abogado.|My parents want me to be a lawyer.
+subj|0|estar|esté|Mi jefe quiere que yo ___ en la oficina a las nueve.|My boss wants me to be at the office at nine.
+subj|0|venir|venga|¿Quieres que yo ___ contigo?|Do you want me to come with you?
+subj|1|ir|vayas|No quiero que tú ___ solo.|I don't want you to go alone.
+subj|1|hacer|hagas|Es mejor que tú ___ los deberes ahora.|It's better that you do your homework now.
+subj|2|estar|esté|Espero que tu madre ___ mejor.|I hope your mother is better.
+subj|2|tener|tenga|Ojalá el hotel ___ piscina.|I hope the hotel has a pool.
+subj|2|ir|vaya|Es importante que usted ___ al médico.|It's important that you go to the doctor.
+subj|3|hablar|hablemos|Es mejor que nosotros ___ en persona.|It's better if we talk in person.
+subj|3|estar|estemos|Mi madre quiere que nosotros ___ en casa a las diez.|My mother wants us to be home at ten.
+subj|4|ir|vayáis|Es mejor que vosotros ___ en metro.|It's better if you all go by metro.
+subj|4|tener|tengáis|Ojalá vosotros ___ buen tiempo en la playa.|I hope you all have good weather at the beach.
+subj|4|ser|seáis|Espero que vosotros ___ muy felices juntos.|I hope you'll be very happy together.
+subj|5|venir|vengan|Espero que mis primos ___ a la boda.|I hope my cousins come to the wedding.
+subj|5|hacer|hagan|El profesor quiere que los alumnos ___ los ejercicios.|The teacher wants the students to do the exercises.
+imp|1|ir|ve|___ a la tienda y compra pan, por favor.|Go to the shop and buy some bread, please.
+imp|2|hablar|hable|___ usted más despacio, por favor.|Please speak more slowly.
+imp|2|abrir|abra|___ usted la boca, por favor.|Open your mouth, please.
+imp|2|poner|ponga|___ usted la maleta aquí, por favor.|Put the suitcase here, please.
+imp|3|salir|salgamos|___ a dar un paseo.|Let's go out for a walk.
+imp|3|ver|veamos|___ qué hay en la tele.|Let's see what's on TV.
+imp|3|cantar|cantemos|¡___ cumpleaños feliz!|Let's sing happy birthday!
+imp|4|comer|comed|Chicos, ___ algo antes de salir.|Guys, eat something before you go out.
+imp|4|decir|decid|___ la verdad, chicos.|Tell the truth, guys.
+imp|4|ir|id|Niños, ___ a lavaros las manos.|Kids, go and wash your hands.
+imp|5|tomar|tomen|___ ustedes asiento, por favor.|Take a seat, please.
+imp|5|hacer|hagan|___ ustedes cola aquí, por favor.|Please queue here.
+imp|5|abrir|abran|___ ustedes las ventanas, por favor.|Please open the windows.
+prox|0|comprar|voy a comprar|Mañana yo ___ un móvil nuevo.|Tomorrow I'm going to buy a new phone.
+prox|0|cocinar|voy a cocinar|Esta noche yo ___ pasta.|Tonight I'm going to cook pasta.
+prox|0|hacer|voy a hacer|Este verano yo ___ un curso de surf.|This summer I'm going to do a surf course.
+prox|0|ir|voy a ir|El sábado yo ___ al dentista.|On Saturday I'm going to go to the dentist.
+prox|0|dormir|voy a dormir|Estoy cansado; ahora yo ___ un rato.|I'm tired; I'm going to sleep for a while now.
+prox|0|ver|voy a ver|Luego yo ___ el partido con mis amigos.|Later I'm going to watch the match with my friends.
+prox|0|escribir|voy a escribir|Esta tarde yo ___ un correo a mi profesora.|This afternoon I'm going to write an email to my teacher.
+prox|1|comer|vas a comer|¿Qué ___ tú hoy para cenar?|What are you going to have for dinner today?
+prox|1|ir|vas a ir|¿Cómo ___ tú al aeropuerto mañana?|How are you going to get to the airport tomorrow?
+prox|1|estudiar|vas a estudiar|¿Qué ___ tú en la universidad?|What are you going to study at university?
+prox|1|llamar|vas a llamar|¿___ tú a tu abuela esta tarde?|Are you going to call your grandmother this afternoon?
+prox|1|comprar|vas a comprar|¿Qué le ___ tú a tu madre por su cumpleaños?|What are you going to buy your mother for her birthday?
+prox|1|ponerse|te vas a poner|¿Qué ___ tú para la fiesta?|What are you going to wear to the party?
+prox|1|salir|vas a salir|¿A qué hora ___ tú de casa mañana?|What time are you going to leave home tomorrow?
+prox|2|empezar|va a empezar|El concierto ___ en cinco minutos.|The concert is going to start in five minutes.
+prox|2|venir|va a venir|Mi abuela ___ a comer el domingo.|My grandmother is going to come for lunch on Sunday.
+prox|2|hacer|va a hacer|Este fin de semana ___ sol.|It's going to be sunny this weekend.
+prox|2|trabajar|va a trabajar|Mi hermano ___ en un hotel este verano.|My brother is going to work in a hotel this summer.
+prox|2|tener|va a tener|Mi prima ___ un bebé en abril.|My cousin is going to have a baby in April.
+prox|2|cerrar|va a cerrar|La tienda ___ dentro de diez minutos.|The shop is going to close in ten minutes.
+prox|2|llegar|va a llegar|¿A qué hora ___ usted mañana?|What time are you going to arrive tomorrow?
+prox|3|comer|vamos a comer|Hoy nosotros ___ en casa de mi tía.|Today we're going to have lunch at my aunt's.
+prox|3|hacer|vamos a hacer|El sábado nosotros ___ una barbacoa.|On Saturday we're going to have a barbecue.
+prox|3|comprar|vamos a comprar|Este año nosotros ___ un coche nuevo.|This year we're going to buy a new car.
+prox|3|pintar|vamos a pintar|Mañana nosotros ___ la cocina.|Tomorrow we're going to paint the kitchen.
+prox|3|salir|vamos a salir|Esta noche nosotros ___ a bailar.|Tonight we're going to go out dancing.
+prox|3|visitar|vamos a visitar|En Navidad nosotros ___ a mis abuelos.|At Christmas we're going to visit my grandparents.
+prox|3|llegar|vamos a llegar|¡Corre, que nosotros ___ tarde!|Hurry, we're going to be late!
+prox|4|hacer|vais a hacer|¿Qué ___ vosotros en Semana Santa?|What are you all going to do at Easter?
+prox|4|ir|vais a ir|¿Cómo ___ vosotros a la boda?|How are you all going to get to the wedding?
+prox|4|venir|vais a venir|¿___ vosotros a mi cumpleaños?|Are you all going to come to my birthday?
+prox|4|ver|vais a ver|¿Qué película ___ vosotros esta noche?|What film are you all going to watch tonight?
+prox|4|quedarse|os vais a quedar|¿Cuántos días ___ vosotros en Roma?|How many days are you all going to stay in Rome?
+prox|4|cenar|vais a cenar|¿Dónde ___ vosotros esta noche?|Where are you all going to have dinner tonight?
+prox|4|comprar|vais a comprar|¿___ vosotros la casa de la playa?|Are you all going to buy the beach house?
+prox|5|venir|van a venir|Mis primos ___ a pasar el verano con nosotros.|My cousins are going to spend the summer with us.
+prox|5|abrir|van a abrir|Ellos ___ un restaurante en el centro.|They're going to open a restaurant in the centre.
+prox|5|hacer|van a hacer|Mis padres ___ un crucero en junio.|My parents are going to go on a cruise in June.
+prox|5|tener|van a tener|Ustedes ___ que esperar un poco.|You're going to have to wait a bit.
+prox|5|construir|van a construir|Aquí ___ un hospital nuevo.|They're going to build a new hospital here.
+prox|5|ver|van a ver|Esta noche ellos ___ el partido en un bar.|Tonight they're going to watch the match in a bar.
+prox|5|llegar|van a llegar|Los invitados ___ a las ocho.|The guests are going to arrive at eight.
+plup|0|salir|había salido|Cuando llamaste, yo ya ___ de casa.|When you called, I had already left home.
+plup|0|perder|había perdido|Yo ___ las llaves, así que no pude entrar.|I had lost my keys, so I couldn't get in.
+plup|0|estar|había estado|Yo nunca ___ en un sitio tan bonito.|I had never been to such a beautiful place.
+plup|0|comer|había comido|Yo no tenía hambre porque ya ___.|I wasn't hungry because I had already eaten.
+plup|0|leer|había leído|Yo ya ___ el libro antes de ver la película.|I had already read the book before seeing the film.
+plup|0|olvidar|había olvidado|Yo ___ el paraguas en casa y me mojé.|I had left my umbrella at home and I got wet.
+plup|0|hacer|había hecho|Cuando llegó mi madre, yo ya ___ la cena.|When my mother arrived, I had already made dinner.
+plup|1|ver|habías visto|¿Tú ya ___ esa película antes?|Had you already seen that film before?
+plup|1|comer|habías comido|¿Por qué no tenías hambre? ¿Ya ___ tú?|Why weren't you hungry? Had you already eaten?
+plup|1|terminar|habías terminado|¿Tú ya ___ los estudios cuando te mudaste?|Had you already finished your studies when you moved?
+plup|1|hacer|habías hecho|¿Qué ___ tú antes de empezar aquí?|What had you done before starting here?
+plup|1|ir|habías ido|¿Tú nunca ___ a un concierto antes?|Had you never been to a concert before?
+plup|1|llamar|habías llamado|Tú ya me ___ cuando recibí el mensaje.|You had already called me when I got the message.
+plup|1|poner|habías puesto|¿Dónde ___ tú las llaves? No las encontraba.|Where had you put the keys? I couldn't find them.
+plup|2|terminar|había terminado|Cuando llegué, la película ya ___.|When I arrived, the film had already finished.
+plup|2|ver|había visto|Mi abuela nunca ___ el mar.|My grandmother had never seen the sea.
+plup|2|llegar|había llegado|Cuando salimos, el taxi ya ___.|When we came out, the taxi had already arrived.
+plup|2|irse|se había ido|Cuando llegué a la oficina, mi jefe ya ___.|When I got to the office, my boss had already left.
+plup|2|decir|había dicho|Ana me ___ que no podía venir.|Ana had told me she couldn't come.
+plup|2|cerrar|había cerrado|Cuando llegamos, el museo ya ___.|When we arrived, the museum had already closed.
+plup|2|hacer|había hecho|Mi padre ya ___ la compra cuando volví.|My father had already done the shopping when I got back.
+plup|3|salir|habíamos salido|Cuando empezó a llover, nosotros ya ___.|When it started to rain, we had already left.
+plup|3|ver|habíamos visto|Nosotros nunca ___ tanta gente en la playa.|We had never seen so many people on the beach.
+plup|3|estar|habíamos estado|Nosotros ya ___ en Lisboa dos veces.|We had already been to Lisbon twice.
+plup|3|reservar|habíamos reservado|Por suerte, nosotros ___ una mesa.|Luckily, we had booked a table.
+plup|3|olvidar|habíamos olvidado|Nosotros ___ los pasaportes en el hotel.|We had left our passports at the hotel.
+plup|3|terminar|habíamos terminado|Cuando sonó el timbre, nosotros ya ___ el examen.|When the bell rang, we had already finished the exam.
+plup|3|hacer|habíamos hecho|Nosotros ya ___ las maletas la noche anterior.|We had already packed our suitcases the night before.
+plup|4|estar|habíais estado|¿Vosotros ya ___ en Barcelona antes?|Had you all been to Barcelona before?
+plup|4|comer|habíais comido|¿Vosotros ya ___ cuando llegamos?|Had you all already eaten when we arrived?
+plup|4|salir|habíais salido|Cuando os llamé, ¿ya ___ vosotros?|When I called you, had you all already left?
+plup|4|terminar|habíais terminado|¿Ya ___ vosotros los deberes cuando llegó vuestra madre?|Had you all already finished your homework when your mother arrived?
+plup|4|decir|habíais dicho|Vosotros me ___ que veníais a las seis.|You all had told me you were coming at six.
+plup|4|comprar|habíais comprado|¿Vosotros ya ___ los billetes?|Had you all already bought the tickets?
+plup|4|ir|habíais ido|¿Vosotros nunca ___ a esquiar antes de aquel invierno?|Had you all never been skiing before that winter?
+plup|5|empezar|habían empezado|Cuando llegué, ellos ya ___ a comer.|When I arrived, they had already started eating.
+plup|5|ver|habían visto|Mis padres nunca ___ un partido de rugby.|My parents had never seen a rugby match.
+plup|5|vender|habían vendido|Cuando fuimos a comprarlas, ya ___ todas las entradas.|When we went to buy them, they had already sold all the tickets.
+plup|5|decir|habían dicho|Ellos me ___ que la tienda abría a las nueve.|They had told me the shop opened at nine.
+plup|5|llegar|habían llegado|Cuando bajé, los invitados ya ___.|When I came down, the guests had already arrived.
+plup|5|hacer|habían hecho|Los niños ya ___ los deberes antes de cenar.|The children had already done their homework before dinner.
+plup|5|estar|habían estado|Ellos nunca ___ tan nerviosos.|They had never been so nervous.
+futp|0|hacer|habré hecho|Para el viernes yo ya ___ todas las compras.|By Friday I will have done all the shopping.
+futp|0|volver|habré vuelto|A las ocho yo ya ___ a casa.|By eight I will have got back home.
+futp|0|ahorrar|habré ahorrado|En diciembre yo ya ___ dinero para el viaje.|By December I will have saved money for the trip.
+futp|0|aprender|habré aprendido|Dentro de un año yo ___ mucho español.|A year from now I will have learnt a lot of Spanish.
+futp|0|escribir|habré escrito|Para el lunes yo ya ___ la carta.|By Monday I will have written the letter.
+futp|0|llegar|habré llegado|Cuando te despiertes, yo ya ___ a Madrid.|When you wake up, I will have arrived in Madrid.
+futp|0|salir|habré salido|A las siete yo ya ___ del trabajo.|By seven I will have left work.
+futp|1|terminar|habrás terminado|Para junio tú ya ___ la carrera.|By June you will have finished your degree.
+futp|1|leer|habrás leído|Para el examen tú ya ___ todos los libros.|By the exam you will have read all the books.
+futp|1|hacer|habrás hecho|Para cuando vuelva, ¿tú ya ___ la cena?|By the time I get back, will you have made dinner?
+futp|1|ver|habrás visto|Seguro que tú ya ___ esa serie.|You've surely seen that series already.
+futp|1|perder|habrás perdido|Tú no encuentras el móvil; lo ___ en el bar.|You can't find your phone; you must have lost it at the bar.
+futp|1|aprender|habrás aprendido|Después del curso tú ___ a cocinar.|After the course you will have learnt to cook.
+futp|1|volver|habrás vuelto|Para Navidad tú ya ___ de Australia.|By Christmas you will have come back from Australia.
+futp|2|llegar|habrá llegado|A estas horas mi hermana ya ___ a casa.|By now my sister will have got home.
+futp|2|ver|habrá visto|Seguro que tu madre ya ___ las fotos.|Your mother has surely seen the photos by now.
+futp|2|hacer|habrá hecho|Para la noche mi padre ya ___ la paella.|By tonight my father will have made the paella.
+futp|2|empezar|habrá empezado|Cuando lleguemos, la película ya ___.|When we arrive, the film will have started.
+futp|2|decir|habrá dicho|¿Qué le ___ el médico a Juan?|I wonder what the doctor has told Juan.
+futp|2|volver|habrá vuelto|Para las seis usted ya ___ del aeropuerto.|By six you will have got back from the airport.
+futp|2|vender|habrá vendido|Para el verano mi tío ya ___ la casa.|By summer my uncle will have sold the house.
+futp|3|hacer|habremos hecho|Para mañana nosotros ya ___ las maletas.|By tomorrow we will have packed the suitcases.
+futp|3|llegar|habremos llegado|A las nueve nosotros ya ___ al hotel.|By nine we will have arrived at the hotel.
+futp|3|terminar|habremos terminado|Para el verano nosotros ___ la casa.|By summer we will have finished the house.
+futp|3|ver|habremos visto|Al final del viaje nosotros ___ diez ciudades.|By the end of the trip we will have seen ten cities.
+futp|3|vivir|habremos vivido|En mayo nosotros ___ aquí cinco años.|In May we will have lived here for five years.
+futp|3|pagar|habremos pagado|En 2030 nosotros ya ___ el piso.|By 2030 we will have paid off the flat.
+futp|3|salir|habremos salido|Cuando lleguéis, nosotros ya ___.|When you all arrive, we will have left.
+futp|4|terminar|habréis terminado|Para las doce vosotros ya ___ el examen.|By twelve you all will have finished the exam.
+futp|4|llegar|habréis llegado|Mañana a esta hora vosotros ya ___ a París.|By this time tomorrow you all will have arrived in Paris.
+futp|4|comer|habréis comido|A las tres vosotros ya ___, ¿no?|By three you all will have eaten, right?
+futp|4|aprender|habréis aprendido|Al final del curso vosotros ___ mucho.|By the end of the course you all will have learnt a lot.
+futp|4|leer|habréis leído|Para el lunes vosotros ya ___ el capítulo.|By Monday you all will have read the chapter.
+futp|4|decidir|habréis decidido|Para el viernes vosotros ya ___ adónde ir.|By Friday you all will have decided where to go.
+futp|4|volver|habréis vuelto|Para septiembre vosotros ya ___ del viaje.|By September you all will have got back from the trip.
+futp|5|terminar|habrán terminado|Para diciembre ellos ya ___ el puente.|By December they will have finished the bridge.
+futp|5|salir|habrán salido|A estas horas mis padres ya ___ de viaje.|By now my parents will have set off on their trip.
+futp|5|cenar|habrán cenado|A las once los niños ya ___.|By eleven the children will have had dinner.
+futp|5|ver|habrán visto|Ustedes ya ___ la catedral, ¿verdad?|You'll have seen the cathedral already, right?
+futp|5|hacer|habrán hecho|Para la fiesta ellos ya ___ la tarta.|By the party they will have made the cake.
+futp|5|irse|se habrán ido|Si llegamos tarde, ellos ya ___.|If we arrive late, they will have left.
+futp|5|recibir|habrán recibido|Para el lunes ustedes ya ___ el paquete.|By Monday you will have received the parcel.
+condp|0|hacer|habría hecho|Yo ___ lo mismo en tu situación.|I would have done the same in your situation.
+condp|0|venir|habría venido|Yo ___ antes, pero había mucho tráfico.|I would have come earlier, but there was a lot of traffic.
+condp|0|llamar|habría llamado|Yo te ___, pero no tenía batería.|I would have called you, but my battery was dead.
+condp|0|ayudar|habría ayudado|Yo te ___ con mucho gusto.|I would have gladly helped you.
+condp|0|decir|habría dicho|Yo no le ___ nada.|I wouldn't have said anything to him.
+condp|0|estudiar|habría estudiado|Con más tiempo, yo ___ medicina.|With more time, I would have studied medicine.
+condp|0|preferir|habría preferido|Yo ___ quedarme en casa.|I would have preferred to stay at home.
+condp|1|ir|habrías ido|¿Tú ___ a la fiesta sin invitación?|Would you have gone to the party without an invitation?
+condp|1|comprar|habrías comprado|¿Tú ___ esa casa?|Would you have bought that house?
+condp|1|poder|habrías podido|Con más práctica, tú ___ ganar.|With more practice, you could have won.
+condp|1|tener|habrías tenido|Sin el paraguas tú ___ problemas.|Without the umbrella you would have had problems.
+condp|1|venir|habrías venido|¿___ tú conmigo a la reunión?|Would you have come with me to the meeting?
+condp|1|aprobar|habrías aprobado|Con un poco más de estudio, tú ___.|With a bit more studying, you would have passed.
+condp|1|preferir|habrías preferido|¿Tú ___ ir en tren?|Would you have preferred to go by train?
+condp|2|llegar|habría llegado|Sin la nieve, el avión ___ a tiempo.|Without the snow, the plane would have arrived on time.
+condp|2|cumplir|habría cumplido|Hoy mi abuelo ___ cien años.|My grandfather would have turned a hundred today.
+condp|2|decir|habría dicho|Mi madre ___ que no.|My mother would have said no.
+condp|2|poder|habría podido|Usted ___ pedir ayuda.|You could have asked for help.
+condp|2|ser|habría sido|Un día en la playa ___ perfecto.|A day at the beach would have been perfect.
+condp|2|ir|habría ido|Mi hermano ___ con nosotros, pero estaba trabajando.|My brother would have gone with us, but he was working.
+condp|2|ayudar|habría ayudado|Mi vecino te ___, seguro.|My neighbour would have helped you, I'm sure.
+condp|3|ir|habríamos ido|Nosotros ___ a la playa, pero hacía frío.|We would have gone to the beach, but it was cold.
+condp|3|comprar|habríamos comprado|Nosotros ___ la casa, pero era demasiado cara.|We would have bought the house, but it was too expensive.
+condp|3|ganar|habríamos ganado|Con nuestro mejor jugador, nosotros ___.|With our best player, we would have won.
+condp|3|hacer|habríamos hecho|Nosotros ___ una fiesta, pero no había tiempo.|We would have had a party, but there wasn't time.
+condp|3|ver|habríamos visto|Desde allí nosotros ___ el castillo.|From there we would have seen the castle.
+condp|3|comer|habríamos comido|Nosotros ___ fuera, pero todo estaba cerrado.|We would have eaten out, but everything was closed.
+condp|3|tener|habríamos tenido|Sin tu ayuda, nosotros ___ problemas.|Without your help, we would have had problems.
+condp|4|ir|habríais ido|¿Vosotros ___ al concierto sin mí?|Would you all have gone to the concert without me?
+condp|4|hacer|habríais hecho|¿Qué ___ vosotros en mi lugar?|What would you all have done in my place?
+condp|4|llegar|habríais llegado|En tren, vosotros ___ antes.|By train, you all would have arrived earlier.
+condp|4|comprar|habríais comprado|¿Vosotros ___ ese coche?|Would you all have bought that car?
+condp|4|tener|habríais tenido|Sin abrigo, vosotros ___ frío.|Without coats, you all would have been cold.
+condp|4|venir|habríais venido|¿___ vosotros a la boda si os hubiéramos invitado?|Would you all have come to the wedding if we had invited you?
+condp|4|decir|habríais dicho|¿Vosotros le ___ la verdad?|Would you all have told him the truth?
+condp|5|ir|habrían ido|Mis padres ___ a la boda, pero estaban enfermos.|My parents would have gone to the wedding, but they were ill.
+condp|5|venir|habrían venido|Mis amigos ___, pero perdieron el autobús.|My friends would have come, but they missed the bus.
+condp|5|ganar|habrían ganado|Con un poco más de suerte, ellos ___ el partido.|With a bit more luck, they would have won the match.
+condp|5|llegar|habrían llegado|Sin la huelga, ustedes ___ a tiempo.|Without the strike, you would have arrived on time.
+condp|5|hacer|habrían hecho|Ellos ___ lo mismo por nosotros.|They would have done the same for us.
+condp|5|comprar|habrían comprado|Mis abuelos ___ la casa, pero no tenían dinero.|My grandparents would have bought the house, but they had no money.
+condp|5|ser|habrían sido|Ellos ___ muy felices en el campo.|They would have been very happy in the countryside.
+isubj|0|poder|pudiera|Si yo ___, viajaría por todo el mundo.|If I could, I would travel all over the world.
+isubj|0|vivir|viviera|Si yo ___ en la playa, nadaría cada día.|If I lived by the beach, I would swim every day.
+isubj|0|saber|supiera|Si yo ___ cocinar, haría la cena.|If I knew how to cook, I would make dinner.
+isubj|0|ir|fuera|Mi madre quería que yo ___ a la universidad.|My mother wanted me to go to university.
+isubj|0|estudiar|estudiara|Mis padres querían que yo ___ medicina.|My parents wanted me to study medicine.
+isubj|0|hablar|hablara|Si yo ___ chino, trabajaría en Pekín.|If I spoke Chinese, I would work in Beijing.
+isubj|0|tener|tuviera|El médico me dijo que yo ___ paciencia.|The doctor told me to be patient.
+isubj|1|tener|tuvieras|Si tú ___ un día libre, ¿qué harías?|If you had a day off, what would you do?
+isubj|1|ser|fueras|Si tú ___ presidente, ¿qué cambiarías?|If you were president, what would you change?
+isubj|1|ganar|ganaras|¿Qué harías si tú ___ la lotería?|What would you do if you won the lottery?
+isubj|1|hacer|hicieras|Te pedí que ___ la cama.|I asked you to make the bed.
+isubj|1|ir|fueras|Mamá quería que tú ___ a la tienda.|Mum wanted you to go to the shop.
+isubj|1|llamar|llamaras|Me gustaría que tú me ___ más a menudo.|I'd like you to call me more often.
+isubj|1|estar|estuvieras|Si tú ___ aquí, todo sería más fácil.|If you were here, everything would be easier.
+isubj|2|tener|tuviera|Si mi hermano ___ coche, nos llevaría.|If my brother had a car, he would take us.
+isubj|2|venir|viniera|Me gustaría que mi abuela ___ a vernos.|I'd like my grandmother to come and see us.
+isubj|2|ser|fuera|Si el piso ___ más grande, lo compraríamos.|If the flat were bigger, we would buy it.
+isubj|2|llover|lloviera|Si ___, nos quedaríamos en casa.|If it rained, we would stay at home.
+isubj|2|poder|pudiera|Si usted ___ ayudarme, sería genial.|If you could help me, that would be great.
+isubj|2|estar|estuviera|Mi madre habla como si ___ enfadada.|My mother talks as if she were angry.
+isubj|2|saber|supiera|Si Pedro lo ___, se pondría muy contento.|If Pedro knew, he'd be very happy.
+isubj|3|tener|tuviéramos|Si nosotros ___ más dinero, viajaríamos más.|If we had more money, we would travel more.
+isubj|3|vivir|viviéramos|Si nosotros ___ en el centro, iríamos andando a todas partes.|If we lived in the centre, we would walk everywhere.
+isubj|3|poder|pudiéramos|Ojalá nosotros ___ ir de vacaciones.|I wish we could go on holiday.
+isubj|3|hacer|hiciéramos|La profesora nos pidió que ___ un resumen.|The teacher asked us to write a summary.
+isubj|3|ser|fuéramos|Si nosotros ___ más jóvenes, iríamos a ese festival.|If we were younger, we would go to that festival.
+isubj|3|ir|fuéramos|Nuestros amigos querían que nosotros ___ a su casa.|Our friends wanted us to go to their house.
+isubj|3|salir|saliéramos|Si nosotros ___ ahora, llegaríamos a tiempo.|If we left now, we would arrive on time.
+isubj|4|tener|tuvierais|Si vosotros ___ tiempo, ¿vendríais?|If you all had time, would you come?
+isubj|4|ver|vierais|Si vosotros ___ la casa, os encantaría.|If you all saw the house, you would love it.
+isubj|4|venir|vinierais|Me encantaría que vosotros ___ a la boda.|I'd love for you all to come to the wedding.
+isubj|4|hablar|hablarais|Os pedí que ___ más bajo.|I asked you all to speak more quietly.
+isubj|4|ser|fuerais|Si vosotros ___ mis hijos, no os dejaría salir.|If you were my children, I wouldn't let you go out.
+isubj|4|poder|pudierais|Si vosotros ___ elegir, ¿adónde iríais?|If you all could choose, where would you go?
+isubj|4|hacer|hicierais|Os dije que ___ los deberes.|I told you all to do your homework.
+isubj|5|tener|tuvieran|Si ellos ___ más tiempo, aprenderían inglés.|If they had more time, they would learn English.
+isubj|5|venir|vinieran|Me gustaría que mis padres ___ en verano.|I'd like my parents to come in summer.
+isubj|5|poder|pudieran|Si ustedes ___ esperar un momento, se lo agradecería.|If you could wait a moment, I'd be grateful.
+isubj|5|hacer|hicieran|El médico les pidió que ___ más deporte.|The doctor asked them to do more exercise.
+isubj|5|vivir|vivieran|Si mis abuelos ___ más cerca, los vería más.|If my grandparents lived closer, I'd see them more.
+isubj|5|llegar|llegaran|Les pedí a los invitados que ___ a las ocho.|I asked the guests to arrive at eight.
+isubj|5|ser|fueran|Si las entradas ___ más baratas, iríamos.|If the tickets were cheaper, we would go.
+psubj|0|hacer|haya hecho|No creo que yo ___ nada malo.|I don't think I've done anything wrong.
+psubj|0|ver|haya visto|Es posible que yo ___ esa película, pero no me acuerdo.|I may have seen that film, but I don't remember.
+psubj|0|terminar|haya terminado|Mi jefe espera que yo ___ el informe para hoy.|My boss expects me to have finished the report by today.
+psubj|0|perder|haya perdido|Es posible que yo ___ la cartera en el autobús.|I may have lost my wallet on the bus.
+psubj|0|leer|haya leído|Cuando yo ___ el libro, te lo dejo.|When I've read the book, I'll lend it to you.
+psubj|0|salir|haya salido|Cuando yo ___ del trabajo, te llamo.|When I've left work, I'll call you.
+psubj|0|equivocarse|me haya equivocado|Es posible que yo ___ de fecha.|I may have got the date wrong.
+psubj|1|ver|hayas visto|No creo que tú ___ nada igual.|I don't think you've seen anything like it.
+psubj|1|hacer|hayas hecho|Me alegro de que tú ___ tantos amigos.|I'm glad you've made so many friends.
+psubj|1|llegar|hayas llegado|Espero que tú ___ bien a casa.|I hope you got home safely.
+psubj|1|estar|hayas estado|Es una pena que tú ___ enfermo en vacaciones.|It's a shame you've been ill on holiday.
+psubj|1|aprobar|hayas aprobado|¡Qué bien que tú ___ el examen!|How great that you've passed the exam!
+psubj|1|decir|hayas dicho|No puedo creer que tú ___ eso.|I can't believe you said that.
+psubj|1|volver|hayas vuelto|Me alegro de que tú ___ sano y salvo.|I'm glad you've come back safe and sound.
+psubj|2|salir|haya salido|Espero que el tren no ___ todavía.|I hope the train hasn't left yet.
+psubj|2|hacer|haya hecho|Me sorprende que mi hijo ___ los deberes solo.|I'm surprised my son has done his homework on his own.
+psubj|2|terminar|haya terminado|Ojalá la reunión ya ___.|I hope the meeting has finished already.
+psubj|2|decir|haya dicho|No creo que el jefe ___ eso.|I don't think the boss said that.
+psubj|2|recibir|haya recibido|Espero que usted ___ mi correo.|I hope you've received my email.
+psubj|2|perder|haya perdido|Es una pena que tu equipo ___ el partido.|It's a shame your team has lost the match.
+psubj|2|venir|haya venido|Me alegro de que tu hermana ___ a la fiesta.|I'm glad your sister has come to the party.
+psubj|3|terminar|hayamos terminado|Cuando nosotros ___, iremos a tomar algo.|When we've finished, we'll go for a drink.
+psubj|3|llegar|hayamos llegado|Te llamaremos cuando nosotros ___ al hotel.|We'll call you when we've arrived at the hotel.
+psubj|3|ver|hayamos visto|Es posible que nosotros ___ esa casa antes.|We may have seen that house before.
+psubj|3|perder|hayamos perdido|Es una pena que nosotros ___ el tren.|It's a shame we've missed the train.
+psubj|3|olvidar|hayamos olvidado|No creo que nosotros ___ nada.|I don't think we've forgotten anything.
+psubj|3|aprender|hayamos aprendido|Mi profesora está contenta de que nosotros ___ tanto.|My teacher is happy that we've learnt so much.
+psubj|3|decir|hayamos dicho|Mis padres no creen que nosotros ___ la verdad.|My parents don't believe we've told the truth.
+psubj|4|hacer|hayáis hecho|Me alegro de que vosotros ___ las paces.|I'm glad you all have made up.
+psubj|4|llegar|hayáis llegado|Espero que vosotros ___ bien.|I hope you all have arrived safely.
+psubj|4|ver|hayáis visto|No creo que vosotros ___ algo tan bonito.|I don't think you've seen anything so beautiful.
+psubj|4|terminar|hayáis terminado|Cuando vosotros ___, podéis salir.|When you've finished, you can go out.
+psubj|4|ganar|hayáis ganado|¡Qué bien que vosotros ___ el concurso!|How great that you've won the competition!
+psubj|4|estar|hayáis estado|Es una pena que vosotros ___ enfermos.|It's a shame you've all been ill.
+psubj|4|decir|hayáis dicho|No me gusta que vosotros ___ eso.|I don't like that you've said that.
+psubj|5|llegar|hayan llegado|Espero que los niños ___ bien al colegio.|I hope the children have got to school safely.
+psubj|5|terminar|hayan terminado|Dudo que ellos ___ el trabajo.|I doubt they've finished the job.
+psubj|5|ver|hayan visto|No creo que ustedes ___ nada parecido.|I don't think you've seen anything like it.
+psubj|5|hacer|hayan hecho|Me alegro de que mis hijos ___ amigos.|I'm glad my children have made friends.
+psubj|5|vender|hayan vendido|Es posible que ya ___ todas las entradas.|They may have already sold all the tickets.
+psubj|5|decir|hayan dicho|No creo que ellos ___ la verdad.|I don't think they have told the truth.
+psubj|5|volver|hayan vuelto|Ojalá mis padres ya ___ del viaje.|I hope my parents are back from their trip already.
+plsubj|0|tener|hubiera tenido|Si yo ___ tiempo, habría ido contigo.|If I had had time, I would have gone with you.
+plsubj|0|ver|hubiera visto|Si yo te ___, te habría saludado.|If I had seen you, I would have said hello.
+plsubj|0|ir|hubiera ido|Ojalá yo ___ al concierto.|I wish I had gone to the concert.
+plsubj|0|salir|hubiera salido|Si yo ___ antes, no habría perdido el tren.|If I had left earlier, I wouldn't have missed the train.
+plsubj|0|aprender|hubiera aprendido|Ojalá yo ___ inglés de niño.|I wish I had learnt English as a child.
+plsubj|0|llamar|hubiera llamado|Si yo te ___, ¿habrías venido?|If I had called you, would you have come?
+plsubj|0|hacer|hubiera hecho|Si yo ___ los deberes, no estaría castigado.|If I had done my homework, I wouldn't be grounded.
+plsubj|1|estudiar|hubieras estudiado|Si tú ___ más, habrías aprobado.|If you had studied more, you would have passed.
+plsubj|1|ver|hubieras visto|¡Si tú ___ el partido!|If only you'd seen the match!
+plsubj|1|llegar|hubieras llegado|Si tú ___ antes, habrías visto a Laura.|If you had arrived earlier, you would have seen Laura.
+plsubj|1|tener|hubieras tenido|Si tú ___ cuidado, no te habrías caído.|If you had been careful, you wouldn't have fallen.
+plsubj|1|hacer|hubieras hecho|Ojalá tú ___ caso a tu madre.|I wish you had listened to your mother.
+plsubj|1|ir|hubieras ido|Si tú ___ al médico, ya estarías bien.|If you had gone to the doctor, you'd be fine by now.
+plsubj|1|llamar|hubieras llamado|Si tú me ___, te habría ayudado.|If you had called me, I would have helped you.
+plsubj|2|hacer|hubiera hecho|Si ___ sol, habríamos ido a la playa.|If it had been sunny, we would have gone to the beach.
+plsubj|2|venir|hubiera venido|Ojalá mi hermano ___ a la fiesta.|I wish my brother had come to the party.
+plsubj|2|saber|hubiera sabido|Si mi madre lo ___, se habría enfadado.|If my mother had known, she would have got angry.
+plsubj|2|ser|hubiera sido|Si el hotel ___ más barato, lo habríamos reservado.|If the hotel had been cheaper, we would have booked it.
+plsubj|2|tener|hubiera tenido|Si Juan ___ tiempo, nos habría ayudado.|If Juan had had time, he would have helped us.
+plsubj|2|estar|hubiera estado|Si usted ___ aquí, lo habría visto.|If you had been here, you would have seen it.
+plsubj|2|empezar|hubiera empezado|Si la película ___ antes, la habríamos visto entera.|If the film had started earlier, we would have seen all of it.
+plsubj|3|saber|hubiéramos sabido|Si nosotros lo ___, no habríamos venido.|If we had known, we wouldn't have come.
+plsubj|3|ir|hubiéramos ido|Ojalá nosotros ___ a la playa ayer.|I wish we had gone to the beach yesterday.
+plsubj|3|tener|hubiéramos tenido|Si nosotros ___ más dinero, habríamos comprado la casa.|If we had had more money, we would have bought the house.
+plsubj|3|llegar|hubiéramos llegado|Si nosotros ___ a tiempo, habríamos cogido el tren.|If we had arrived on time, we would have caught the train.
+plsubj|3|hacer|hubiéramos hecho|Si nosotros ___ una reserva, no estaríamos esperando.|If we had made a reservation, we wouldn't be waiting.
+plsubj|3|ver|hubiéramos visto|Si nosotros ___ el pronóstico, no habríamos salido.|If we had seen the forecast, we wouldn't have gone out.
+plsubj|3|estudiar|hubiéramos estudiado|Ojalá nosotros ___ más para el examen.|I wish we had studied more for the exam.
+plsubj|4|venir|hubierais venido|Si vosotros ___, os habríais divertido.|If you all had come, you would have had fun.
+plsubj|4|estar|hubierais estado|Ojalá vosotros ___ allí.|I wish you all had been there.
+plsubj|4|saber|hubierais sabido|Si vosotros lo ___, ¿qué habríais hecho?|If you all had known, what would you have done?
+plsubj|4|tener|hubierais tenido|Si vosotros ___ cuidado, no habría pasado nada.|If you all had been careful, nothing would have happened.
+plsubj|4|salir|hubierais salido|Si vosotros ___ antes, habríais llegado a tiempo.|If you all had left earlier, you would have arrived on time.
+plsubj|4|decir|hubierais dicho|Ojalá vosotros me lo ___ antes.|I wish you all had told me earlier.
+plsubj|4|ir|hubierais ido|Si vosotros ___ en tren, habríais tardado menos.|If you all had gone by train, it would have taken you less time.
+plsubj|5|llegar|hubieran llegado|Si los invitados ___ a tiempo, habríamos cenado antes.|If the guests had arrived on time, we would have had dinner earlier.
+plsubj|5|saber|hubieran sabido|Si mis padres lo ___, no me habrían dejado ir.|If my parents had known, they wouldn't have let me go.
+plsubj|5|venir|hubieran venido|Ojalá mis amigos ___ a mi cumpleaños.|I wish my friends had come to my birthday.
+plsubj|5|tener|hubieran tenido|Si ellos ___ más suerte, habrían ganado.|If they had had more luck, they would have won.
+plsubj|5|ver|hubieran visto|Si ustedes ___ el espectáculo, les habría encantado.|If you had seen the show, you would have loved it.
+plsubj|5|estar|hubieran estado|Ojalá ellos ___ con nosotros.|I wish they had been with us.
+plsubj|5|ir|hubieran ido|Si ellos ___ al médico, no estarían tan mal.|If they had gone to the doctor, they wouldn't be so ill.
+neg|1|llegar|llegues|No ___ tarde, por favor.|Don't be late, please.
+neg|1|comer|comas|No ___ tanto chocolate, Pablo.|Don't eat so much chocolate, Pablo.
+neg|1|decir|digas|No le ___ nada a mamá.|Don't say anything to Mum.
+neg|1|ir|vayas|No ___ solo por la noche, Juan.|Don't go out alone at night, Juan.
+neg|1|preocuparse|te preocupes|No ___, todo va a salir bien.|Don't worry, everything's going to be fine.
+neg|1|poner|pongas|No ___ los pies en el sofá, Lucía.|Don't put your feet on the sofa, Lucía.
+neg|2|tocar|toque|No ___ usted el cuadro, por favor.|Please don't touch the painting.
+neg|2|olvidar|olvide|No ___ usted su paraguas, señora.|Don't forget your umbrella, madam.
+neg|2|aparcar|aparque|No ___ usted aquí, señor.|Don't park here, sir.
+neg|2|hablar|hable|Por favor, no ___ usted por teléfono aquí.|Please don't talk on the phone here.
+neg|2|salir|salga|No ___ usted sin abrigo, que hace frío.|Don't go out without a coat, it's cold.
+neg|2|comer|coma|No ___ usted tanta sal, señor.|Don't eat so much salt, sir.
+neg|2|ir|vaya|No ___ usted por esa calle, está cortada.|Don't go down that street, it's closed.
+neg|3|ir|vayamos|No ___ a ese restaurante, es muy caro.|Let's not go to that restaurant, it's very expensive.
+neg|3|comer|comamos|No ___ tan tarde hoy.|Let's not eat so late today.
+neg|3|salir|salgamos|No ___ con esta lluvia.|Let's not go out in this rain.
+neg|3|perder|perdamos|No ___ el tiempo.|Let's not waste time.
+neg|3|hablar|hablemos|No ___ de trabajo en la cena.|Let's not talk about work at dinner.
+neg|3|comprar|compremos|No ___ más ropa este mes.|Let's not buy any more clothes this month.
+neg|3|preocuparse|nos preocupemos|No ___ antes de tiempo.|Let's not worry too soon.
+neg|4|tocar|toquéis|Niños, no ___ nada en la tienda.|Kids, don't touch anything in the shop.
+neg|4|gritar|gritéis|Chicos, no ___, que el bebé duerme.|Guys, don't shout, the baby is sleeping.
+neg|4|llegar|lleguéis|No ___ tarde a la cena, chicos.|Don't be late for dinner, guys.
+neg|4|comer|comáis|Niños, no ___ caramelos antes de comer.|Kids, don't eat sweets before lunch.
+neg|4|decir|digáis|No le ___ nada a papá, chicos.|Don't say anything to Dad, guys.
+neg|4|ir|vayáis|No ___ al río solos, niños.|Don't go to the river alone, kids.
+neg|4|preocuparse|os preocupéis|Chicos, no ___ por mí.|Guys, don't worry about me.
+neg|5|fumar|fumen|Por favor, no ___ ustedes en el tren.|Please don't smoke on the train.
+neg|5|olvidar|olviden|No ___ ustedes sus maletas.|Don't forget your suitcases.
+neg|5|hablar|hablen|Por favor, no ___ ustedes durante el concierto.|Please don't talk during the concert.
+neg|5|salir|salgan|No ___ ustedes del autobús todavía.|Don't get off the bus yet.
+neg|5|comer|coman|Por favor, no ___ ustedes en la sala.|Please don't eat in the room.
+neg|5|usar|usen|No ___ ustedes el móvil en clase.|Don't use your phones in class.
+neg|5|correr|corran|No ___ ustedes, hay tiempo de sobra.|Don't run, there's plenty of time.
+`;
+SENT.push(...SENT_RAW.trim().split('\n').map(l=>{const[t,p,v,a,s,en]=l.split('|');return{t,p:+p,v,a,s,en}}));
+const sentPool=()=>SENT.filter(s=>persons().includes(s.p));
+// the quick set leans on everyday tenses (about 4 in 5 questions); the level-up test stays even across all tenses
+const COMMON_T=new Set([...TENSES.map(t=>t.id),'prox','imp']);
+function weightedPick(arr,n,w){ // n distinct items, each drawn with probability proportional to w(item)
+  const pool=arr.map(x=>[x,w(x)]),out=[];
+  while(out.length<n&&pool.length){let r=Math.random()*pool.reduce((s,[,k])=>s+k,0),i=0;while(i<pool.length-1&&(r-=pool[i][1])>0)i++;out.push(pool.splice(i,1)[0][0])}
+  return out;
+}
+const qs_=s=>({kind:'sent',v:verbBy(s.v),t:s.t,p:s.p,ans:s.a,s:s.s,en:s.en,note:s.note});
 
 const isIrregularForm=(v,t,p)=>bare(v,t)[p]!==bare(plainOf(v),t)[p];
 function build(ts,vs,n,o={}){
@@ -1396,7 +2232,7 @@ function build(ts,vs,n,o={}){
 }
 function choices(x){ // four options: the answer plus plausible wrong ones
   const set=new Set([x.ans]);
-  if(x.kind==='sent'){for(const f of shuffle(TT.flatMap(t=>conj(x.v,t.id)).filter(f=>f&&!f.includes(' '))))if(set.size<4)set.add(f)}
+  if(x.kind==='sent'){const w=x.ans.split(' ').length;for(const f of shuffle(TT.flatMap(t=>conj(x.v,t.id)).filter(f=>f&&f.split(' ').length===w)))if(set.size<4)set.add(f)}
   else if(x.kind==='conj'){
     const pool=[bare(plainOf(x.v),x.t)[x.p]&&!x.v.refl?bare(plainOf(x.v),x.t)[x.p]:null,
       ...shuffle(conj(x.v,x.t).filter(Boolean)),...shuffle(TT.map(t=>conj(x.v,t.id)[x.p]).filter(Boolean))];
@@ -1411,7 +2247,7 @@ function choices(x){ // four options: the answer plus plausible wrong ones
 }
 function diagnose(x,got){
   const g=strip(got);
-  if(x.kind==='sent')return['Not quite.',x.note];
+  if(x.kind==='sent')return['Not quite.',x.note||steps(x.v,x.t,x.p).join(' ')];
   if(x.kind==='mean'){const v=VERBS.find(v=>strip(v.inf)===g);return v?['Wrong verb.',`${v.inf} means "${v.en}".`]:['Not a real verb.','That spelling does not match any verb in the dictionary.']}
   const hits=[];for(const t of TT)conj(x.v,t.id).forEach((f,i)=>{if(f&&strip(f)===g&&!(t.id===x.t&&i===x.p))hits.push([t.id,i])});
   const L_=(t,i)=>(t==='imp'||t==='neg'?IMPLAB:LAB)[i];
@@ -1430,7 +2266,7 @@ function showSteps(v,t,i){
   document.getElementById('mc').onclick=closeModal;
 }
 function recordAnswer(x,ok){
-  if(x.kind==='conj'){const st=S.st[x.t]||(S.st[x.t]={c:0,n:0});st.n++;if(ok)st.c++;const k=x.t+'|'+x.p,sp=S.stp[k]||(S.stp[k]={c:0,n:0});sp.n++;if(ok)sp.c++}
+  if(x.kind==='conj'||x.kind==='sent'&&x.p!=null){const st=S.st[x.t]||(S.st[x.t]={c:0,n:0});st.n++;if(ok)st.c++;const k=x.t+'|'+x.p,sp=S.stp[k]||(S.stp[k]={c:0,n:0});sp.n++;if(ok)sp.c++}
   const vs=S.vs[x.v.inf]||(S.vs[x.v.inf]={c:0,n:0});vs.n++;if(ok)vs.c++;
   if(x.kind!=='conj')return;
   const key=x.v.inf+'|'+x.t+'|'+x.p;
