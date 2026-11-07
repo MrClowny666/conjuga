@@ -1066,7 +1066,7 @@ const norm=s=>s.trim().toLowerCase().replace(/\s+/g,' ');
 /* ---------- state ---------- */
 const KEY='conjuga-v1';
 const fresh=()=>({lv:{},xp:0,streak:0,last:'',st:{},miss:[],vos:true,strict:false,tts:true,pt:['pres'],pg:['ar','erir','stem','spell','irr'],
-  fav:[],vf:{pop:0,end:'all',refl:'include',irr:[]},favOnly:false,hidePro:false,esNames:true,expand:true,
+  fav:[],vf:{pop:0,end:'all',refl:'include',irr:[]},favOnly:false,hidePro:false,esNames:false,expand:true,
   typo:true,auto:false,pause:'never',theme:'system',stp:{},days:{},quizzes:0,scoreSum:0,vs:{},missOk:{},
   cq:{what:'conj',how:'type',tenses:['pres'],pron:[0,1,2,3,4,5],verbs:'top100',n:10,hideInf:false,hideEn:false,irrOnly:false}});
 let S;try{S=Object.assign(fresh(),JSON.parse(localStorage.getItem(KEY)||'{}'))}catch{S=fresh()}
@@ -1121,7 +1121,7 @@ const VIEWS={
   const done=LEVELS.filter(l=>S.lv[l.id]).length;
   view.innerHTML=`<div class="row"><h1 style="font-size:26px">Your path</h1><span class="muted small">${done} / ${LEVELS.length} levels</span></div>
   <div class="meter" style="margin-top:8px"><i style="width:${done/LEVELS.length*100}%"></i></div>`+
-  TENSES.map(t=>`<section class="tense"><div class="tense-head"><h2>${t.name}</h2><span class="ex">${t.ex}</span></div><p class="tense-sub"><b>${T[t.id].en}:</b> ${T[t.id].use}</p><div class="levels">`+
+  TENSES.map(t=>`<section class="tense"><div class="tense-head"><h2>${tn(t.id)}</h2><span class="ex">${t.ex}</span></div><p class="tense-sub"><b>${S.esNames?T[t.id].en:T[t.id].es}:</b> ${T[t.id].use}</p><div class="levels">`+
    LEVELS.map((l,i)=>[l,i]).filter(([l])=>l.t===t).map(([l,i])=>{
      const open=i===0||S.lv[LEVELS[i-1].id];const s=S.lv[l.id]||0;
      return `<button class="lvl" data-lvl="${i}" ${open?'':'disabled'}><span class="n">Level ${i+1}</span><span class="g">${l.g.name}</span>${open?starHtml(s):'<span class="muted small">Locked</span>'}</button>`}).join('')+
@@ -1310,7 +1310,7 @@ const FORM_NOTE={pres:'Remove -ar, -er or -ir and add the present ending.',pret:
 function intro(l){
   const sample=groupVerbs(l.g.id).slice(0,2),t=T[l.t.id];
   open(`<div class="qtop"><button class="x" aria-label="Close" id="cx">×</button><span class="muted small">Level ${LEVELS.indexOf(l)+1}</span></div>
-  <div><span class="tag">${l.t.name}</span><h1 style="font-size:30px;margin-top:8px">${l.g.name}</h1><p class="muted" style="margin-bottom:0">${l.t.ex}. Read the two short lessons, then conjugate 10 forms. Score 6 or more to unlock the next level.</p></div>
+  <div><span class="tag">${tn(l.t.id)}</span><h1 style="font-size:30px;margin-top:8px">${l.g.name}</h1><p class="muted" style="margin-bottom:0">${l.t.ex}. Read the two short lessons, then conjugate 10 forms. Score 6 or more to unlock the next level.</p></div>
   <section class="card stack"><h2 style="font-size:20px">Usage</h2><p style="margin:0">${t.use}</p>
    <table>${t.ex.map(([es,en])=>`<tr><td style="color:var(--ink);width:50%">${es}</td><td class="muted">${en}</td></tr>`).join('')}</table></section>
   <section class="card stack"><h2 style="font-size:20px">Formation</h2><p style="margin:0">${FORM_NOTE[l.t.id]}</p><div style="overflow-x:auto">${endingsTable(l.t.id)}</div></section>
