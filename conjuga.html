@@ -70,6 +70,7 @@ main{padding-block:16px 110px}
 .tip summary::-webkit-details-marker{display:none}
 .tip summary h2{font-size:20px}
 .tip td:first-child{width:auto}
+.tiplink{display:block;background:none;border:0;padding:6px 0 0;color:var(--blue);font-weight:600;font-size:14px;text-align:left;cursor:pointer}
 .tip table{font-size:14px;margin-top:4px}
 .tip[open] summary{margin-bottom:4px}
 .levels{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:10px}
@@ -1240,6 +1241,13 @@ computer, in Spain|Pick the word|ordenador|computadora,carro|Latin America says 
 phone, in Mexico|Pick the word|celular|móvil,coche|Spain says móvil.
 car, in Spain|Pick the word|coche|carro,zumo|Much of Latin America says carro or auto.
 juice, in Spain|Pick the word|zumo|jugo,celular|Latin America says jugo.`};
+const TIP_ES={'Preterite vs. imperfect':'Pretérito vs. imperfecto','When to use the subjunctive':'Cuándo usar el subjuntivo'}; // titles that name a tense follow "Use Spanish tense names"
+const tt=h=>S.esNames&&TIP_ES[h]||h;
+const TENSE_TIPS={pres:['SER vs. ESTAR','Reflexive pronouns'],pret:['Preterite vs. imperfect'],impf:['Preterite vs. imperfect'],perf:['Spain vs. Latin America'],subj:['When to use the subjunctive'],isubj:['When to use the subjunctive'],imp:['Reflexive pronouns'],neg:['Reflexive pronouns']};
+const tipLinks=id=>(TENSE_TIPS[id]||[]).map(h=>`<button class="tiplink" data-goto="${h}">💡 Tip: ${tt(h)}</button>`).join('');
+const tipOfDay=()=>TIPS[Math.floor(Date.now()/864e5)%TIPS.length];
+function goTip(h){closeSheet();show('tips');const d=view.querySelector(`[data-tip="${h}"]`);if(d){d.open=true;d.scrollIntoView()}}
+const bindTipLinks=root=>root.querySelectorAll('[data-goto]').forEach(b=>b.onclick=e=>{e.preventDefault();goTip(b.dataset.goto)});
 const tipQs=title=>shuffle(TIPQ[title].split('\n').map(l=>{const[s,en,ans,w,note]=l.split('|');return{kind:'tip',tip:title,s,en,ans,opts:[ans,...w.split(',')],note}})).slice(0,8);
 const MOODS=[
  {es:'El Indicativo',en:'Indicative mood',desc:'For facts, events and things believed to be true.',groups:[['Simple tenses',['pres','prox','pret','impf','fut','cond']],['Compound tenses',['perf','plup','futp','condp']]]},
@@ -1397,12 +1405,12 @@ const VIEWS={
   const done=LEVELS.filter(l=>S.lv[l.id]).length;
   view.innerHTML=`<div class="row"><h1 style="font-size:26px">Your path</h1><span class="muted small">${done} / ${LEVELS.length} levels</span></div>
   <div class="meter" style="margin-top:8px"><i style="width:${done/LEVELS.length*100}%"></i></div>`+
-  TENSES.map(t=>`<section class="tense"><div class="tense-head"><h2>${tn(t.id)}</h2><span class="ex">${t.ex}</span></div><p class="tense-sub"><b>${S.esNames?T[t.id].en:T[t.id].es}:</b> ${T[t.id].use}</p>${deep(t.id)}<div class="levels">`+
+  TENSES.map(t=>`<section class="tense"><div class="tense-head"><h2>${tn(t.id)}</h2><span class="ex">${t.ex}</span></div><p class="tense-sub"><b>${S.esNames?T[t.id].en:T[t.id].es}:</b> ${T[t.id].use}</p>${deep(t.id)}${tipLinks(t.id)}<div class="levels">`+
    LEVELS.map((l,i)=>[l,i]).filter(([l])=>l.t===t).map(([l,i])=>{
      const open=i===0||S.lv[LEVELS[i-1].id];const s=S.lv[l.id]||0;
      return `<button class="lvl" data-lvl="${i}" ${open?'':'disabled'}><span class="n">Level ${i+1}</span><span class="g">${l.g.name}</span>${open?starHtml(s):'<span class="muted small">Locked</span>'}</button>`}).join('')+
    `</div></section>`).join('');
-  view.querySelectorAll('[data-lvl]').forEach(b=>b.onclick=()=>intro(LEVELS[+b.dataset.lvl]));
+  view.querySelectorAll('[data-lvl]').forEach(b=>b.onclick=()=>intro(LEVELS[+b.dataset.lvl]));bindTipLinks(view);
  },
  practice(){
   const C=S.cq,tog=(arr,id)=>arr.includes(id)?arr.filter(x=>x!==id):[...arr,id];
@@ -1413,7 +1421,7 @@ const VIEWS={
    const seg=(key,opts)=>`<div class="seg" role="group">${opts.map(([v,l])=>`<button data-seg="${key}" data-val="${v}" aria-pressed="${C[key]===v}">${l}</button>`).join('')}</div>`;
    const sw=(k,t,d)=>`<label class="switch" for="cq-${k}"><span>${t}<br><span class="muted small">${d}</span></span><input type="checkbox" id="cq-${k}" ${C[k]?'checked':''}></label>`;
    const n=make().length;
-   const vd=vod(),vf=conj(vd,'pret')[1];
+   const vd=vod(),vf=conj(vd,'pret')[1],td=tipOfDay();
    view.innerHTML=`<div class="stack"><div><p class="muted small" style="margin:0">${new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})}</p><h1 style="font-size:36px">Practice</h1></div>
    <div class="card stack"><h2 style="font-size:26px">Today's set</h2><p class="muted" style="margin:0">5 questions · ${tns('pret')} irregulars</p>
    <p class="small" style="margin:0;color:var(--soft)">Type each form and press Enter. Accent keys sit under the answer box.</p><button class="btn" id="todaySet">Start</button></div>
@@ -1422,6 +1430,7 @@ const VIEWS={
    <div class="row"><button class="btn" id="sent5">5 questions</button><button class="btn ghost" id="sentTest">Level-up test</button></div></div>
    <button class="card" id="vod" style="text-align:left;display:flex;justify-content:space-between;align-items:flex-end;gap:12px;color:var(--ink)"><span><span class="muted small" style="display:block">Verb of the day</span><span style="font-family:var(--display);font-size:40px;font-weight:700;display:block;line-height:1.1">${vd.inf}</span><span class="muted">${vd.en}</span></span>
    <span style="text-align:right"><span class="muted small" style="display:block">tú · ${tns('pret')}</span><span style="font-family:var(--display);font-size:26px;font-weight:600">${hl(vf,bare(plainOf(vd),'pret')[1])}</span></span></button>
+   <button class="card" id="tod" style="text-align:left;color:var(--ink)"><span class="muted small" style="display:block">💡 Tip of the day</span><span style="font-family:var(--display);font-size:24px;font-weight:700;display:block;margin:2px 0">${tt(td[0])}</span><span class="muted">${td[2][0][1].startsWith('<table')?td[1]:td[2][0][1]}</span></button>
    <h2 style="font-size:22px;margin-top:8px">Custom quiz</h2>
    <div class="card stack"><h3><span class="stepn">1</span> What to practise</h3>${seg('what',[['conj','Conjugations'],['mean','Meanings']])}
    ${C.what==='conj'?`<div class="lbl">Tenses</div><div class="chips">${TT.map(t=>`<button class="chip" data-t="${t.id}" aria-pressed="${C.tenses.includes(t.id)}">${tn(t.id)}</button>`).join('')}</div>
@@ -1443,7 +1452,7 @@ const VIEWS={
    document.getElementById('qp').onclick=()=>{C.n=Math.min(50,C.n+5);save();draw()};
    document.getElementById('go').onclick=()=>quiz(make(),{title:C.what==='conj'?(C.tenses.length===1?tn(C.tenses[0]):'Custom quiz'):'Meanings',mode:C.how,hideInf:C.what==='conj'&&C.hideInf,hideEn:C.what==='conj'&&C.hideEn});
    document.getElementById('todaySet').onclick=()=>quiz(build(['pret'],VERBS.filter(v=>v.irregular&&!v.refl&&v.rank<=150),5),{title:`${cap(tns('pret'))} irregulars`});
-   document.getElementById('vod').onclick=()=>verbSheet(vd);
+   document.getElementById('vod').onclick=()=>verbSheet(vd);document.getElementById('tod').onclick=()=>goTip(td[0]);
    document.getElementById('sent5').onclick=()=>quiz(weightedPick(sentPool(),5,s=>COMMON_T.has(s.t)?3:1).map(qs_),{title:'Sentences'});
    document.getElementById('sentTest').onclick=()=>quiz(shuffle(sentPool()).slice(0,10).map(qs_),{title:'Level-up test',pass:8});
    document.getElementById('rev').onclick=()=>quiz(shuffle(S.miss).slice(0,15).map(k=>{const[inf,t,p]=k.split('|');const v=verbBy(inf);return v&&T[t]&&conj(v,t)[+p]?q(v,t,+p):null}).filter(Boolean),{title:'Smart review'});
@@ -1486,8 +1495,8 @@ const VIEWS={
  },
  tips(){
   view.innerHTML=`<h1 style="font-size:26px">Hints &amp; tips</h1><div class="stack" style="margin-top:12px">`+
-   TIPS.map(([h,sub,parts])=>`<details class="tense deep tip"><summary><h2>${h}</h2><span class="tense-sub">${sub}</span></summary>${parts.map(([t,p])=>`<h4>${t}</h4>${p.startsWith('<table')?p:`<p>${p}</p>`}`).join('')}${TIPQ[h]?`<button class="btn" style="margin-top:16px" data-tq="${h}">Quiz yourself</button>`:''}</details>`).join('')+`</div>`;
-  view.querySelectorAll('[data-tq]').forEach(b=>b.onclick=()=>quiz(tipQs(b.dataset.tq),{mode:'mc',title:b.dataset.tq}));
+   TIPS.map(([h,sub,parts])=>`<details class="tense deep tip" data-tip="${h}"><summary><h2>${tt(h)}</h2><span class="tense-sub">${sub}</span></summary>${parts.map(([t,p])=>`<h4>${t}</h4>${p.startsWith('<table')?p:`<p>${p}</p>`}`).join('')}${TIPQ[h]?`<button class="btn" style="margin-top:16px" data-tq="${h}">Quiz yourself</button>`:''}</details>`).join('')+`</div>`;
+  view.querySelectorAll('[data-tq]').forEach(b=>b.onclick=()=>quiz(tipQs(b.dataset.tq),{mode:'mc',title:tt(b.dataset.tq)}));
  },
  stats(){
   const stars=Object.values(S.lv).reduce((a,b)=>a+b,0),avg=S.quizzes?Math.round(S.scoreSum/S.quizzes):0;
@@ -1600,13 +1609,13 @@ function intro(l){
   const sample=groupVerbs(l.g.id).slice(0,2),t=T[l.t.id];
   open(`<div class="qtop"><button class="x" aria-label="Close" id="cx">×</button><span class="muted small">Level ${LEVELS.indexOf(l)+1}</span></div>
   <div><span class="tag">${tn(l.t.id)}</span><h1 style="font-size:30px;margin-top:8px">${l.g.name}</h1><p class="muted" style="margin-bottom:0">${l.t.ex}. Read the two short lessons, then conjugate 10 forms. Score 6 or more to unlock the next level.</p></div>
-  <section class="card stack"><h2 style="font-size:20px">Usage</h2><p style="margin:0">${t.use}</p>${deep(t.id)}
+  <section class="card stack"><h2 style="font-size:20px">Usage</h2><p style="margin:0">${t.use}</p>${deep(t.id)}${tipLinks(t.id)}
    <table>${t.ex.map(([es,en])=>`<tr><td style="color:var(--ink);width:50%">${es}</td><td class="muted">${en}</td></tr>`).join('')}</table>
    ${PEX[l.t.id]?`<h3 style="margin:4px 0 0">One for each pronoun</h3><table>${persons().map(i=>{const[es,en]=PEX[l.t.id][i];return `<tr><td class="muted small" style="white-space:nowrap">${LAB[i]}</td><td style="color:var(--ink)">${es.replace(/\*(.+?)\*/g,'<b>$1</b>')}</td><td class="muted">${en}</td></tr>`}).join('')}</table>`:''}</section>
   <section class="card stack"><h2 style="font-size:20px">Formation</h2><p style="margin:0">${FORM_NOTE[l.t.id]}</p><div style="overflow-x:auto">${endingsTable(l.t.id)}</div></section>
   <div class="grid2">${sample.map(v=>`<div class="card"><h3>${v.inf} <span class="muted small">${v.en}</span></h3>${table(v,l.t.id)}</div>`).join('')}</div>
   <div class="spacer"></div><div class="row"><button class="btn ghost" id="fl">Flash cards: meanings</button><button class="btn" id="st">Start level</button></div>`);
-  document.getElementById('cx').onclick=closeSheet;
+  document.getElementById('cx').onclick=closeSheet;bindTipLinks(body);
   document.getElementById('fl').onclick=()=>quiz(groupVerbs(l.g.id).slice(0,10).map(qm),{title:'Meanings',mode:'flash',back:()=>intro(l)});
   document.getElementById('st').onclick=()=>quiz(build([l.t.id],groupVerbs(l.g.id),10),{title:l.g.name,level:l});
 }
@@ -2590,7 +2599,7 @@ function quiz(qs,opt){
     if(i>=total)return finish();
     cur=qs[i];phase='ask';typoUsed=false;tally();fb.innerHTML='';
     const c=cur.kind==='conj',gloss=c?english(cur.v,cur.t,cur.p):'';
-    $('pr').innerHTML=cur.kind==='tip'?`<span class="tchip">${cur.tip}</span><div class="inf" style="font-size:26px;line-height:1.3">${cur.s.replace('___','<span style="color:var(--blue)">___</span>')}</div><div class="en">${cur.en}</div>${cur.opts.includes('—')?'<div class="muted small">— means nothing goes in the gap</div>':''}`
+    $('pr').innerHTML=cur.kind==='tip'?`<span class="tchip">${tt(cur.tip)}</span><div class="inf" style="font-size:26px;line-height:1.3">${cur.s.replace('___','<span style="color:var(--blue)">___</span>')}</div><div class="en">${cur.en}</div>${cur.opts.includes('—')?'<div class="muted small">— means nothing goes in the gap</div>':''}`
       :cur.kind==='sent'?`<span class="tchip">${tn(cur.t)}</span><div class="inf" style="font-size:26px;line-height:1.3">${cur.s.replace('___',`<span style="color:var(--blue)">___</span> <span class="muted" style="font-weight:600">(${cur.v.inf})</span>`)}</div><div class="en">${cur.en}</div>`
       :c?`<span class="tchip">${tn(cur.t)}</span>${opt.hideInf?'':`<div class="inf">${cur.v.inf}</div>`}${opt.hideEn?'':`<div class="en">${gloss}</div>`}<div class="who">${SUBJ.has(cur.t)?'que ':''}${cur.who} …</div>`
       :`<span class="tchip">Meaning</span><div class="inf" style="font-size:30px">${cur.v.en}</div>${cur.v.refl?'<div class="en">reflexive</div>':''}`;

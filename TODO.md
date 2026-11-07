@@ -28,5 +28,6 @@ Decided 2026-11-07: `conjuga.html` is the one app. The prototype's design and fe
 
 - [x] Tips tab: 14 expandable cards (SER/ESTAR, POR/PARA, reflexive pronouns, possessives (tables), yo/me/mí/mi (tables), personal a, false friends, small words, verb pairs, preterite/imperfect, subjunctive, grammar traps, pronunciation, Spain vs. Latin America).
 - [x] Quiz per tip: "Quiz yourself" button in each card, up to 8 multiple-choice questions with a note on wrong answers. Tip answers do not touch verb stats or Smart review.
-- [ ] Link tips from the matching tense on the path screen.
-- [ ] Tip of the day.
+- [x] Tip links ("💡 Tip: ...") under the matching tense on the path screen and in the level intro. Tapping one opens the Tips tab with that card open.
+- [x] Tip of the day card on the Practice tab, under Verb of the day. Changes daily and opens the tip.
+- [x] Tip titles that name a tense follow "Use Spanish tense names" (Pretérito vs. imperfecto, Cuándo usar el subjuntivo).
