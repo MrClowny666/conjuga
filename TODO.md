@@ -31,3 +31,24 @@ Decided 2026-11-07: `conjuga.html` is the one app. The prototype's design and fe
 - [x] Tip links ("💡 Tip: ...") under the matching tense on the path screen and in the level intro. Tapping one opens the Tips tab with that card open.
 - [x] Tip of the day card on the Practice tab, under Verb of the day. Changes daily and opens the tip.
 - [x] Tip titles that name a tense follow "Use Spanish tense names" (Pretérito vs. imperfecto, Cuándo usar el subjuntivo).
+
+## Offline app on Android (PWA)
+
+- [x] Conjuga is an installable PWA: `manifest.webmanifest`, icons in `icons/`, a cache-first service worker (`sw.js`) and self-hosted fonts in `fonts/`. No external requests. After the first visit it runs fully offline.
+- [x] Progress and settings stay in `localStorage` (key `conjuga-v1`, format unchanged). The app calls `navigator.storage.persist()` so the browser doesn't evict it.
+
+### Hosting on GitHub Pages
+
+1. Push the repo to GitHub.
+2. Settings → Pages → Build and deployment → Source: "Deploy from a branch", branch `main`, folder `/ (root)`. Save.
+3. After a minute the app is at `https://<user>.github.io/<repo>/conjuga.html`. It must be HTTPS (Pages is), or the service worker won't run.
+
+### Installing on Android
+
+1. Open that URL in Chrome on the phone (needs internet this once).
+2. Chrome menu (⋮) → "Add to Home screen" → "Install" (or "Install app" if Chrome shows it).
+3. Open Conjuga from the home screen. From now on it works without internet.
+
+### Releasing an update
+
+Change `VERSION` in `sw.js` (e.g. `conjuga-v2`) whenever any app file changes, then push. The phone picks up the new version the next time the app is opened online, and uses it from the launch after that. Progress is kept.

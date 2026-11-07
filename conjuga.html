@@ -2,9 +2,18 @@
 <title>Conjuga</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=Atkinson+Hyperlegible:ital@1&display=swap">
+<meta name="theme-color" content="#F6F4EF">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preload" href="fonts/bricolage-grotesque-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/atkinson-hyperlegible-400-latin.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+/* Fonts: self-hosted latin subsets (from Google Fonts) so the app works offline. Bricolage is one variable file (opsz 12-96, wght 500-800). */
+@font-face{font-family:"Bricolage Grotesque";font-style:normal;font-weight:500 800;font-display:swap;src:url(fonts/bricolage-grotesque-latin.woff2) format("woff2")}
+@font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:400;font-display:swap;src:url(fonts/atkinson-hyperlegible-400-latin.woff2) format("woff2")}
+@font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:700;font-display:swap;src:url(fonts/atkinson-hyperlegible-700-latin.woff2) format("woff2")}
+@font-face{font-family:"Atkinson Hyperlegible";font-style:italic;font-weight:400;font-display:swap;src:url(fonts/atkinson-hyperlegible-400italic-latin.woff2) format("woff2")}
 /* Layout: single phone-width column, app bar on top, tab bar fixed at bottom, quiz and verb pages as full-screen sheets */
 /* Themes: tokens sit on [data-theme] (not just :root) so the Settings swatches can preview any theme in place. An explicit data-theme always beats the system dark query. */
 :root{
@@ -2680,5 +2689,9 @@ function quiz(qs,opt){
 }
 
 show('learn');
+
+// Offline app: the service worker caches the app shell; persist() asks the browser not to evict localStorage under storage pressure.
+if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
 
 </script>
