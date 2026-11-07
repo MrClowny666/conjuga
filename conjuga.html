@@ -1528,7 +1528,7 @@ const VIEWS={
   const pathLvl=t=>LEVELS.find(l=>l.t.id===t);
   const firstGap=sk.find(x=>x.started&&x.pct<80),fresh=sk.find(x=>!x.started);
   const nu=fc.fading?{h:`${fc.fading} ${fc.fading===1?'form is':'forms are'} fading`,p:'A quick refresh brings them back before they slip away.',b:'Refresh',go:()=>formQuiz(fc.fadingKeys,'Refresh')}
-   :fc.due.length?{h:`Lock in ${fc.due.length} ${fc.due.length===1?'form':'forms'}`,p:'You typed these right on an earlier day. Get them right again today and they count as known.',b:'Lock in',go:()=>formQuiz(fc.due,'Lock in')}
+   :fc.due.length?{h:`Lock in ${fc.due.length} ${fc.due.length===1?'form':'forms'}`,p:`You typed ${fc.due.length===1?'this':'these'} right on an earlier day. Get ${fc.due.length===1?'it':'them'} right again today and ${fc.due.length===1?'it counts':'they count'} as known.`,b:'Lock in',go:()=>formQuiz(fc.due,'Lock in')}
    :firstGap?{h:`Keep going: ${firstGap.name}`,p:`${firstGap.pct}% · aims at the patterns you haven’t got yet.`,b:'Practise',go:()=>skillQuiz(firstGap)}
    :fresh?{h:`New skill: ${fresh.name}`,p:`<i>${fresh.es}</i>`,b:pathLvl(fresh.ts[0])?'Start lesson':'Start',go:()=>pathLvl(fresh.ts[0])?intro(pathLvl(fresh.ts[0])):skillQuiz(fresh)}
    :S.miss.length?{h:'Smart review',p:`${S.miss.length} forms you’ve missed before.`,b:'Review',go:()=>formQuiz(S.miss,'Smart review')}
@@ -1547,7 +1547,7 @@ const VIEWS={
    <p class="muted small" style="margin:0">${fc.known||fc.half||fc.fading?'A form counts once you’ve typed it right on two different days. Leave it too long and it starts to fade.':'Type your answers in any quiz to start counting. A form counts once you’ve typed it right on two different days.'}</p>
    ${fc.half||fc.fading?`<p class="small" style="margin:0">${[fc.half&&`<b>${fc.half}</b> half-learned`,fc.fading&&`<b>${fc.fading}</b> fading`].filter(Boolean).join(' · ')}</p>`:''}</div>
   <div class="card stack" style="background:var(--blue-soft)"><span class="muted small">Next up</span><h3>${nu.h}</h3><p class="small" style="margin:0">${nu.p}</p><button class="btn" id="nu">${nu.b}</button></div>
-  <div class="card stack"><div class="row"><h3>What you can say</h3>${range?`<span class="pill">Verb range ≈ ${range}</span>`:''}</div>
+  <div class="card stack"><div class="row"><h3>What you can say</h3>${range?`<span class="pill" style="white-space:nowrap">Verb range ≈ ${range}</span>`:''}</div>
    <div>${shown.map(x=>skRow(x,sk.indexOf(x))).join('')}</div>
    ${hidden.length?`<details class="deep"><summary>${hidden.length} more ${hidden.length===1?'skill':'skills'}</summary>${hidden.map(x=>skRow(x,sk.indexOf(x))).join('')}</details>`:''}
    <p class="muted" style="font-size:12px;margin:0">A skill is ✓ at 80%: two verbs you know for each pattern (person × verb type). Levels are a rough guide to the verb forms, not a full language test.</p></div>
