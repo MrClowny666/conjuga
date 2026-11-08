@@ -27,7 +27,7 @@ Decided 2026-11-07: `conjuga.html` is the one app. The prototype's design and fe
 
 ## Level path
 
-- [x] Path grouped into Beginner, Intermediate and Advanced (`STAGES` in `conjuga.html`). Beginner covers the everyday tenses (present, near future, present perfect, preterite) with regular verbs and everyday irregulars. Stem changes start in Intermediate. Only the current stage opens by default, the current level is marked, and Today's set and Verb of the day follow the path. All 35 earlier levels kept, plus a new near future level. Saved progress carries over.
+- [x] Path grouped into Beginner, Intermediate and Advanced (`STAGES` in `conjuga.html`). Beginner covers the everyday tenses (present, near future, present perfect, preterite) with regular verbs and everyday irregulars. Stem changes start in Intermediate. Only the current stage opens by default, the current level is marked, and Today's set and Verb of the day follow the path. Eight levels with no change to teach (imperfect, future, conditional and present perfect for stem and spelling verbs) were removed on 2026-11-08, leaving 28 levels; the other 27 earlier levels were kept, plus a new near future level. Saved progress carries over.
 
 ## Ideas from other language apps
 
