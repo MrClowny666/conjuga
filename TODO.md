@@ -27,7 +27,16 @@ Decided 2026-11-07: `conjuga.html` is the one app. The prototype's design and fe
 
 ## Level path
 
-- [x] Path grouped into Beginner, Intermediate and Advanced (`STAGES` in `conjuga.html`). Beginner covers the everyday tenses (present, near future, present perfect, preterite) with regular verbs and everyday irregulars. Stem changes start in Intermediate. Only the current stage opens by default, the current level is marked, and Today's set and Verb of the day follow the path. Eight levels with no change to teach (imperfect, future, conditional and present perfect for stem and spelling verbs) were removed on 2026-11-08, leaving 28 levels; the other 27 earlier levels were kept, plus a new near future level. Saved progress carries over.
+Rebuilt on 2026-11-09, with every lesson written from scratch.
+
+- [x] 51 levels: Beginner 1 to 3 (-ar, -er, -ir, 5 verbs each, pass 13 of 15), Milestone 1, then Levels 4 to 41 and Milestones 2 to 10 (30 questions, pass 28). Beginner, Intermediate and Advanced headings sit over that order (`STAGES`, `PATH` in `conjuga.html`).
+- [x] Each level: ordered short lessons, one small quiz per sub-pattern plus All, a verb list with flash cards and a meaning quiz, then a gated level-up test. Lessons start with infinitive, stem, ending, pronouns and the vosotros setting, using hablar, comer, vivir.
+- [x] Milestones: sentence quizzes from the 846-sentence bank, a verb-hidden variant (Show the verb button), and choice quizzes: ser or estar, preterite or imperfect, future or conditional, indicative or subjunctive, si clauses, which subjunctive. 51 extra choice sentences (`CHX`) fill gaps where the bank has no contrast; each is checked against the engine.
+- [x] New tense in the engine: present progressive (`prog`, estar + gerund). Verb pages, custom quizzes and steps know it.
+- [x] Lesson-coverage check: `node tools/check-lessons.js` (also `checkLessons()` in the page). Fails if any quiz or lesson example can ask for a form its own or earlier lessons have not taught. Sentences and Today's set only use what the path has reached; Forms you know is unchanged.
+- [x] Wrong answers show the tense's one-line use, and Steps now works on sentence questions too.
+- [x] Saved progress: old level ids map to the new levels (`OLD_LV`), so anything passed stays unlocked. A level is passed by the test pass mark; old saves count as passed.
+- [ ] Deferred: a c → z preterite/subjunctive quiz, -eír and o → u gerund variety, "adding j" beyond -ducir, and -oler/reír verbs, because Conjuga's verb list lacks those verbs. Present progressive has no sentence bank, so it is tested with forms only. Vocabulary lists leave out verbs missing from the 586-verb list. Placement test and Speaking are not built.
 
 ## Ideas from other language apps
 
@@ -40,7 +49,7 @@ Compared against Duolingo, Babbel, Anki, Memrise, Busuu and Conjuguemos on 2026-
 - [ ] **English to Spanish production.** Show the English ("they had eaten", "we will go") and ask for the Spanish form, without naming the tense or person. Current questions hand over the verb, tense and person, so the learner never has to choose the tense themselves, which is the hard part in real speech. `english(v,t,i)` already builds the English, so this is mostly a new question kind.
 - [ ] **Recognition drill.** The reverse of the normal quiz: show a form ("tuviéramos") and ask which verb, tense and person it is (multiple choice per part). Reading real Spanish starts with recognising forms, not producing them. `formIndex` already maps a form back to its verb, and the loop in `diagnose()` finds its tense and person. Must allow every valid answer where a form is shared (e.g. yo and él in the imperfecto).
 - [ ] **Pretérito vs. imperfecto drill.** Sentences where the learner picks or types the right past tense from context ("Cuando ___ (ser) niño, ___ (vivir) en Madrid"), with a one-line reason on each answer. This is the single most common sticking point for learners and the app only teaches it as a tip card. Could extend the sentence bank with tagged pairs; the same pattern later works for indicative vs. subjunctive and ser vs. estar.
-- [ ] **Real spaced repetition.** Smart review (`S.miss`) is a list of missed forms that leave after two right answers, and never come back. Replace or extend it with per-form intervals (e.g. 1, 3, 7, 16, 35 days, reset on a miss, in the style of Anki/SM-2) so forms already learned resurface just before they are forgotten. Show "N due today" on the Practice tab. Keep stored data small: only forms that have been answered.
+- [ ] **Real spaced repetition.** Mostly there already: `S.fm` (Forms you know) keeps a box per form with intervals of 1, 3, 7, 14, 30 and 60 days and resets on a miss, but only typed answers count and nothing brings a form back when its interval ends. Smart review (`S.miss`) is still a separate list of missed forms that leave after two right answers. Missing: a due queue built from `S.fm` and `S.miss`, most overdue first, with "N due today" on the Practice tab.
 - [ ] **Home-screen shortcuts.** Add `shortcuts` to `manifest.webmanifest` (e.g. "Today's set", "Smart review", "Verb of the day") so a long press on the Android icon jumps straight in. Needs a URL hash or query the app reads at start-up to open that screen. Small job, makes the app feel native.
 
 ### Tier 2: worth doing
@@ -55,7 +64,7 @@ Compared against Duolingo, Babbel, Anki, Memrise, Busuu and Conjuguemos on 2026-
 
 - [ ] **Graded stories.** Short texts (5 to 10 sentences) built around one tense, with the verbs blanked or tappable for their tense and person. Gives the forms a context and a reason to read. Fits the Tips or Practice tab; content has to be written and checked against the conjugation engine like the sentence bank.
 - [ ] **Voseo setting.** Option to practise vos forms (vos hablás, vos tenés, imperative hablá) for Argentina, Uruguay and Central America. Next to the existing "Include vosotros" setting. Needs vos forms in the engine for the present, imperative and present subjunctive, and sentences to match.
-- [ ] **Accent feedback in relaxed mode.** "Check accents" is on/off today: off accepts "hablo" for "habló" silently. Add a note on a correct-but-unaccented answer ("Correct, but it's habló: the accent changes the meaning") so relaxed mode still teaches the accent, without counting it wrong.
+- [ ] **Accent feedback in relaxed mode.** With "Check accents" off, a correct but unaccented answer already shows "Correct, but mind the accent" and the right spelling. Missing: when the unaccented answer is itself another form of the verb, say so ("hablo is the yo present, habló is the él preterite: the accent changes the meaning"), without counting it wrong.
 
 ## Hints & tips
 

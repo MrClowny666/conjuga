@@ -203,6 +203,8 @@ mark{background:none;color:var(--irr);font-weight:700;text-decoration:underline 
 .heat{display:grid;gap:4px}
 .skill{display:flex;flex-direction:column;gap:4px;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:10px 0;color:inherit;font:inherit;cursor:pointer}
 .skill .meter{display:block;margin-top:2px}
+.lex{padding:8px 0;border-top:1px solid var(--line)}.lex b{color:var(--blue)}
+.lvl.ms{border-style:dashed}
 .vgrid{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px}.vgrid .cell{height:auto;aspect-ratio:1;border-radius:5px;cursor:pointer}
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px}.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:5px}
 .cell{height:34px;border:0;border-radius:8px;font:700 13px var(--body);padding:0;color:var(--ink);display:grid;place-items:center}
@@ -893,6 +895,7 @@ function bare(v,t){ // forms without reflexive pronouns; imperative slot 0 is nu
   if(v.o&&v.o[t])r=v.o[t];
   else if(AUX[t])r=AUX[t].map(a=>a+' '+participle(v));
   else if(t==='prox')r=IRP.map(a=>a+' a '+v.root);
+  else if(t==='prog')r=OVR.estar.pres.map(a=>a+' '+gerundBare(v));
   else if(t==='isubj'){const s=bare(v,'pret')[5].slice(0,-3),acc=s.slice(0,-1)+({a:'á',e:'é'}[s.at(-1)]||s.at(-1));r=['ra','ras','ra','ramos','rais','ran'].map((e,i)=>(i===3?acc:s)+e)}
   else if(t==='imp'){const p=bare(v,'pres'),s=bare(v,'subj');r=[null,v.tu||p[2],s[2],v.root==='ir'?'vamos':s[3],v.root.slice(0,-1)+'d',s[5]]}
   else if(t==='neg'){const s=bare(v,'subj');r=[null,...s.slice(1).map(f=>'no '+f)]}
@@ -983,6 +986,7 @@ for(const v of VERBS){
 /* ---------- tenses ---------- */
 const TT=[
  {id:'pres',es:'El Presente',en:'Present',use:'Habits, facts and what is happening now.',ex:[['Hablo español todos los días.','I speak Spanish every day.'],['Ella vive en Madrid.','She lives in Madrid.']]},
+ {id:'prog',es:'El Presente Progresivo',en:'Present progressive',use:'What is happening right now: the present of estar, then the gerund (-ando or -iendo).',ex:[['Estoy cocinando ahora.','I am cooking right now.']]},
  {id:'prox',es:'El Futuro Próximo',en:'Near future',use:'Plans and things about to happen: a present form of ir, then "a", then the infinitive.',ex:[['Voy a cocinar esta noche.','I am going to cook tonight.']]},
  {id:'pret',es:'El Pretérito Indefinido',en:'Preterite',use:'Completed actions at a specific moment in the past.',ex:[['Ayer comí paella.','Yesterday I ate paella.'],['Llegaron a las ocho.','They arrived at eight.']]},
  {id:'impf',es:'El Pretérito Imperfecto',en:'Imperfect',use:'Past habits, background description, and actions that were in progress.',ex:[['De niño jugaba al fútbol.','As a child I used to play football.'],['Llovía cuando salí.','It was raining when I left.']]},
@@ -1272,7 +1276,7 @@ function goTip(h){closeSheet();show('tips');const d=view.querySelector(`[data-ti
 const bindTipLinks=root=>root.querySelectorAll('[data-goto]').forEach(b=>b.onclick=e=>{e.preventDefault();goTip(b.dataset.goto)});
 const tipQs=title=>shuffle(TIPQ[title].split('\n').map(l=>{const[s,en,ans,w,note]=l.split('|');return{kind:'tip',tip:title,s,en,ans,opts:[ans,...w.split(',')],note}})).slice(0,8);
 const MOODS=[
- {es:'El Indicativo',en:'Indicative mood',desc:'For facts, events and things believed to be true.',groups:[['Simple tenses',['pres','prox','pret','impf','fut','cond']],['Compound tenses',['perf','plup','futp','condp']]]},
+ {es:'El Indicativo',en:'Indicative mood',desc:'For facts, events and things believed to be true.',groups:[['Simple tenses',['pres','prog','prox','pret','impf','fut','cond']],['Compound tenses',['perf','plup','futp','condp']]]},
  {es:'El Subjuntivo',en:'Subjunctive mood',desc:'For wishes, doubts, emotions and possibilities.',groups:[['Simple tenses',['subj','isubj']],['Compound tenses',['psubj','plsubj']]]},
  {es:'El Imperativo',en:'Imperative mood',desc:'For commands and instructions. There is no yo form.',groups:[['',['imp','neg']]]}];
 const SUBJ=new Set(['subj','isubj','psubj','plsubj']);
@@ -1282,15 +1286,530 @@ const TENSES=[ // the level path
  {id:'cond',name:'Condicional',ex:'hablaría · I would speak'},{id:'perf',name:'Pretérito perfecto',ex:'he hablado · I have spoken'},
  {id:'subj',name:'Subjuntivo presente',ex:'que hable · that I speak'},{id:'prox',name:'Futuro próximo',ex:'voy a hablar · I am going to speak'}];
 const GROUPS=[{id:'ar',name:'Regular -ar'},{id:'erir',name:'Regular -er / -ir'},{id:'stem',name:'Stem-changers'},{id:'spell',name:'Spelling changes'},{id:'irr',name:'Irregulars'}];
-const STAGES=[ // the level path, in teaching order. Level ids are tense-group and key saved progress, so don't rename them.
- {name:'Beginner',sub:'The tenses you use every day, with regular verbs and the verbs you need most.',lv:'pres-ar pres-erir pres-irr prox-top perf-ar perf-erir pret-ar pret-erir'},
- {name:'Intermediate',sub:'Stem changes, spelling changes and irregulars, then describing the past and the future.',lv:'pres-stem pres-spell perf-irr pret-irr pret-stem pret-spell impf-ar impf-erir impf-irr fut-ar fut-erir fut-irr'},
- {name:'Advanced',sub:'The conditional and the subjunctive: what would happen, wishes and doubts.',lv:'cond-ar cond-erir cond-irr subj-ar subj-erir subj-stem subj-spell subj-irr'}];
-const LV_GROUP=Object.fromEntries([...GROUPS,{id:'top',name:'Everyday verbs'}].map(g=>[g.id,g])); // top stays out of GROUPS: Progress counts patterns per group
-const LEVELS=STAGES.flatMap(s=>s.lv.split(' ').map(id=>{const[t,g]=id.split('-');
-  return{id,t:TENSES.find(x=>x.id===t),g:id==='pres-irr'?{...LV_GROUP.irr,name:'Everyday irregulars'}:LV_GROUP[g],stage:s}}));
+const STAGES=[ // the three headings over the path
+ {name:'Beginner',sub:'The present tense, from your first verb to the everyday irregulars.'},
+ {name:'Intermediate',sub:'Reflexives, what is happening now, the near future and every way of talking about the past.'},
+ {name:'Advanced',sub:'The future, the conditional, the subjunctive and commands.'}];
+/* ---------- what a form needs ----------
+   needs(v,t,p) lists what a learner must have been taught to produce that form:
+   a rule key ('pres.ar', 'part.erir', ...) that a level names in teach, or '=word', a form that has to appear in a lesson.
+   t can also be 'nf.ger' or 'nf.part' for the gerund or participle alone. tools/check-lessons.js holds every quiz to this. */
+const partNeeds=v=>v.part?['='+v.part]:[cls(v)==='ar'?'part.ar':/[aeo]$/.test(base(v))?'part.acc':'part.erir'];
+function gerNeeds(v){if(v.ger)return['='+v.ger];if(cls(v)==='ar')return['ger.ar'];const s=shifts(v)?irShift(base(v),v.st):base(v);return[shifts(v)?(v.st==='ue'?'ger.u':'ger.i'):endsVowel(s)?'ger.y':'ger.erir']}
+const stemKey=v=>{const b=base(v);return v.fut===b+'dr'?'stem.d':v.fut===b+'r'?'stem.drop':'stem.own'};
+function needs(v,t,p){
+  if(t==='nf.ger')return gerNeeds(v);if(t==='nf.part')return partNeeds(v);
+  const c=cls(v),f=bare(v,t)[p],erir=c==='ar'?'ar':'erir',out=v.refl?[t==='imp'?'refl.imp':'refl']:[];
+  if(v.o&&v.o[t])return[...out,'='+f];
+  if(AUX[t])return[...out,t+'.aux',...partNeeds(v)];
+  if(t==='prox')return[...out,'prox.ir'];
+  if(t==='prog')return[...out,'prog.estar',...gerNeeds(v)];
+  if(t==='pres'){
+    if(p===0&&v.yo&&!v.uy)return[...out,/zco$/.test(v.yo)?'pres.zc':'='+v.yo];
+    out.push('pres.'+c);
+    if(v.uy&&BOOT[p])out.push('pres.uy');else if(v.st&&BOOT[p])out.push('pres.'+v.st);
+    if(p===0&&/g[ei]r$/.test(v.root))out.push('pres.gj');if(p===0&&v.root.endsWith('guir'))out.push('pres.guir');
+  }else if(t==='pret'){
+    if(v.pret)return[...out,'='+f];
+    out.push('pret.'+erir);
+    if(shifts(v)&&(p===2||p===5))out.push('pret.shift'+(v.st==='ue'?'u':'i'));
+    const s=base(v);if(c!=='ar'&&endsVowel(s)&&f!==s+END.pret.er[p])out.push('pret.y');
+    if(p===0&&/[cgz]ar$/.test(v.root))out.push('pret.'+v.root.slice(-3));
+    if(p===0&&v.root.endsWith('guar'))out.push('pret.gar');
+  }else if(t==='impf')out.push('impf.'+erir);
+  else if(t==='fut'||t==='cond'){out.push(t+'.reg');if(v.fut)out.push(stemKey(v))}
+  else if(t==='subj'){
+    out.push('subj.'+erir);
+    if(v.yo)out.push('subj.yo',...needs({...v,refl:false},'pres',0));
+    else{if(v.st&&BOOT[p])out.push('subj.'+v.st);else if(shifts(v))out.push('subj.shift');
+      const m=/([cgz])ar$/.exec(v.root);if(m)out.push('subj.'+m[1]+'ar');
+      if(v.root.endsWith('guar'))out.push('subj.gar');if(/g[ei]r$/.test(v.root))out.push('subj.gj');if(v.root.endsWith('guir'))out.push('subj.guir')}
+  }else if(t==='isubj')out.push('isubj.reg',...needs({...v,refl:false},'pret',5));
+  else if(t==='imp'){
+    if(p===4)out.push('imp.vos');else if(p===1){if(v.tu)out.push('='+v.tu);else out.push('imp.tu',...needs({...v,refl:false},'pres',2))}
+    else if(v.root==='ir'&&p===3)out.push('=vamos');else out.push('imp.subj',...needs({...v,refl:false},'subj',p));
+  }else if(t==='neg')out.push('neg.subj',...needs({...v,refl:false},'subj',p));
+  return out;
+}
+const formOf=(v,t,p)=>t==='nf.ger'?gerund(v):t==='nf.part'?participle(v):conj(v,t)[p];
+const slotsOf=t=>t.startsWith('nf.')?[0]:t==='imp'||t==='neg'?[1,2,3,4,5]:[0,1,2,3,4,5];
+const BASICS={pres:'pres.ar pres.er pres.ir',pret:'pret.ar pret.erir',impf:'impf.ar impf.erir',fut:'fut.reg',cond:'cond.reg',subj:'subj.ar subj.erir',
+  perf:'perf.aux part.ar part.erir',plup:'plup.aux part.ar part.erir',futp:'futp.aux part.ar part.erir',condp:'condp.aux part.ar part.erir',psubj:'psubj.aux part.ar part.erir',plsubj:'plsubj.aux part.ar part.erir',
+  prog:'prog.estar ger.ar ger.erir',prox:'prox.ir','nf.ger':'ger.ar ger.erir','nf.part':'part.ar part.erir',imp:'imp.tu imp.vos imp.subj pres.ar pres.er pres.ir subj.ar subj.erir',neg:'neg.subj subj.ar subj.erir',isubj:'isubj.reg pret.ar pret.erir'};
+/* drill builders. D: verbs picked by the rules they need; V: a named verb list; S: sentences from the bank; C: a choice quiz. */
+const dD=(name,t,need,o={})=>({name,t,need,...o}),dV=(name,t,v,o={})=>({name,t,v,...o}),dS=(name,f,o={})=>({name,sent:f,...o}),dC=(name,choice)=>({name,choice}),ALL={name:'All',all:1};
+const inT=(...ts)=>s=>ts.includes(s.t),vIs=(...vs)=>s=>vs.includes(s.v),clsIs=c=>s=>cls(verbBy(s.v))===c;
+const isReg=s=>needs(verbBy(s.v),s.t,s.p).every(k=>BASICS[s.t].split(' ').includes(k));
+const allOf=(...fs)=>s=>fs.every(f=>f(s)),notF=f=>s=>!f(s);
+const dH=(name,f,o={})=>dS(name,f,{hide:1,...o}); // same sentences, verb hidden
+const pronounDrills=vs=>[['Yo',0],['Tú',1],['Él / ella / usted',2],['Nosotros',3],['Vosotros',4],['Ellos / ellas / ustedes',5]].map(([n,p])=>dV(n,'pres',vs,{p:[p]}));
+const PRES_ALLOW='pres.ar pres.er pres.ir';
+
+/* ---------- the path ----------
+   Each entry is a level: [lessons as [title, html]], drills, vocabulary, and a test built from the drills.
+   In lesson html: [[hablar,comer pres]] is a table per verb (English under each form), [[end pres ar]] an ending table,
+   [[pp volver,abrir]] participles, [[ger hablar,comer]] gerunds, [[ex hablar pres 0|Yo ___ mucho.|I talk a lot.]] an example whose form comes from the engine.
+   id keys saved progress, so don't rename one. */
+const PATH=[
+{id:'b1',s:0,n:'Beginner 1',name:'Your first verbs: -ar',tid:'pres',teach:'pres.ar',vocab:'hablar bailar cantar cocinar trabajar',q:5,
+ lessons:[
+ ['Welcome',`<p>Every level here works the same way. You read a few short lessons, try small quizzes on one thing at a time, learn the verbs on flash cards, then take a level-up test.</p><p>Pass the test and the next level opens. You will never be tested on a form the lessons have not shown you.</p><p>We start with the present tense and only one kind of verb.</p>`],
+ ['What a verb is made of',`<p>The form you find in a dictionary is the <b>infinitive</b>. In English it has "to" in front: to speak. In Spanish it is a single word, and it always ends in <b>-ar</b>, <b>-er</b> or <b>-ir</b>.</p><table><tr><td><b>-ar</b></td><td><i>hablar</i></td><td>to speak</td></tr><tr><td><b>-er</b></td><td><i>comer</i></td><td>to eat</td></tr><tr><td><b>-ir</b></td><td><i>vivir</i></td><td>to live</td></tr></table><p>Cut off those last two letters and two parts remain: the <b>stem</b> and the <b>ending</b>. In <i>hablar</i> the stem is <b>habl-</b> and the ending is <b>-ar</b>.</p><p>Changing the ending to show who is acting is called <b>conjugating</b>. This level covers -ar verbs only.</p>`],
+ ['Who is doing it',`<p>These are the subject pronouns.</p><table><tr><td><b>yo</b></td><td>I</td></tr><tr><td><b>tú</b></td><td>you (one friend)</td></tr><tr><td><b>él / ella / usted</b></td><td>he / she / you (polite)</td></tr><tr><td><b>nosotros / nosotras</b></td><td>we</td></tr><tr><td><b>vosotros / vosotras</b></td><td>you all (Spain, friends)</td></tr><tr><td><b>ellos / ellas / ustedes</b></td><td>they / you all</td></tr></table><p>The -as forms are for all-female groups. One man in the group makes it -os.</p><p>Each row shares one verb form, so there are six forms to learn. Because the ending already says who is acting, Spanish usually leaves the pronoun out: <i>hablo</i> on its own means "I speak".</p><p><b>Vosotros</b> is used in Spain. Latin America says <i>ustedes</i> instead. If you do not need it, turn off <b>Include vosotros</b> in Settings (the gear at the top) and it disappears from lessons and quizzes.</p>`],
+ ['Conjugating -ar verbs',`<p>Three steps, using <i>hablar</i>:</p><ol class="ol"><li>Start with the infinitive: <b>hablar</b>.</li><li>Remove -ar to get the stem: <b>habl-</b>.</li><li>Add the ending for the person you want.</li></ol>[[end pres ar]][[hablar pres]]<p>The ending carries the meaning, so the pronoun is optional. The stress falls on the stem, except in the nosotros and vosotros forms.</p>`],
+ ['Your first five verbs',`<p>Each of these follows the same three steps. Flash cards for all five are on the level page.</p>[[ex hablar pres 0|___ español en casa.|I speak Spanish at home.]][[ex trabajar pres 2|Mi hermana ___ en un hospital.|My sister works in a hospital.]][[ex cantar pres 1|Tú ___ muy bien.|You sing very well.]][[ex cocinar pres 3|Los domingos ___ para toda la familia.|On Sundays we cook for the whole family.]][[ex bailar pres 5|Ellos ___ en la fiesta.|They dance at the party.]]`]],
+ drills:pronounDrills('bailar cantar cocinar hablar trabajar').concat(ALL)},
+{id:'b2',s:0,n:'Beginner 2',name:'-er verbs',tid:'pres',teach:'pres.er',vocab:'comer beber correr leer vender',q:5,
+ lessons:[
+ ['Conjugating -er verbs',`<p>The same three steps, with <i>comer</i> (to eat): remove -er to get <b>com-</b>, then add the ending.</p>[[end pres er]][[comer pres]]<p>Most endings swap the a of -ar verbs for an e: <i>hablas, comes</i>. The yo form is the same in both groups.</p>`],
+ ['Five -er verbs',`[[ex comer pres 0|___ fruta por la mañana.|I eat fruit in the morning.]][[ex beber pres 1|Tú ___ mucha agua.|You drink a lot of water.]][[ex leer pres 2|Mi padre ___ el periódico.|My father reads the newspaper.]][[ex correr pres 3|___ en el parque.|We run in the park.]][[ex vender pres 5|Ellos ___ coches.|They sell cars.]]`]],
+ drills:pronounDrills('beber comer correr leer vender').concat(ALL)},
+{id:'b3',s:0,n:'Beginner 3',name:'-ir verbs',tid:'pres',teach:'pres.ir',vocab:'vivir abrir decidir escribir recibir',q:5,
+ lessons:[
+ ['Conjugating -ir verbs',`<p><i>Vivir</i> (to live): remove -ir to get <b>viv-</b>, then add the ending.</p>[[end pres ir]][[vivir pres]]<p>-ir verbs share four endings with -er verbs. Only nosotros and vosotros differ: <i>comemos</i> but <i>vivimos</i>, <i>coméis</i> but <i>vivís</i>.</p>`],
+ ['Five -ir verbs',`[[ex vivir pres 0|___ en una ciudad pequeña.|I live in a small city.]][[ex abrir pres 2|La tienda ___ a las nueve.|The shop opens at nine.]][[ex escribir pres 1|Tú ___ muchos correos.|You write a lot of emails.]][[ex recibir pres 3|___ cartas de nuestros amigos.|We receive letters from our friends.]][[ex decidir pres 5|Ellos ___ hoy.|They decide today.]]`]],
+ drills:pronounDrills('abrir decidir escribir recibir vivir').concat(ALL)},
+{id:'m1',s:0,n:'Milestone 1',name:'The present in real sentences',tid:'pres',teach:'',ms:1,
+ lessons:[['When to use the present',`<p>The Spanish present does more than the English one. It covers:</p><ul class="ol"><li><b>Habits:</b> what you do regularly.</li><li><b>Facts:</b> things that are simply true.</li><li><b>Right now:</b> Spanish often says "I work" where English says "I am working".</li></ul>[[ex trabajar pres 0|___ todos los días.|I work every day.]][[ex vivir pres 2|Ana ___ en Lima.|Ana lives in Lima.]][[ex comer pres 3|Ahora ___.|We are eating now.]]<p>From here on you fill the gap in full sentences. Later you do the same with the verb hidden, so you have to work out which verb fits.</p>`]],
+ drills:[dS('-ar in sentences',allOf(inT('pres'),clsIs('ar'),isReg)),dS('-er in sentences',allOf(inT('pres'),clsIs('er'),isReg)),dS('-ir in sentences',allOf(inT('pres'),clsIs('ir'),isReg)),dH('Verb hidden',allOf(inT('pres'),isReg))],
+ testX:[dV('','pres','hablar trabajar cantar bailar cocinar comer beber correr leer vender vivir abrir decidir escribir recibir')]},
+{id:'l4',s:0,n:'Level 4',name:'Present regulars',tid:'pres',teach:'',vocab:'aprender ayudar compartir comprender escuchar esperar mirar necesitar permitir tomar',
+ lessons:[
+ ['Using the present',`<p>You already know the three jobs of the present: habits, facts and what is going on now. It also covers plans when a time word makes the future clear.</p>[[ex trabajar pres 0|Mañana ___ hasta las cinco.|Tomorrow I am working until five.]][[ex escuchar pres 1|Siempre ___ música.|You always listen to music.]][[ex aprender pres 3|___ español.|We are learning Spanish.]]`],
+ ['The three patterns',`<p>Here are all the endings side by side.</p>[[end pres]][[hablar,comer,vivir pres]]<p>Any regular verb follows one of these tables, so from now on quizzes may use verbs you have not met yet. They test the pattern, not the vocabulary.</p>`]],
+ drills:[dD('-ar','pres','pres.ar',{f:v=>cls(v)==='ar'}),dD('-er','pres','pres.er',{f:v=>cls(v)==='er'}),dD('-ir','pres','pres.ir',{f:v=>cls(v)==='ir'}),ALL]},
+{id:'l5',s:0,n:'Level 5',name:'Stem changes: e → ie',tid:'pres',teach:'pres.ie pres.acc',vocab:'comenzar convertir empezar entender pensar perder sentir',
+ lessons:[
+ ['What a stem change is',`<p>Some verbs keep the normal endings but change a vowel in the stem whenever that vowel is stressed. Spanish stresses the stem in every form except nosotros and vosotros, so those two keep the vowel of the infinitive.</p><p>Picture a boot: yo, tú, él and ellos sit inside it and change. Nosotros and vosotros stay outside.</p><p>The infinitive does not warn you, so learn each one with its yo form: <i>pensar, pienso</i>.</p>`],
+ ['e → ie',`<p>The last e of the stem becomes ie.</p>[[pensar,entender,sentir pres]][[ex pensar pres 0|___ en ti.|I think about you.]][[ex empezar pres 2|La clase ___ a las ocho.|The class starts at eight.]][[ex entender pres 3|___ la pregunta.|We understand the question.]]`],
+ ['Added accents',`<p>A few -iar and -uar verbs put a written accent on the i or u in those same four forms, so it is stressed as its own syllable.</p>[[enviar,continuar pres]]<p>Nosotros and vosotros are again untouched: <i>enviamos, continuáis</i>.</p>`]],
+ drills:[dD('e → ie · top 100','pres','pres.ie',{rk:100}),dD('e → ie · top 300','pres','pres.ie',{rk:300}),dD('Accents','pres','pres.acc'),ALL]},
+{id:'l6',s:0,n:'Level 6',name:'Stem changes: o → ue, e → i, adding y',tid:'pres',teach:'pres.ue pres.i pres.uy',vocab:'contar dormir encontrar morir pedir recordar servir volver',
+ lessons:[
+ ['o → ue',`<p>The same boot, a different vowel: the last o of the stem becomes ue.</p>[[volver,dormir pres]]<p><i>Jugar</i> is the only u → ue verb in Spanish, and it works the same way.</p>[[jugar pres]][[ex volver pres 5|___ a casa tarde.|They come home late.]][[ex encontrar pres 0|No ___ las llaves.|I can't find the keys.]]`],
+ ['e → i',`<p>Only -ir verbs do this one. The last e becomes i.</p>[[pedir pres]][[ex pedir pres 1|Siempre ___ lo mismo.|You always order the same thing.]][[ex servir pres 2|El camarero ___ la mesa.|The waiter serves the table.]]`],
+ ['Verbs in -uir add a y',`<p>Verbs ending in -uir (but not -guir) add a y after the u in the four boot forms.</p>[[construir pres]][[ex incluir pres 2|El precio ___ el desayuno.|The price includes breakfast.]]`]],
+ drills:[dD('o → ue · top 100','pres','pres.ue',{rk:100}),dD('o → ue · top 300','pres','pres.ue',{rk:300}),dD('e → i · top 100','pres','pres.i',{rk:100}),dD('e → i · top 300','pres','pres.i',{rk:300}),dD('Adding y','pres','pres.uy'),ALL]},
+{id:'l7',s:0,n:'Level 7',name:'Irregular yo forms',tid:'pres',teach:'pres.zc pres.gj pres.guir',vocab:'conocer parecer elegir seguir conseguir caer saber conducir',
+ lessons:[
+ ['Yo forms with a spelling change',`<p>Many verbs are regular except in the yo form.</p><p>Verbs ending in a vowel + -cer or -cir take <b>-zco</b> in yo.</p>[[conocer pres]]<p>Verbs in -ger and -gir change g to j in yo, to keep the soft sound before o. Verbs in -guir drop the u.</p>[[recoger,seguir pres]]<p>The stem changes you have learned still apply: <i>elegir</i> is e → i and also g → j, so <b>elijo, eliges</b>.</p>`],
+ ['Yo forms with a g',`<p>A group of everyday verbs adds a g in yo. The other five forms are regular or follow a stem change.</p>[[hacer,poner,salir,traer pres]][[caer,valer pres]]<p><i>Venir</i> takes a g in yo and is e → ie in the other boot forms.</p>[[venir pres]]`],
+ ['Two oddities',`<p><i>Saber</i> (to know a fact) has an irregular yo. <i>Caber</i> (to fit) does too.</p>[[saber,caber pres]][[ex saber pres 0|No ___ la respuesta.|I don't know the answer.]][[ex conocer pres 0|___ a tu hermano.|I know your brother.]][[ex hacer pres 0|___ la cena.|I make dinner.]][[ex salir pres 0|___ a las siete.|I leave at seven.]]`]],
+ drills:[dD('c → zc','pres','pres.zc'),dD('g → j','pres','pres.gj',{allow:'pres.i pres.gj'}),dD('-guir','pres','pres.guir',{allow:'pres.i'}),dV('Add g','pres','hacer poner salir traer caer valer venir'),dV('Other','pres','saber caber'),ALL],
+ testX:[dD('','pres','pres.ie')]},
+{id:'l8',s:0,n:'Level 8',name:'Irregulars: the big six',tid:'pres',teach:'',vocab:'ser estar hacer tener haber ir',
+ lessons:[
+ ['ser, estar, hacer',`<p>The most-used verbs in Spanish are also the most irregular, so each one gets its own table. Both ser and estar mean "to be"; Milestone 2 shows when to use each.</p>[[ser,estar pres]][[hacer pres]][[ex ser pres 0|___ de Madrid.|I am from Madrid.]][[ex estar pres 1|¿Dónde ___?|Where are you?]]`],
+ ['tener, haber, ir',`<p><i>Tener</i> mixes yo in -go with e → ie. <i>Haber</i> ("to have" as a helper) is the verb behind "I have done". You will use it from Level 14. <i>Ir</i> means "to go".</p>[[tener,haber,ir pres]][[ex tener pres 3|___ dos gatos.|We have two cats.]][[ex ir pres 5|___ al cine.|They are going to the cinema.]]`]],
+ drills:[dV('ser','pres','ser'),dV('estar','pres','estar'),dV('hacer','pres','hacer'),dV('tener','pres','tener'),dV('haber','pres','haber'),dV('ir','pres','ir'),ALL],
+ testX:[dD('','pres','pres.ie'),dD('','pres','pres.ue')]},
+{id:'l9',s:0,n:'Level 9',name:'Irregulars: six more',tid:'pres',teach:'',vocab:'oír poder ver decir dar querer',
+ lessons:[
+ ['oír, poder, ver',`[[oír,poder,ver pres]]<p><i>Oír</i> is the odd one: yo adds a g and the boot forms add y. <i>Poder</i> is simply o → ue. <i>Ver</i> keeps an e in yo.</p>[[ex poder pres 0|No ___ ir.|I can't go.]]`],
+ ['decir, dar, querer',`[[decir,dar,querer pres]]<p><i>Decir</i> is g in yo plus e → i. <i>Dar</i> ends in -oy like <i>estoy, soy, voy</i>. <i>Querer</i> is e → ie.</p>[[ex querer pres 1|¿Qué ___?|What do you want?]][[ex decir pres 2|Ella ___ la verdad.|She tells the truth.]]`]],
+ drills:[dV('oír','pres','oír'),dV('poder','pres','poder'),dV('ver','pres','ver'),dV('decir','pres','decir'),dV('dar','pres','dar'),dV('querer','pres','querer'),ALL],
+ testX:[dD('','pres','pres.ie'),dD('','pres','pres.ue')]},
+{id:'m2',s:0,n:'Milestone 2',name:'The present, complete',tid:'pres',teach:'',ms:1,
+ lessons:[
+ ['The present so far',`<p>You now have the whole present tense: regular endings, stem changes, irregular yo forms and the big irregulars. The rest of this milestone puts them in sentences and sorts out the two verbs for "to be".</p>[[ex tener pres 0|___ hambre.|I am hungry.]][[ex dormir pres 2|El bebé ___ mucho.|The baby sleeps a lot.]][[ex ir pres 3|___ a la playa.|We are going to the beach.]]`],
+ ['ser: what something is',`<p><b>Ser</b> says what a person or thing is. Think of a definition: identity, origin, job, what it is made of, the time and date, and traits you would use to describe it.</p>[[ex ser pres 0|___ profesora.|I am a teacher.]][[ex ser pres 2|El reloj ___ de oro.|The watch is made of gold.]][[ex ser pres 5|Mis hijos ___ altos.|My children are tall.]]`],
+ ['estar: how or where something is',`<p><b>Estar</b> says where something is or what state it is in right now: location, moods, health, and conditions that can change.</p>[[ex estar pres 2|Madrid ___ en España.|Madrid is in Spain.]][[ex estar pres 0|Hoy ___ cansada.|Today I am tired.]][[ex estar pres 5|Las ventanas ___ abiertas.|The windows are open.]]`],
+ ['The same word, two meanings',`<p>Some adjectives change meaning with the verb.</p><table><tr><td><i>Es aburrido</i></td><td>He is boring</td></tr><tr><td><i>Está aburrido</i></td><td>He is bored</td></tr><tr><td><i>Es listo</i></td><td>He is clever</td></tr><tr><td><i>Está listo</i></td><td>He is ready</td></tr><tr><td><i>Es rico</i></td><td>He is rich</td></tr><tr><td><i>Está rico</i></td><td>It tastes delicious</td></tr></table>`],
+ ['Telling them apart',`<p>Two checks settle most cases. Is it a location, or a mood or condition that could change by tomorrow? Use estar. Is it a description of what the thing fundamentally is? Use ser.</p><p>Events are the exception to the location rule: <i>La fiesta es en mi casa</i> uses ser, because a party happens rather than sits somewhere.</p>`]],
+ drills:[dS('Regular verbs',allOf(inT('pres'),isReg)),dS('Irregular verbs',s=>s.t==='pres'&&verbBy(s.v).irregular),dS('Stem changes',s=>s.t==='pres'&&verbBy(s.v).stem),dC('ser or estar','serest'),dH('Verb hidden',inT('pres'))],
+ testX:[dV('','pres','ser estar tener ir hacer poder querer decir ver dar'),dD('','pres','pres.ie'),dD('','pres','pres.ue')]},
+
+{id:'l10',s:1,n:'Level 10',name:'Reflexive verbs',tid:'pres',teach:'refl',vocab:'levantarse ducharse lavarse casarse quedarse equivocarse maquillarse vestirse despertarse acostarse',
+ lessons:[
+ ['What reflexive means',`<p>A reflexive verb has an action that comes back to the person doing it. You can spot one by -se on the infinitive: <i>lavarse</i>, to wash oneself.</p><p>Spanish uses them far more than English, mainly for routines and changes of state: getting up, showering, getting dressed.</p>`],
+ ['Building the form',`<p>Conjugate the verb as usual and put the matching pronoun in front.</p><table><tr><td>yo</td><td><b>me</b></td></tr><tr><td>tú</td><td><b>te</b></td></tr><tr><td>él / ella / usted</td><td><b>se</b></td></tr><tr><td>nosotros</td><td><b>nos</b></td></tr><tr><td>vosotros</td><td><b>os</b></td></tr><tr><td>ellos / ellas / ustedes</td><td><b>se</b></td></tr></table>[[lavarse pres]][[ex levantarse pres 0|___ a las siete.|I get up at seven.]][[ex ducharse pres 1|¿___ por la mañana?|Do you shower in the morning?]]`],
+ ['With stem changes',`<p>The pronoun changes nothing about the verb, so everything you already know applies.</p>[[vestirse,acostarse pres]][[ex despertarse pres 2|Mi hija ___ temprano.|My daughter wakes up early.]]`]],
+ drills:[dD('Regular','pres','pres.ar pres.er pres.ir',{refl:1}),dD('Irregular','pres','pres.ie pres.ue pres.i',{refl:1}),ALL]},
+{id:'l11',s:1,n:'Level 11',name:'Present progressive',tid:'prog',teach:'prog.estar ger.ar ger.erir',vocab:'acabar aceptar considerar crear entrar estudiar existir formar ganar',
+ lessons:[
+ ['When to use it',`<p>You already know that the plain present covers "I am working". Add the progressive when you want to stress that something is under way at this very moment.</p>[[ex trabajar prog 0|Ahora no puedo, ___.|I can't right now, I am working.]][[ex comer prog 3|___ , te llamo luego.|We are eating, I'll call you later.]]<p>It is never used for future plans, unlike English "I am leaving tomorrow".</p>`],
+ ['How to build it',`<p>Use the present of <b>estar</b>, then the <b>gerund</b>, the -ing form. For -ar verbs remove -ar and add <b>-ando</b>. For -er and -ir verbs remove the ending and add <b>-iendo</b>.</p>[[ger hablar,comer,vivir]][[hablar,comer,vivir prog]]<p>Only estar changes. The gerund stays the same for everybody.</p>`]],
+ drills:[dV('estar present','pres','estar'),dD('Regular','prog','ger.ar ger.erir'),dD('Gerund only','nf.ger','ger.ar ger.erir')]},
+{id:'l12',s:1,n:'Level 12',name:'Progressive: reflexives and irregular gerunds',tid:'prog',teach:'ger.i ger.u ger.y',vocab:'bailar cantar cocinar hablar trabajar beber comer correr leer vender abrir decidir escribir recibir vivir',
+ lessons:[
+ ['Reflexives',`<p>The pronoun usually goes in front of estar.</p>[[ex lavarse prog 0|___ las manos.|I am washing my hands.]][[lavarse prog]]<p>You can also attach it to the end of the gerund and add an accent: <i>estoy lavándome</i>. Both are correct, and this app asks for the first.</p>`],
+ ['e → i',`<p>-ir stem-changers shift one letter in the gerund, e → i.</p>[[ger pedir,servir,sentir,decir]]`],
+ ['o → u',`<p>The two o → ue -ir verbs take u in the gerund.</p>[[ger dormir,morir]]`],
+ ['Adding y',`<p>When the stem ends in a vowel, -iendo becomes -yendo.</p>[[ger leer,creer,traer,oír,construir]]`],
+ ['Irregular gerunds',`<p>Two to memorise: <i>ir</i> and <i>poder</i>.</p>[[ger ir,poder,ser]]`]],
+ drills:[dD('Reflexives','prog','ger.ar ger.erir',{refl:1}),dD('e → i','nf.ger','ger.i'),dD('o → u','nf.ger','ger.u'),dD('Adding y','nf.ger','ger.y'),dV('ir, poder','nf.ger','ir poder ser'),{name:'All (gerund only)',all:1}]},
+{id:'l13',s:1,n:'Level 13',name:'Futuro próximo',tid:'prox',teach:'prox.ir',vocab:'intentar levantar llevar lograr ocurrir partir preguntar presentar terminar tratar',
+ lessons:[
+ ['When to use it',`<p>This is the everyday way to talk about what is going to happen: plans, intentions, and things that are clearly about to happen. It works just like English "going to".</p>`],
+ ['How to build it',`<p>Take the present of <b>ir</b>, add <b>a</b>, then the infinitive. Only ir changes.</p>[[hablar,comer,vivir prox]][[ex estudiar prox 0|___ esta noche.|I am going to study tonight.]][[ex llover prox 2|Mira las nubes, ___.|Look at the clouds, it is going to rain.]]`],
+ ['Irregular verbs',`<p>The second verb is always the infinitive, so there is nothing irregular to learn here: <i>voy a tener, vas a hacer, van a decir</i>.</p>[[ex ser prox 2|___ difícil.|It is going to be hard.]]`],
+ ['Reflexives',`<p>Put the pronoun in front of ir.</p>[[ex levantarse prox 0|___ temprano.|I am going to get up early.]]<p>Attaching it to the infinitive is also correct: <i>voy a levantarme</i>. This app asks for the first.</p>`]],
+ drills:[dV('ir present','pres','ir'),dD('Reflexives','prox','prox.ir',{refl:1}),dD('Verbs','prox','prox.ir',{rk:150}),ALL]},
+{id:'l14',s:1,n:'Level 14',name:'Pretérito perfecto',tid:'perf',teach:'perf.aux part.ar part.erir',vocab:'cerrar costar encontrar llover medir recoger',
+ lessons:[
+ ['When to use it',`<p>Use it for finished actions connected to now: today, this week, this year, or at any time in your life so far.</p><p>In Spain it is the normal choice for anything that happened today. Much of Latin America uses the preterite instead (Level 17).</p>[[ex hablar perf 0|Hoy ___ con mi jefe.|Today I have spoken with my boss.]][[ex comer perf 1|¿___ alguna vez paella?|Have you ever eaten paella?]]`],
+ ['How to build it',`<p>Use the present of <b>haber</b>, then the <b>past participle</b>. For -ar verbs swap -ar for <b>-ado</b>; for -er and -ir verbs swap the ending for <b>-ido</b>.</p>[[end perf]][[pp hablar,comer,vivir]][[hablar,comer,vivir perf]]<p>The participle never changes for gender or number here, and nothing can go between haber and the participle.</p>`],
+ ['Reflexives',`<p>The pronoun goes in front of haber.</p>[[lavarse perf]][[ex levantarse perf 0|Hoy ___ tarde.|Today I got up late.]]`]],
+ drills:[dV('haber present','pres','haber'),dD('-ar','perf','part.ar'),dD('-er / -ir','perf','part.erir'),dD('Reflexives','perf','part.ar part.erir',{refl:1}),ALL,dD('Participle only','nf.part','part.ar part.erir',{rk:150})]},
+{id:'l15',s:1,n:'Level 15',name:'Perfecto: participles to learn, part 1',tid:'perf',teach:'part.acc',vocab:'creer cubrir devolver poseer resolver romper traer volver',
+ lessons:[
+ ['Why some are irregular',`<p>Regular participles end in -ado or -ido: <i>hablado, comido, vivido</i>. About twenty common verbs break that rule, and so does every verb built on them (<i>descubrir</i> from <i>cubrir</i>, <i>componer</i> from <i>poner</i>).</p><p>Haber never changes, so the participle is the only thing to memorise, and the same participles are used in every perfect tense that follows. Most fall into families, which the next lessons cover.</p><p><i>Ser</i> is a one-off:</p>[[pp ser]][[ex ser perf 0|___ muy feliz aquí.|I have been very happy here.]]`],
+ ['Accent on -ído',`<p>When the stem ends in a, e or o, the i of -ido takes an accent to be heard as its own syllable.</p>[[pp creer,leer,traer,caer,oír]]`],
+ ['-uelto and -ierto',`[[pp volver,devolver,resolver]]<p><i>Volver</i> and its relatives end in -uelto.</p>[[pp abrir,cubrir,descubrir]]<p><i>Abrir</i> and <i>cubrir</i> end in -ierto.</p>[[ex volver perf 2|Pedro ___ a casa.|Pedro has come back home.]][[ex abrir perf 0|___ la ventana.|I have opened the window.]]`]],
+ drills:[dV('All','perf','creer leer traer caer oír volver devolver resolver abrir cubrir descubrir'),dV('Participle only','nf.part','creer leer traer caer oír volver devolver resolver abrir cubrir descubrir')],
+ testX:[dD('','perf','part.ar part.erir')]},
+{id:'l16',s:1,n:'Level 16',name:'Perfecto: participles to learn, part 2',tid:'perf',teach:'',vocab:'componer decir escribir describir hacer morir poner proponer romper ver',
+ lessons:[
+ ['-sto',`[[pp poner,ver,componer,proponer,suponer]]<p>Verbs built on <i>poner</i> keep the pattern: compose, propose, suppose.</p>`],
+ ['-to',`<p>A few end in plain -to, usually with a vowel change in the stem: <i>morir</i> becomes <i>muerto</i>. <i>Escribir</i> and everything built on it (<i>describir, inscribir</i>) loses the i of -ido.</p>[[pp escribir,describir,romper,morir]][[ex morir perf 2|El abuelo ___ hace un año.|Grandad died a year ago.]]`],
+ ['-cho',`<p>Two very common verbs end in -cho.</p>[[pp hacer,decir]][[ex hacer perf 1|¿Qué ___ hoy?|What have you done today?]][[ex decir perf 5|___ la verdad.|They have told the truth.]][[ex ver perf 3|___ esa película.|We have seen that film.]][[ex escribir perf 0|___ una carta.|I have written a letter.]][[ex poner perf 2|Ella ___ la mesa.|She has set the table.]][[ex romper perf 0|___ un vaso.|I have broken a glass.]]`]],
+ drills:[dV('All','perf','poner ver componer proponer suponer escribir describir romper morir hacer decir'),dV('Participle only','nf.part','poner ver componer proponer suponer escribir describir romper morir hacer decir'),dV('The six big ones','nf.part','hacer decir ver poner escribir romper')],
+ testX:[dD('','perf','part.ar part.erir')]},
+{id:'m3',s:1,n:'Milestone 3',name:'The perfect and the near future',tid:'perf',teach:'',ms:1,
+ lessons:[['Past and future so far',`<p>You can now say what you have done and what you are going to do. Keep the two apart by the helper verb: <b>haber</b> with a participle looks back, <b>ir a</b> with an infinitive looks ahead.</p>[[ex comer perf 0|Ya ___.|I have already eaten.]][[ex comer prox 0|Luego ___.|I am going to eat later.]]<p>The present progressive is not in the sentence quizzes yet; the level tests cover it.</p>`]],
+ drills:[dS('Regular verbs',allOf(inT('perf','prox'),isReg)),dS('Irregular verbs',allOf(inT('perf','prox'),notF(isReg))),dS('All',inT('perf','prox')),dS('Reflexive verbs',allOf(inT('perf','prox'),s=>verbBy(s.v).refl)),dH('Verb hidden',inT('perf','prox'))],
+ testX:[dD('','prog','ger.ar ger.erir'),dD('','perf','part.ar part.erir')]},
+
+{id:'l17',s:1,n:'Level 17',name:'Preterite regulars',tid:'pret',teach:'pret.ar pret.erir',vocab:'contar recomendar recordar repetir salir sentir servir',
+ lessons:[
+ ['When to use it',`<p>The preterite is for finished actions at a specific moment in the past: what happened, and when. Words like <i>ayer</i> (yesterday), <i>anoche</i> (last night) and <i>el año pasado</i> (last year) point to it.</p>[[ex comprar pret 0|Ayer ___ un coche.|Yesterday I bought a car.]][[ex vivir pret 5|___ tres años en Quito.|They lived in Quito for three years.]]`],
+ ['How to build it',`<p>Remove -ar, -er or -ir and add the preterite ending. -er and -ir verbs share one set.</p>[[end pret]][[hablar,comer,vivir pret]]<p>Accents matter: <i>hablo</i> is "I speak", <i>habló</i> is "he spoke". Nosotros is also the same as the present for -ar and -ir verbs, so context tells them apart.</p>`]],
+ drills:[dD('-ar','pret','pret.ar'),dD('-er','pret','pret.erir',{f:v=>cls(v)==='er'}),dD('-ir','pret','pret.erir',{f:v=>cls(v)==='ir'}),ALL]},
+{id:'l18',s:1,n:'Level 18',name:'Preterite: spelling in yo',tid:'pret',teach:'pret.car pret.gar pret.zar',vocab:'abrazar acercar alcanzar almorzar apagar buscar comenzar cruzar empezar explicar jugar llegar pagar practicar realizar sacar tocar',
+ lessons:[
+ ['Why the spelling changes',`<p>The yo ending <i>-é</i> would change the sound of the last consonant, so the spelling moves to keep the sound. It happens in the yo form only, because only yo begins with e.</p>`],
+ ['-car and -zar',`[[ex buscar pret 0|Ayer ___ las llaves.|Yesterday I looked for the keys.]][[buscar,empezar pret]]<p>c → qu and z → c, in yo only.</p>`],
+ ['-gar',`[[llegar pret]][[ex pagar pret 0|___ la cuenta.|I paid the bill.]]<p>g → gu in yo only.</p>`]],
+ drills:[dD('c → qu','pret','pret.car',{allow:'pret.ar'}),dD('g → gu','pret','pret.gar',{allow:'pret.ar'}),dD('z → c','pret','pret.zar',{allow:'pret.ar'}),ALL]},
+{id:'l19',s:1,n:'Level 19',name:'Preterite: third-person changes',tid:'pret',teach:'pret.shiftu pret.shifti pret.y',vocab:'concluir entender seguir',
+ lessons:[
+ ['Which verbs change',`<p>-ar and -er stem-changers are regular in the preterite: <i>pensé, volví</i>. Only -ir stem-changers change, only in the él and ellos forms, and by one letter.</p>`],
+ ['o → u and e → i',`[[dormir,pedir pret]][[ex dormir pret 2|El bebé ___ toda la noche.|The baby slept all night.]][[ex pedir pret 5|___ la cuenta.|They asked for the bill.]]`],
+ ['Adding y',`<p>When the stem ends in a vowel, the i of -ió and -ieron becomes y, and the other forms take accents.</p>[[leer,construir pret]][[ex creer pret 2|Ella no me ___.|She didn't believe me.]]`]],
+ drills:[dD('o → u','pret','pret.shiftu'),dD('e → i','pret','pret.shifti',{allow:'pret.erir'}),dD('Adding y','pret','pret.y'),ALL]},
+{id:'l20',s:1,n:'Level 20',name:'Preterite: new stems',tid:'pret',teach:'',vocab:'andar caber conducir producir traducir poner',
+ lessons:[
+ ['Stems that change completely',`<p>Some verbs swap to a new stem and take one shared set of endings with no written accents: -e, -iste, -o, -imos, -isteis, -ieron.</p><p>Spot the missing accent: <i>anduve</i>, not <i>anduvé</i>.</p>`],
+ ['Adding j',`<p>Verbs ending in -ducir get a j. After j, -ieron becomes <b>-eron</b>.</p>[[conducir,producir,traducir pret]]`],
+ ['-uv-',`<p><i>Andar</i> (to walk) takes the stem <b>anduv-</b> and the shared endings. Tener, estar and their relatives follow the same idea, with <b>tuv-</b> and <b>estuv-</b>.</p>[[andar pret]][[ex andar pret 5|___ por la playa.|They walked along the beach.]]`],
+ ['-u-',`[[poner,caber pret]][[ex poner pret 1|¿Dónde ___ las llaves?|Where did you put the keys?]]`]],
+ drills:[dV('Adding j','pret','conducir producir traducir'),dV('-uv- and -u-','pret','andar poner caber'),ALL],
+ testX:[dD('','pret','pret.ar')]},
+{id:'l21',s:1,n:'Level 21',name:'Preterite irregulars 1',tid:'pret',teach:'',vocab:'aparecer buscar explicar llamar mantener pagar producir reconocer sacar tocar',
+ lessons:[
+ ['ser, ir, estar',`<p>Ser and ir share one set of forms, so context tells you which is meant.</p>[[ser,ir,estar pret]][[ex ir pret 3|Ayer ___ al cine.|Yesterday we went to the cinema.]][[ex ser pret 2|___ un día muy largo.|It was a very long day.]]`],
+ ['tener and haber',`[[tener,haber pret]][[ex tener pret 0|___ una idea.|I had an idea.]]`]],
+ drills:[dV('ser','pret','ser'),dV('estar','pret','estar'),dV('haber','pret','haber'),dV('tener','pret','tener'),dV('ir','pret','ir'),ALL],
+ testX:[dD('','pret','pret.ar pret.erir')]},
+{id:'l22',s:1,n:'Level 22',name:'Preterite irregulars 2',tid:'pret',teach:'',vocab:'dar hacer poder saber ver',
+ lessons:[
+ ['hacer, poder, saber',`[[hacer,poder,saber pret]]<p><i>Hacer</i> spells él with z: <i>hizo</i>.</p>[[ex hacer pret 0|Ayer ___ la cena.|Yesterday I made dinner.]]`],
+ ['dar and ver',`<p>Two short verbs with no accents.</p>[[dar,ver pret]][[ex ver pret 0|Anoche ___ una película.|Last night I saw a film.]]`]],
+ drills:[dV('hacer','pret','hacer'),dV('poder','pret','poder'),dV('ver','pret','ver'),dV('dar','pret','dar'),dV('saber','pret','saber'),ALL],
+ testX:[dD('','pret','pret.ar pret.erir')]},
+{id:'l23',s:1,n:'Level 23',name:'Preterite irregulars 3',tid:'pret',teach:'',vocab:'decir querer traer venir',
+ lessons:[
+ ['querer and venir',`<p>Both take an <b>i</b> in the stem and keep the shared endings with no accents: <i>quise, vine</i>. Careful with <i>querer</i>: in the preterite it often means "tried" or, in a negative, "refused".</p>[[querer,venir pret]]`],
+ ['decir and traer',`<p>Both take a j, so ellos ends in -eron.</p>[[decir,traer pret]][[ex decir pret 5|No ___ nada.|They said nothing.]][[ex venir pret 2|Mi hermano ___ ayer.|My brother came yesterday.]]`]],
+ drills:[dV('querer','pret','querer'),dV('venir','pret','venir'),dV('decir','pret','decir'),dV('traer','pret','traer'),ALL],
+ testX:[dD('','pret','pret.ar pret.erir')]},
+{id:'m4',s:1,n:'Milestone 4',name:'The preterite',tid:'pret',teach:'',ms:1,
+ lessons:[['When to use it again',`<p>The preterite narrates what happened: events in order, each one finished. If you could put a full stop after it and move on to the next event, it belongs here.</p>[[ex llegar pret 0|___ a las ocho.|I arrived at eight.]][[ex comer pret 0|Luego ___ algo.|Then I ate something.]]`]],
+ drills:[dS('Regular verbs',allOf(inT('pret'),isReg)),dS('Stem-changing',s=>s.t==='pret'&&verbBy(s.v).stem),dS('Irregular verbs',s=>s.t==='pret'&&verbBy(s.v).irregular),dS('All',inT('pret')),dH('Verb hidden',inT('pret'))],
+ testX:[dD('','pret','pret.ar pret.erir'),dV('','pret','ser ir tener hacer poder venir decir')]},
+
+{id:'l24',s:1,n:'Level 24',name:'The imperfect',tid:'impf',teach:'impf.ar impf.erir',vocab:'convertir descubrir jugar llenar nacer ofrecer parecer realizar suponer utilizar',
+ lessons:[
+ ['When to use it',`<p>The imperfect paints the background of the past. Use it for habits ("used to"), descriptions, and things in progress when something else happened.</p><p>Compare the two tenses: the preterite says what happened, the imperfect says what was going on.</p>[[ex hablar impf 0|De niño ___ mucho.|As a child I used to talk a lot.]][[ex comer impf 3|___ cuando llamaste.|We were eating when you called.]]`],
+ ['How to build it',`<p>Remove the ending and add the imperfect ending. -er and -ir verbs share one set, and nearly every verb is regular here.</p>[[end impf]][[hablar,comer,vivir impf]]<p>Yo and él look the same, so the pronoun is often used to avoid doubt.</p>`]],
+ drills:[dD('-ar','impf','impf.ar',{rk:150}),dD('-er','impf','impf.erir',{f:v=>cls(v)==='er',rk:200}),dD('-ir','impf','impf.erir',{f:v=>cls(v)==='ir',rk:200}),ALL]},
+{id:'l25',s:1,n:'Level 25',name:'Imperfect irregulars',tid:'impf',teach:'',vocab:'atraer dirigir lograr permitir proponer resultar vender viajar',
+ lessons:[
+ ['ser, ir, ver',`<p>Only three verbs are irregular in the whole imperfect. Everything else, even <i>tener</i> and <i>hacer</i>, is regular.</p>[[ser,ir,ver impf]][[ex ser impf 0|___ muy pequeño.|I was very small.]][[ex ir impf 3|Siempre ___ a la playa.|We always went to the beach.]][[ex ver impf 2|___ mucho la tele.|She used to watch a lot of TV.]]`]],
+ drills:[dV('ser','impf','ser'),dV('ir','impf','ir'),dV('ver','impf','ver'),ALL],
+ testX:[dD('','impf','impf.ar impf.erir',{rk:100})]},
+{id:'l26',s:1,n:'Level 26',name:'Pluscuamperfecto',tid:'plup',teach:'plup.aux',vocab:'caminar cepillarse cumplir gritar interrumpir llamarse usar',
+ lessons:[
+ ['When to use it',`<p>Use it for something that had already happened before another past moment: "I had eaten". Words like <i>ya</i> (already) and <i>nunca antes</i> (never before) go with it.</p>[[ex comer plup 3|Ya ___ cuando llegó.|We had already eaten when she arrived.]]`],
+ ['How to build it',`<p>The imperfect of <b>haber</b> and a past participle.</p>[[end plup]][[hablar,comer,vivir plup]]`],
+ ['Irregular participles',`<p>The same ones you learned in Levels 15 and 16.</p>[[ex ver plup 0|Nunca lo ___.|I had never seen it.]]`]],
+ drills:[dV('haber imperfect','impf','haber'),dD('-ar','plup','part.ar',{rk:200}),dD('-er / -ir','plup','part.erir',{rk:300}),dV('Irregulars','plup','hacer decir ver poner abrir escribir volver romper morir'),dV('Participle only','nf.part','hacer decir ver poner abrir escribir volver romper morir')]},
+{id:'m5',s:1,n:'Milestone 5',name:'The past tenses',tid:'impf',teach:'',ms:1,
+ lessons:[['Choosing a past tense',`<p>Think of a film. The <b>preterite</b> moves the story forward: one event, then the next. The <b>imperfect</b> is the scenery: what things were like and what was going on.</p><p>Clue words help. <i>Ayer, anoche, de repente</i> lean preterite. <i>Siempre, antes, de niño, mientras</i> lean imperfect.</p>[[ex llover impf 2|___ cuando salí.|It was raining when I left.]][[ex salir pret 0|Llovía cuando ___.|It was raining when I left.]]`]],
+ drills:[dC('Preterite or imperfect','pvi'),dC('ser or estar','serest'),dS('All in sentences',inT('pret','impf','perf','plup')),dH('Verb hidden',inT('pret','impf','perf','plup'))],
+ testX:[dD('','pret','pret.ar pret.erir'),dD('','impf','impf.ar impf.erir',{rk:150})]},
+
+{id:'l27',s:2,n:'Level 27',name:'The future',tid:'fut',teach:'fut.reg',vocab:'continuar disfrutar fijar limpiar mostrar ocupar olvidar referir suceder',
+ lessons:[
+ ['When to use it',`<p>The simple future is for predictions and promises, and it sounds more formal than <i>ir a</i>. It can also guess about now: <i>¿Dónde estará?</i> means "Where can he be?".</p>[[ex hablar fut 0|Mañana ___ con él.|Tomorrow I will talk to him.]][[ex llover fut 2|Mañana ___.|It will rain tomorrow.]]<p>With a real <b>if</b>: <i>si</i> takes the present, and the result can take the future: <i>Si llueve, me quedaré en casa</i>.</p>`],
+ ['How to build it',`<p>Keep the whole infinitive and add the ending. All three groups share them.</p>[[end fut]][[hablar,comer,vivir fut]]`]],
+ drills:[dD('-ar','fut','fut.reg',{f:v=>cls(v)==='ar',rk:150}),dD('-er','fut','fut.reg',{f:v=>cls(v)==='er',rk:200}),dD('-ir','fut','fut.reg',{f:v=>cls(v)==='ir',rk:200}),dC('Si clauses','siFut')],
+ },
+{id:'l28',s:2,n:'Level 28',name:'Future irregulars',tid:'fut',teach:'stem.d stem.drop stem.own',vocab:'aprender comprar dedicar echar evitar informar responder subir sufrir',
+ lessons:[
+ ['Only the stem changes',`<p>The future endings are the same for every verb: <i>-é, -ás, -á, -emos, -éis, -án</i>. A few common verbs attach them to a shorter stem instead of the whole infinitive, and they fall into three groups.</p><p>Learn the stem for each group, and the six forms follow. All verbs built on these (<i>mantener, componer, deshacer</i>) do the same.</p>`],
+ ['Last vowel becomes d',`<p>The vowel before the final r turns into a d: <i>tener → tendr-</i>. Notice that the d makes a new consonant cluster, <i>-ndr-</i> or <i>-ldr-</i>.</p>[[tener,poner,salir,venir,valer fut]]`],
+ ['Last vowel removed',`<p>Here the vowel before the final r just disappears: <i>poder → podr-</i>. <i>Querer</i> ends up with a double r, <i>querr-</i>.</p>[[poder,querer,saber,haber,caber fut]]`],
+ ['Completely irregular',`[[hacer,decir fut]][[ex hacer fut 0|Mañana ___ la cena.|Tomorrow I will make dinner.]][[ex tener fut 1|___ tiempo.|You will have time.]]`]],
+ drills:[dV('Last vowel → d','fut','tener poner salir venir valer'),dV('Last vowel removed','fut','poder querer saber haber caber'),dV('Completely irregular','fut','hacer decir'),ALL]},
+{id:'l29',s:2,n:'Level 29',name:'Future perfect',tid:'futp',teach:'futp.aux',vocab:'desarrollar detener elegir imaginar indicar observar obtener preparar señalar soler',
+ lessons:[
+ ['When to use it',`<p>What will have happened by a point in the future, and guesses about the recent past.</p>[[ex terminar futp 0|Para junio ___.|By June I will have finished.]]`],
+ ['How to build it',`<p>The future of <b>haber</b> and a past participle.</p>[[end futp]][[hablar,comer,vivir futp]]`],
+ ['Irregular participles',`<p>Only the helper verb is different here. The participle comes from the same lists as in Levels 15 and 16: <i>hecho, dicho, visto, puesto, abierto, escrito, vuelto, roto</i>.</p>[[ex hacer futp 5|Ya lo ___.|They will have done it already.]]`]],
+ drills:[dV('haber future','fut','haber'),dD('-ar','futp','part.ar',{rk:200}),dD('-er / -ir','futp','part.erir',{rk:300}),dV('Irregulars','futp','hacer decir ver poner abrir escribir volver romper morir'),dV('Participle only','nf.part','hacer decir ver poner abrir escribir volver romper morir')]},
+{id:'l30',s:2,n:'Level 30',name:'The conditional',tid:'cond',teach:'cond.reg',vocab:'acompañar celebrar construir demostrar desaparecer desear enseñar representar reunir significar',
+ lessons:[
+ ['When to use it',`<p>The conditional says what would happen, makes requests polite, and gives advice.</p>[[ex comprar cond 0|___ esa casa.|I would buy that house.]][[ex vivir cond 2|Ella ___ en la costa.|She would live on the coast.]][[ex poder cond 1|¿___ ayudarme?|Could you help me?]]`],
+ ['How to build it',`<p>The same stems as the future, with the imperfect's -ía endings.</p>[[end cond]][[hablar,comer,vivir cond]]`],
+ ['Irregular stems',`<p>Exactly the stems from Level 28.</p>[[tener,hacer,decir cond]]`]],
+ drills:[dD('-ar / -er / -ir','cond','cond.reg',{rk:150}),dV('Irregular stems','cond','tener poner salir venir poder querer saber haber hacer decir'),ALL]},
+{id:'l31',s:2,n:'Level 31',name:'Conditional perfect',tid:'condp',teach:'condp.aux',vocab:'asegurar colocar crecer entregar establecer guardar mandar matar preferir surgir',
+ lessons:[
+ ['When to use it',`<p>What would have happened but did not.</p>[[ex ir condp 0|___ contigo.|I would have gone with you.]]`],
+ ['How to build it',`<p>The conditional of <b>haber</b> and a past participle.</p>[[end condp]][[hablar,comer,vivir condp]]`],
+ ['Irregular participles',`<p>Only the helper verb is different here. The participle comes from the same lists as in Levels 15 and 16: <i>hecho, dicho, visto, puesto, abierto, escrito, vuelto, roto</i>.</p>[[ex hacer condp 3|Lo ___.|We would have done it.]]`]],
+ drills:[dV('haber conditional','cond','haber'),dD('-ar','condp','part.ar',{rk:200}),dD('-er / -ir','condp','part.erir',{rk:300}),dV('Irregulars','condp','hacer decir ver poner abrir escribir volver romper morir'),dV('Participle only','nf.part','hacer decir ver poner abrir escribir volver romper morir')]},
+{id:'m6',s:2,n:'Milestone 6',name:'The future and the conditional',tid:'cond',teach:'',ms:1,
+ lessons:[['Will or would',`<p>The future states what will happen; the conditional what would happen if things were different. <i>Vendré</i> is a promise, <i>vendría</i> depends on something else.</p>[[ex venir fut 0|Mañana ___.|I will come tomorrow.]][[ex venir cond 0|Yo ___ con gusto.|I would gladly come.]]`]],
+ drills:[dC('Future or conditional','fvc'),dC('ser or estar','serest'),dS('All in sentences',inT('fut','cond','futp','condp')),dH('Verb hidden',inT('fut','cond','futp','condp'))],
+ testX:[dD('','fut','fut.reg',{rk:200}),dD('','cond','cond.reg',{rk:200})]},
+
+{id:'l32',s:2,n:'Level 32',name:'Present subjunctive',tid:'subj',teach:'subj.ar subj.erir',vocab:'actuar adquirir bajar corresponder cortar iniciar lanzar meter notar probar',
+ lessons:[
+ ['When to use it',`<p>The indicative states facts. The subjunctive is for what is wanted, felt, doubted or still uncertain. It usually follows a main verb and <i>que</i>, when the subject changes.</p><p>Triggers to memorise: wanting (<i>quiero que</i>), emotion (<i>me alegra que</i>), doubt (<i>dudo que</i>), impersonal phrases (<i>es importante que</i>) and <i>ojalá</i>. After <i>creo que</i> or <i>es verdad que</i> the verb stays in the indicative.</p>[[ex hablar subj 1|Quiero que ___ con ella.|I want you to speak with her.]][[ex comer subj 3|Es importante que ___ bien.|It is important that we eat well.]]`],
+ ['How to build it',`<p>Remove the ending and add the "opposite" vowel: -ar verbs take e, -er and -ir verbs take a.</p>[[end subj]][[hablar,comer,vivir subj]]`]],
+ drills:[dD('Present recap','pres','pres.ar pres.er pres.ir',{rk:120}),dC('Indicative or subjunctive','ivs'),dD('-ar','subj','subj.ar',{rk:200}),dD('-er','subj','subj.erir',{f:v=>cls(v)==='er',rk:400}),dD('-ir','subj','subj.erir',{f:v=>cls(v)==='ir',rk:400})]},
+{id:'l33',s:2,n:'Level 33',name:'Subjunctive: stems',tid:'subj',teach:'subj.yo subj.ie subj.ue subj.i subj.shift subj.acc',vocab:'abandonar aplicar apoyar aprovechar aumentar avanzar exigir imponer negar obligar',
+ lessons:[
+ ['Built on the yo form',`<p>Start from the yo present and drop the -o. If yo was irregular, every form carries that irregularity.</p>[[tener,hacer subj]][[ex venir subj 1|Espero que ___.|I hope you come.]]`],
+ ['Stem changes',`<p>The boot forms change as in the present. Nosotros and vosotros go back to the infinitive vowel. -ir stem-changers keep a one-letter shift there: e → i, o → u.</p>[[pensar,volver subj]][[pedir,dormir subj]]`],
+ ['Added accents',`<p>-iar and -uar verbs with an accent keep it in the boot forms.</p>[[enviar subj]]`]],
+ drills:[dV('Irregular yo','subj','tener hacer poner salir traer decir venir conocer parecer'),dD('e → ie','subj','subj.ie',{rk:300}),dD('o → ue','subj','subj.ue',{rk:300}),dD('e → i','subj','subj.i',{rk:300,allow:'subj.shift'}),ALL]},
+{id:'l34',s:2,n:'Level 34',name:'Subjunctive: spelling',tid:'subj',teach:'subj.car subj.gar subj.zar subj.gj subj.guir',vocab:'ayudar cambiar dejar escuchar esperar mirar necesitar pasar quedar tomar',
+ lessons:[
+ ['Keeping the sound',`<p>The subjunctive endings begin with e (for -ar verbs) or a (for the others). That would change the sound of the last consonant of the stem, so the spelling is adjusted in every form, not just yo.</p><p>The sound stays the same and only the letters change: <i>buscar → busque</i> still ends in a hard k sound. Three short lessons follow.</p>`],
+ ['-car and -zar',`<p>c becomes qu and z becomes c, in all six forms.</p>[[buscar,empezar subj]][[ex buscar subj 1|Quiero que ___ otro piso.|I want you to look for another flat.]][[ex empezar subj 2|Es mejor que ___ ya.|It is better that he starts now.]]`],
+ ['-gar, -ger and -gir',`<p>g becomes gu in -gar verbs, to keep the hard g. In -ger and -gir verbs g becomes j, to keep the soft sound.</p>[[llegar,recoger subj]][[ex llegar subj 1|Espero que ___ a tiempo.|I hope you arrive on time.]][[ex recoger subj 3|Es importante que ___ la mesa.|It is important that we clear the table.]]`],
+ ['-guir',`<p>-guir verbs drop the u: <i>sigo → siga</i>. Seguir is also e → i, so the stem is <i>sig-</i> in every form.</p>[[seguir subj]][[ex seguir subj 2|Quiero que ___ mis consejos.|I want her to follow my advice.]]`]],
+ drills:[dD('c → qu','subj','subj.car',{allow:'subj.ie'}),dD('z → c','subj','subj.zar',{allow:'subj.ie subj.ue'}),dD('g → gu','subj','subj.gar',{allow:'subj.ie subj.ue'}),dD('-ger / -gir','subj','subj.gj',{allow:'subj.i subj.shift'}),dD('-guir','subj','subj.guir',{allow:'subj.i subj.shift'})]},
+{id:'l35',s:2,n:'Level 35',name:'Subjunctive irregulars',tid:'subj',teach:'',vocab:'compartir conservar defender depender disponer expresar marcar pertenecer provocar quitar',
+ lessons:[
+ ['Six verbs to learn',`<p>Six verbs do not build their subjunctive from the yo present form. Ser and estar come first.</p><p><i>Ser</i> uses the stem <i>se-</i>, and <i>estar</i> needs a written accent on the forms that would otherwise be stressed on the wrong syllable.</p>[[ser,estar subj]]`],
+ ['haber and dar',`[[haber,dar subj]]<p><i>Dé</i> has an accent to tell it apart from the word <i>de</i>.</p>`],
+ ['saber and ir',`[[saber,ir subj]][[ex ser subj 2|Dudo que ___ fácil.|I doubt it is easy.]][[ex ir subj 3|Quiere que ___.|He wants us to go.]]`]],
+ drills:[dV('ser','subj','ser'),dV('estar','subj','estar'),dV('haber','subj','haber'),dV('dar','subj','dar'),dV('saber','subj','saber'),dV('ir','subj','ir'),ALL,dC('Indicative or subjunctive','ivs')],
+ testX:[dD('','subj','subj.ar subj.erir',{rk:150})]},
+{id:'m7',s:2,n:'Milestone 7',name:'The present subjunctive',tid:'subj',teach:'',ms:1,
+ lessons:[
+ ['Subjunctive or indicative',`<p>Ask what the main clause is doing. Reporting a fact or belief: indicative. Wanting, feeling, doubting or judging: subjunctive.</p>[[ex venir pres 2|Creo que ___ mañana.|I think he is coming tomorrow.]][[ex venir subj 2|No creo que ___ mañana.|I don't think he is coming tomorrow.]]`],
+ ['The hard cases',`<p><i>Cuando</i> takes the subjunctive only about the future: <i>Cuando llegues, llámame</i>. For a habit it takes the indicative. If both clauses share a subject, use the infinitive: <i>Quiero ir</i>, not <i>Quiero que vaya</i>.</p>`]],
+ drills:[dC('Indicative or subjunctive','ivs'),dS('In sentences',inT('subj')),dH('Verb hidden',inT('subj'))],
+ testX:[dD('','subj','subj.ar subj.erir',{rk:150}),dV('','subj','ser estar ir tener hacer poder')]},
+{id:'l36',s:2,n:'Level 36',name:'Imperfect subjunctive',tid:'isubj',teach:'isubj.reg',vocab:'acostar amenazar apretar atender consistir describir enviar funcionar insistir visitar',
+ lessons:[
+ ['When to use it',`<p>The same triggers as the present subjunctive, when the main verb is in the past or conditional. It also makes the unreal side of an "if": <i>Si tuviera tiempo, viajaría</i>.</p>[[ex hablar isubj 1|Quería que ___ con él.|I wanted you to speak with him.]]`],
+ ['How to build it',`<p>Take the ellos preterite, drop -ron, add -ra, -ras, -ra, -ramos, -rais, -ran. Nosotros gets an accent.</p>[[hablar,comer,vivir isubj]]`],
+ ['Irregulars',`<p>Any irregular preterite carries straight over.</p>[[tener,ser isubj]][[ex tener isubj 0|Si ___ dinero, viajaría.|If I had money, I would travel.]]`]],
+ drills:[dD('Preterite recap','pret','pret.ar pret.erir',{rk:100}),dD('-ar','isubj','isubj.reg',{f:v=>cls(v)==='ar',rk:150}),dD('-er / -ir','isubj','isubj.reg',{f:v=>cls(v)!=='ar',rk:300}),dV('Irregulars','isubj','tener ser ir hacer poder venir decir saber'),dC('Si clauses','siIsubj'),dC('Real or imagined','realOrNot'),ALL]},
+{id:'l37',s:2,n:'Level 37',name:'Perfect subjunctive',tid:'psubj',teach:'psubj.aux',vocab:'asistir contener descansar nadar regresar saltar secar sentar soñar',
+ lessons:[
+ ['When to use it',`<p>Subjunctive triggers about something already done.</p>[[ex llegar psubj 1|Espero que ___ bien.|I hope you have arrived safely.]]`],
+ ['How to build it',`<p>The present subjunctive of <b>haber</b> and a past participle.</p>[[end psubj]][[hablar,comer,vivir psubj]]`],
+ ['Irregular participles',`<p>Only the helper verb is different here. The participle comes from the same lists as in Levels 15 and 16: <i>hecho, dicho, visto, puesto, abierto, escrito, vuelto, roto</i>.</p>[[ex hacer psubj 5|No creo que lo ___.|I don't think they have done it.]]`]],
+ drills:[dV('haber subjunctive','subj','haber'),dC('Indicative or subjunctive','ivsPerf'),dD('-ar','psubj','part.ar',{rk:200}),dD('-er / -ir','psubj','part.erir',{rk:300}),dV('Irregulars','psubj','hacer decir ver poner abrir escribir volver romper morir'),dV('Participle only','nf.part','hacer decir ver poner abrir escribir volver romper morir')]},
+{id:'l38',s:2,n:'Level 38',name:'Pluperfect subjunctive',tid:'plsubj',teach:'plsubj.aux',vocab:'arreglar cuidar entrenar luchar odiar organizar parar practicar sugerir volar',
+ lessons:[
+ ['When to use it',`<p>Regrets, and the unreal side of a past "if": <i>Si hubiera sabido, habría venido</i>.</p>[[ex saber plsubj 0|Si lo ___, te habría llamado.|If I had known, I would have called you.]]`],
+ ['How to build it',`<p>The imperfect subjunctive of <b>haber</b> and a past participle.</p>[[end plsubj]][[hablar,comer,vivir plsubj]]`],
+ ['Irregular participles',`<p>Only the helper verb is different here. The participle comes from the same lists as in Levels 15 and 16: <i>hecho, dicho, visto, puesto, abierto, escrito, vuelto, roto</i>.</p>[[ex hacer plsubj 5|Si lo ___, ahora tendrían mesa.|If they had done it, they would have a table now.]]`]],
+ drills:[dV('haber imperfect subjunctive','isubj','haber'),dD('-ar','plsubj','part.ar',{rk:200}),dD('-er / -ir','plsubj','part.erir',{rk:300}),dV('Irregulars','plsubj','hacer decir ver poner abrir escribir volver romper morir'),dV('Participle only','nf.part','hacer decir ver poner abrir escribir volver romper morir'),dC('Si clauses','siPast')]},
+{id:'m8',s:2,n:'Milestone 8',name:'All the subjunctives',tid:'plsubj',teach:'',ms:1,
+ lessons:[['Which subjunctive',`<p>Match the time. A present or future main verb points to the present or perfect subjunctive. A past or conditional main verb points to the imperfect or pluperfect.</p><p>And in "if" sentences: <i>si</i> + present for real, <i>si</i> + imperfect subjunctive for imagined, <i>si</i> + pluperfect subjunctive for a past that did not happen.</p>`]],
+ drills:[dC('Which tense','which'),dC('Si clauses','siAll'),dS('In sentences',inT('subj','isubj','psubj','plsubj')),dH('Verb hidden',inT('subj','isubj','psubj','plsubj'))],
+ testX:[dD('','isubj','isubj.reg',{rk:200}),dD('','psubj','part.ar part.erir',{rk:200}),dD('','subj','subj.ar subj.erir',{rk:150})]},
+{id:'l39',s:2,n:'Level 39',name:'Commands',tid:'imp',teach:'imp.tu imp.subj imp.vos neg.subj refl.imp',vocab:'alquilar amar cancelar cenar contestar cruzar dibujar empujar manejar tirar',
+ lessons:[
+ ['When to use it',`<p>Commands give instructions, invitations and advice. There is no yo form, because you cannot command yourself.</p><p>Spanish has a separate form for each way of addressing people: tú (a friend), usted (polite), vosotros (friends, Spain), ustedes (a group), and nosotros ("let's").</p>[[ex hablar imp 1|___ conmigo, por favor.|Talk to me, please.]][[ex comer imp 2|___ algo antes de salir.|Eat something before leaving (formal).]]`],
+ ['Building each form',`<p><b>Tú:</b> the él form of the present. <b>Vosotros:</b> swap the final -r of the infinitive for -d. <b>Usted, ustedes, nosotros:</b> the present subjunctive.</p>[[hablar,comer,vivir imp]]<p>Negative commands are <b>no + present subjunctive</b> for every person.</p>[[hablar neg]][[ex hablar imp 1|¡___ más despacio!|Speak more slowly!]][[ex comer neg 1|¡___ eso!|Don't eat that!]]`],
+ ['Reflexives',`<p>Attach the pronoun to the end and add an accent to keep the stress. Nosotros drops its s and vosotros its d first.</p>[[lavarse imp]]<p>In negative commands the pronoun goes before the verb.</p>`]],
+ drills:[dD('Tú','imp','imp.tu',{p:[1],rk:200}),dD('Usted','imp','imp.subj',{p:[2],rk:200}),dD('Nosotros','imp','imp.subj',{p:[3],rk:200}),dD('Ustedes','imp','imp.subj',{p:[5],rk:200}),dD('Reflexives','imp','imp.tu imp.subj imp.vos',{refl:1}),dD('Negative','neg','neg.subj',{rk:200}),ALL]},
+{id:'l40',s:2,n:'Level 40',name:'Irregular commands 1',tid:'imp',teach:'',vocab:'apagar averiguar encender girar incluir picar pintar proteger quejarse sorprender',
+ lessons:[
+ ['Short tú forms',`<p>Eight verbs have a short tú command. This level covers four.</p>[[ser,tener,hacer,ir imp]][[ex ir imp 1|¡___ a casa!|Go home!]][[ex hacer imp 1|___ los deberes.|Do your homework.]]<p>The other persons use the subjunctive forms you already know.</p>`]],
+ drills:[dV('ser','imp','ser'),dV('tener','imp','tener'),dV('hacer','imp','hacer'),dV('ir','imp','ir'),ALL],
+ testX:[dD('','imp','imp.tu',{p:[1],rk:200}),dD('','imp','imp.subj',{p:[2],rk:200})]},
+{id:'l41',s:2,n:'Level 41',name:'Irregular commands 2',tid:'imp',teach:'',vocab:'aconsejar alcanzar hervir necesitar preferir recordar referir significar surgir',
+ lessons:[
+ ['The other four',`[[venir,decir,poner,salir imp]][[ex venir imp 1|¡___ aquí!|Come here!]][[ex decir imp 1|___ la verdad.|Tell the truth.]][[ex poner imp 1|___ la mesa.|Set the table.]][[ex salir imp 1|¡___ de ahí!|Get out of there!]]`]],
+ drills:[dV('venir','imp','venir'),dV('decir','imp','decir'),dV('poner','imp','poner'),dV('salir','imp','salir'),ALL],
+ testX:[dD('','imp','imp.tu',{p:[1],rk:200}),dD('','imp','imp.subj',{p:[2],rk:200})]},
+{id:'m9',s:2,n:'Milestone 9',name:'Commands in context',tid:'imp',teach:'',ms:1,
+ lessons:[['Saying it clearly',`<p>Commands are everywhere: recipes, directions, friends. Add <i>por favor</i> and they stay polite.</p>[[ex pasar imp 1|___, por favor.|Come in, please.]][[ex venir imp 2|___ conmigo.|Come with me (formal).]]`]],
+ drills:[dS('Regular verbs',allOf(inT('imp','neg'),isReg)),dS('Irregular verbs',allOf(inT('imp','neg'),s=>verbBy(s.v).irregular)),dS('All',inT('imp','neg')),dS('Reflexive verbs',allOf(inT('imp','neg'),s=>verbBy(s.v).refl)),dH('Verb hidden',inT('imp','neg'))],
+ testX:[dD('','imp','imp.tu',{p:[1],rk:200}),dD('','imp','imp.subj',{p:[2],rk:200}),dD('','neg','neg.subj',{rk:200})]},
+{id:'m10',s:2,n:'Milestone 10',name:'Overall recap',tid:'recap',teach:'',ms:1,
+ lessons:[['Words that fool you',`<p>Well done reaching the end of the path. Before the final test, a warning: many Spanish words look like English ones but mean something else.</p><table><tr><td><i>embarazada</i></td><td>pregnant</td></tr><tr><td><i>éxito</i></td><td>success</td></tr><tr><td><i>realizar</i></td><td>to carry out</td></tr><tr><td><i>asistir</i></td><td>to attend</td></tr><tr><td><i>recordar</i></td><td>to remember</td></tr><tr><td><i>sensible</i></td><td>sensitive</td></tr></table><p>The False friends quiz below covers these and more.</p>`]],
+ drills:[dC('Indicative or subjunctive','ivs'),dC('ser or estar, any tense','serest'),dS('All past tenses',inT('pret','impf','perf','plup')),dS('All future tenses',inT('fut','cond','prox','futp','condp')),dS('Any tense',()=>1),dH('Verb hidden',()=>1),{name:'False friends',tip:'False friends'},{name:'Meanings: top 100',mean:100},{name:'Meanings: top 300',mean:300}]}
+];
+const LEVELS=PATH.map(l=>({...l,stage:STAGES[l.s],pass:l.q===5?13:28,total:l.q===5?15:30,q:l.q||10,verbs:(l.vocab?L(l.vocab):[]).map(verbBy).filter(Boolean)})); // vocab verbs missing from Conjuga's list are left out
 const nextLevel=()=>LEVELS.find(l=>!S.lv[l.id]);
-const groupVerbs=g=>VERBS.filter(v=>!v.refl&&(g==='top'?v.inf!=='haber':v.g===g)).slice(0,20);
+const groupVerbs=g=>VERBS.filter(v=>!v.refl&&v.g===g).slice(0,20);
+// old level id (tense-group) -> the new levels that now cover it. Passing an old level counts for those.
+const OLD_LV={'pres-ar':'b1 l4','pres-erir':'b2 b3 l4','pres-irr':'l7 l8 l9','prox-top':'l13','perf-ar':'l14','perf-erir':'l14','pres-stem':'l5 l6','pres-spell':'l7','perf-irr':'l15 l16','pret-ar':'l17','pret-erir':'l17','pret-spell':'l18','pret-stem':'l19','pret-irr':'l20 l21 l22 l23','impf-ar':'l24','impf-erir':'l24','impf-irr':'l25','fut-ar':'l27','fut-erir':'l27','fut-irr':'l28','cond-ar':'l30','cond-erir':'l30','cond-irr':'l30','subj-ar':'l32','subj-erir':'l32','subj-stem':'l33','subj-spell':'l34','subj-irr':'l35'};
+function migrateLv(){for(const[o,ns]of Object.entries(OLD_LV))if(S.lv[o])for(const n of L(ns))S.lv[n]=Math.max(S.lv[n]||0,S.lv[o])}
+
+/* ---------- lessons: rendering and what they teach ---------- */
+const P_ALL=[0,1,2,3,4,5];
+function fTable(v,t,ps){ // one verb, English under each form
+  const fh=formsHtml(v,t),lab=t==='imp'||t==='neg'?IMPLAB:LAB;
+  return `<div class="card"><h3>${v.inf} <span class="muted small">${v.en}</span></h3><table>${ps.map(i=>fh[i]?`<tr><td class="muted small">${lab[i]}</td><td><b>${fh[i]}</b><div class="muted small">${english(v,t,i)}</div></td></tr>`:'').join('')}</table></div>`;
+}
+const egForm=(s,f)=>s.replace('___',`<b>${/^[¿¡]?___/.test(s)?cap(f):f}</b>`);
+const ppRows=(k,vs)=>`<div style="overflow-x:auto"><table>${vs.map(inf=>{const v=verbBy(inf),pl=plainOf(v);
+  return `<tr><td>${inf}</td><td><b>${k==='pp'?hl(participle(v),participle(pl)):hl(gerund(v),gerundBare(pl))}</b></td><td class="muted small">${enParts(v.en).h} → ${k==='pp'?enPast(enParts(v.en).h)[1]:enIng(v)}</td></tr>`}).join('')}</table></div>`;
+function renderToken(x,ps){
+  if(x.startsWith('ex ')){const[h,s,en]=x.slice(3).split('|'),[inf,t,p]=h.split(' ');if(!ps.includes(+p))return'';
+    return `<div class="lex"><div>${egForm(s,conj(verbBy(inf),t)[+p])}</div><div class="muted small">${en}</div></div>`}
+  const w=x.split(' ');
+  if(w[0]==='end')return `<div style="overflow-x:auto">${endingsTable(w[1],w[2])}</div>`;
+  if(w[0]==='pp'||w[0]==='ger')return ppRows(w[0],w[1].split(','));
+  return `<div class="grid2">${w[0].split(',').map(inf=>fTable(verbBy(inf),w[1],ps)).join('')}</div>`;
+}
+const segs=html=>html.split(/(\[\[.+?\]\])/).filter(Boolean).map(s=>s.startsWith('[[')?{tok:s.slice(2,-2)}:{txt:s});
+const renderLesson=(html,all)=>segs(html).map(g=>g.txt??renderToken(g.tok,all?P_ALL:persons())).join('');
+const wordsOf=h=>h.replace(/<\/?mark>/g,'').replace(/<[^>]+>/g,' ').toLowerCase().split(/[^a-záéíóúüñ]+/).filter(Boolean);
+function segWords(g){const sv=S.vos;S.vos=true;try{return wordsOf(g.txt??renderToken(g.tok,P_ALL))}finally{S.vos=sv}} // every person counts as shown, whatever the vosotros setting
+const lessonWords=l=>new Set(l.lessons.flatMap(([,h])=>segs(h).flatMap(segWords)));
+const TAUGHT=[];
+function taughtAt(i){if(TAUGHT[i])return TAUGHT[i];const prev=i?taughtAt(i-1):{r:new Set,w:new Set},l=LEVELS[i];
+  return TAUGHT[i]={r:new Set([...prev.r,...(l.teach?L(l.teach):[])]),w:new Set([...prev.w,...lessonWords(l)])}}
+const metBy=(ns,T_)=>ns.every(k=>k[0]==='='?T_.w.has(k.slice(1)):T_.r.has(k));
+const curIdx=()=>{let i=LEVELS.indexOf(nextLevel());if(i<0)i=LEVELS.length-1;LEVELS.forEach((l,k)=>{if(S.lv[l.id]&&k>i)i=k});return i};
+/* ---------- drills ---------- */
+const POOL=new Map();
+function drillVerbs(l,d){ // verbs a drill may use: every rule and every irregular form they need has been taught by this level
+  if(POOL.has(d))return POOL.get(d);const T_=taughtAt(LEVELS.indexOf(l));let out;
+  if(d.v)out=L(d.v).map(verbBy).filter(Boolean);
+  else{const need=L(d.need);
+    out=VERBS.filter(v=>!!v.refl===!!d.refl&&(!d.rk||v.rank<=d.rk)&&(!d.f||d.f(v))).filter(v=>{const ns=slotsOf(d.t).flatMap(p=>needs(v,d.t,p));return metBy(ns,T_)&&ns.some(k=>need.includes(k))})}
+  POOL.set(d,out);return out}
+const nfQ=(v,t)=>({kind:'nf',v,nf:t.slice(3),ans:formOf(v,t,0)});
+const SENTALL=[];
+const sentAt=i=>{const T_=taughtAt(i);return SENTALL.filter(s=>metBy(needs(verbBy(s.v),s.t,s.p),T_))};
+const bankAt=i=>sentAt(i).filter(s=>!s.ch);
+function drillQs(l,d,n=l.q){const i=LEVELS.indexOf(l);
+  if(d.all)return levelQs(l,n);
+  if(d.tip)return tipQs(d.tip);
+  if(d.mean)return shuffle(VERBS.filter(v=>v.rank<=d.mean&&!v.refl)).slice(0,n).map(qm);
+  if(d.choice)return shuffle(choiceItems(d.choice,i)).slice(0,n).map(choiceQ);
+  if(d.sent)return shuffle(bankAt(i).filter(s=>persons().includes(s.p)&&d.sent(s))).slice(0,n).map(s=>({...qs_(s),hide:!!d.hide}));
+  const vs=drillVerbs(l,d);
+  if(d.t.startsWith('nf.'))return shuffle(vs).slice(0,n).map(v=>nfQ(v,d.t));
+  return d.p?build([d.t],vs,n,{pron:d.p}):levelTest(d.t,vs,n);
+}
+const qKey=q=>q.kind==='sent'?q.s:q.kind==='nf'?q.v.inf+q.nf:q.kind==='conj'?q.v.inf+q.t+q.p:q.s||q.ans;
+function levelQs(l,n=l.total){ // a balanced test across the level's drills, no repeats
+  const ds=[...l.drills,...(l.testX||[])].filter(d=>!d.all&&!d.choice&&!d.hide&&!d.tip&&!d.mean);
+  const seen=new Set(),out=[],add=q=>{const k=qKey(q);if(!seen.has(k)&&out.length<n){seen.add(k);out.push(q)}};
+  if(!ds.length)return out;
+  for(const d of shuffle(ds))drillQs(l,d,Math.ceil(n/ds.length)).forEach(add);
+  for(const d of shuffle(ds))if(out.length<n)drillQs(l,d,n*2).forEach(add);
+  return shuffle(out);
+}
+const drillOK=(l,d)=>{try{return drillQs(l,d,1).length>0}catch{return false}};
+/* ---------- choice quizzes: the right form for the sentence. Items come from the sentence bank and, where the bank has no contrast, CHX. ---------- */
+const BAD_SE=/simpático|amables|perfecto|felices|tímido|traviesos|oficina/;
+const CH={
+ serest:{title:'ser or estar',bank:s=>(s.v==='ser'||s.v==='estar')&&!BAD_SE.test(s.s),ts:()=>0,note:s=>s.v==='estar'?'Location, a mood, or a condition that can change takes estar.':'Identity, origin, a job or a lasting trait takes ser.'},
+ pvi:{title:'Preterite or imperfect',bank:s=>s.t==='pret'&&CLUE.pret.test(s.s)||s.t==='impf'&&CLUE.impf.test(s.s),ts:()=>['pret','impf'],note:s=>s.t==='pret'?'A finished event at a set time takes the preterite.':'A habit, a description or something in progress takes the imperfect.'},
+ fvc:{title:'Future or conditional',bank:s=>s.t==='fut'&&/mañana|algún día|el año que viene|próxim/i.test(s.s)||s.t==='cond'&&/\bsi\b|en tu lugar|¿___|por favor|mesa para/i.test(s.s),ts:()=>['fut','cond'],note:s=>s.t==='fut'?'A prediction or a promise takes the future.':'What would happen, or a polite request, takes the conditional.'},
+ ivs:{title:'Indicative or subjunctive',bank:s=>s.t==='subj',ts:()=>['pres','subj'],note:s=>s.t==='subj'?'Wanting, doubting, feeling or judging takes the subjunctive.':'Stating a fact or a belief takes the indicative.'},
+ ivsPerf:{title:'Indicative or subjunctive',bank:s=>s.t==='psubj',ts:()=>['perf','psubj'],note:s=>s.t==='psubj'?'A subjunctive trigger about something already done.':'A plain statement takes the indicative.'},
+ siFut:{title:'si clauses',bank:null,ts:s=>s.t==='pres'?['pres','fut']:['fut','cond'],note:s=>s.t==='pres'?'A real possibility: si + present.':'The result of a real "if" takes the future.'},
+ siIsubj:{title:'si clauses',bank:s=>s.t==='isubj'&&/\bsi\b/i.test(s.s),ts:()=>['isubj','cond','subj'],note:()=>'Something imagined: si + imperfect subjunctive, then the conditional.'},
+ siPast:{title:'si clauses',bank:s=>s.t==='plsubj'&&/\bsi\b/i.test(s.s),ts:()=>['plsubj','condp','plup'],note:()=>'A past that did not happen: si + pluperfect subjunctive, then the conditional perfect.'},
+ realOrNot:{title:'Real or imagined',bank:s=>s.t==='isubj'&&/\bsi\b/i.test(s.s),ts:()=>['pres','isubj'],note:s=>s.t==='pres'?'A real possibility: si + present.':'Imagined: si + imperfect subjunctive.'},
+ which:{title:'Which tense',bank:s=>['isubj','plsubj'].includes(s.t)&&/\bsi\b/i.test(s.s)||s.t==='subj'&&/quiere|quiero|espero|ojalá|dudo|es mejor|es importante|es necesario/i.test(s.s),ts:()=>['subj','isubj','plsubj'],note:s=>({subj:'A present main verb, action not yet done: present subjunctive.',isubj:'An imagined "if": imperfect subjunctive.',plsubj:'A past that did not happen: pluperfect subjunctive.'})[s.t]},
+ siAll:{title:'si clauses',bank:s=>/\bsi\b/i.test(s.s)&&['isubj','plsubj'].includes(s.t),ts:()=>['pres','isubj','plsubj'],note:s=>({pres:'A real possibility: si + present.',isubj:'Imagined: si + imperfect subjunctive.',plsubj:'A past that did not happen: si + pluperfect subjunctive.'})[s.t]}};
+const CLUE={pret:/ayer|anoche|pasad|hace |en 20|el (lunes|martes|sábado|domingo)|de repente/i,impf:/de niñ|de peq|de pequeñ|antes|siempre|todos los|cada |mientras|cuando/i};
+const choiceTs=(k,s)=>k==='serest'?null:CH[k].ts(s);
+const choiceOpts=(k,s)=>k==='serest'?['ser','estar'].map(x=>[verbBy(x),s.t,s.p]):choiceTs(k,s).map(t=>[verbBy(s.v),t,s.p]);
+function choiceItems(k,i){const c=CH[k],T_=taughtAt(i);
+  return sentAt(i).filter(s=>persons().includes(s.p)&&(s.ch?s.ch.split(',').includes(k):c.bank&&c.bank(s))).filter(s=>{
+    const o=choiceOpts(k,s),f=o.map(([v,t,p])=>conj(v,t)[p]);return f.every(Boolean)&&new Set(f).size===f.length&&f.includes(s.a)&&o.every(([v,t,p])=>metBy(needs(v,t,p),T_))}).map(s=>({...s,k}))}
+const choiceQ=s=>{const o=choiceOpts(s.k,s);return{kind:'tip',tip:CH[s.k].title,s:s.s,en:s.en,ans:s.a,opts:o.map(([v,t,p])=>conj(v,t)[p]),note:CH[s.k].note(s),reqs:o}};
+/* ---------- the check: a quiz may only ask for what the lessons so far have shown ---------- */
+function reqsOf(q){return q.kind==='conj'||q.kind==='sent'?[[q.v,q.t,q.p]]:q.kind==='nf'?[[q.v,'nf.'+q.nf,0]]:q.reqs||[]}
+function checkLessons(runs=30){
+  const bad=[],say=(l,m)=>bad.push(`${l.n}: ${m}`);
+  LEVELS.forEach((l,i)=>{
+    if(l.pass!==(l.q===5?13:28)||l.total!==(l.q===5?15:30))say(l,'wrong pass mark');
+    l.lessons.forEach(([t,h],k)=>{const txt=segs(h).filter(g=>g.txt).map(g=>g.txt.replace(/<[^>]+>/g,' ')).join(' ').trim();
+      if(txt.length+segs(h).filter(g=>g.tok).length*120<150)say(l,`lesson ${k+1} "${t}" is nearly empty`)});
+        for(const d of [...l.drills,...(l.testX||[])]){if(d.v)for(const v of L(d.v))if(!verbBy(v))say(l,`${d.name}: unknown verb ${v}`)}
+    // lesson examples: each must use only what was taught before it
+    const prev=i?taughtAt(i-1):{r:new Set,w:new Set};let r=new Set(prev.r),w=new Set(prev.w);L(l.teach||'').forEach(x=>r.add(x));
+    const T_={r,w};
+    for(const[title,h]of l.lessons)for(const g of segs(h)){
+      if(g.tok){const x=g.tok;
+        if(x.startsWith('ex ')){const[hd,s,en]=x.slice(3).split('|'),[inf,t,p]=hd.split(' '),v=verbBy(inf);
+          if(!v||!T[t]||!s||!s.includes('___')||!en)say(l,`bad example ${x}`);
+          else{if(!conj(v,t)[+p])say(l,`example has no form: ${x}`);
+            const ns=needs(v,t,+p);if(!metBy(ns,T_))say(l,`example not yet taught: ${inf} ${t} ${p} (${ns.join(' ')})`)}}
+        else{const w0=x.split(' ');if(w0[0]!=='end'&&!(w0[0]==='pp'||w0[0]==='ger')){for(const inf of w0[0].split(','))if(!verbBy(inf)||!T[w0[1]])say(l,`bad table ${x}`)}
+          else if(w0[0]==='pp'||w0[0]==='ger')for(const inf of w0[1].split(','))if(!verbBy(inf))say(l,`bad table ${x}`)}}
+      segWords(g).forEach(x=>w.add(x))}
+    // quizzes
+    const T2=taughtAt(i);
+    const test=(src,qs)=>{for(const q of qs){
+      if(q.kind==='tip'&&q.reqs&&!q.opts.includes(q.ans))say(l,`${src}: answer missing from options "${q.s}"`);
+      for(const[v,t,p]of reqsOf(q)){const ns=needs(v,t,p);if(!metBy(ns,T2))say(l,`${src}: asks ${v.inf} ${t} ${p} = ${formOf(v,t,p)} but needs ${ns.filter(k=>k[0]==='='?!T2.w.has(k.slice(1)):!T2.r.has(k)).join(' ')}`)}}};
+    let nonEmpty=0;
+    for(const d of l.drills){let any=false;for(let n=0;n<runs;n++){let qs;try{qs=drillQs(l,d,l.q)}catch(e){say(l,`${d.name}: ${e.message}`);break}if(qs.length)any=true;test(d.name,qs)}if(any)nonEmpty++;else if(!d.all)console.log?.(`  (note) ${l.n}: drill "${d.name}" has nothing to ask yet and is hidden`)}
+    for(let n=0;n<runs;n++){const qs=levelQs(l);test('level test',qs);if(qs.length<l.total)say(l,`test only has ${qs.length} of ${l.total} questions`)}
+    if(!nonEmpty)say(l,'no working drill');
+  });
+  return bad.filter((x,i,a)=>a.indexOf(x)===i);
+}
+const dedupe=a=>[...new Set(a)];
+
+const nfEn=x=>x.nf==='ger'?enIng(x.v):enPast(enParts(x.v.en).h)[1]+enParts(x.v.en).tail;
+function lessonSheet(l,k){
+  const[title,html]=l.lessons[k],last=k===l.lessons.length-1,r=renderLesson(html);
+  open(`<div class="qtop"><button class="x" aria-label="Back to the level" id="cx">←</button><span class="muted small">${l.n} · lesson ${k+1} of ${l.lessons.length}</span></div>
+  <section class="card stack"><h1 style="font-size:26px">${title}</h1>${r}${k===0&&!l.ms?deep(l.tid)+tipLinks(l.tid):''}</section>
+  ${r.includes('<mark>')?'<p class="muted small" style="margin:0">Letters in <mark>this colour</mark> differ from the regular pattern.</p>':''}
+  <div class="spacer"></div><div class="row">${k?'<button class="btn ghost" id="pv">Back</button>':''}<button class="btn" id="nx">${last?'Go to the quizzes':'Next lesson'}</button></div>`);
+  document.getElementById('cx').onclick=()=>levelSheet(l);bindTipLinks(body);
+  if(k)document.getElementById('pv').onclick=()=>lessonSheet(l,k-1);
+  document.getElementById('nx').onclick=()=>last?levelSheet(l):lessonSheet(l,k+1);
+}
+function levelSheet(l){
+  const s=S.lv[l.id]||0,back=()=>levelSheet(l),ds=l.drills.filter(d=>drillOK(l,d)),vs=l.verbs;
+  const run=(qs,title)=>quiz(qs,{title,back,mode:qs.every(x=>x.kind==='tip')?'mc':undefined});
+  open(`<div class="qtop"><button class="x" aria-label="Close" id="cx">×</button><span class="muted small">${l.stage.name}</span></div>
+  <div><span class="tag">${l.ms?'Milestone':'Level'}</span> ${s?starHtml(s):''}<h1 style="font-size:30px;margin-top:8px">${l.n}: ${l.name}</h1>
+   <p class="muted" style="margin-bottom:0">Read the short lessons, try the quizzes, then pass the level-up test to unlock the next level.</p></div>
+  <section class="card stack"><h2 style="font-size:20px">Learn</h2><div>${l.lessons.map(([t],k)=>`<button class="skill" data-ls="${k}"><span class="row"><b>${k+1}. ${t}</b><span class="muted small">Read</span></span></button>`).join('')}</div></section>
+  <section class="card stack"><h2 style="font-size:20px">Practice</h2><p class="muted small" style="margin:0">${l.q} questions each. Each quiz sticks to one pattern.</p><div>${ds.map(d=>`<button class="skill" data-dr="${l.drills.indexOf(d)}"><span class="row"><b>${d.name}</b><span class="muted small">${d.choice||d.tip?'Choose':d.mean||d.hide?'Quiz':'Type'}</span></span></button>`).join('')}</div></section>
+  ${vs.length?`<section class="card stack"><h2 style="font-size:20px">Verbs in this level</h2><div>${vs.map(v=>`<div class="vrow"><button class="open" data-v="${v.inf}"><b>${v.inf}</b><span class="m">${v.en}</span></button></div>`).join('')}</div>
+   <div class="row"><button class="btn ghost" id="fl">Flash cards</button><button class="btn ghost" id="mq">Meaning quiz</button></div></section>`:''}
+  <section class="card stack"><h2 style="font-size:20px">Level up</h2><p style="margin:0">${l.total} questions, mixed. Get ${l.pass} right to pass.</p><button class="btn" id="st">Start the test</button></section>`);
+  document.getElementById('cx').onclick=closeSheet;
+  body.querySelectorAll('[data-ls]').forEach(b=>b.onclick=()=>lessonSheet(l,+b.dataset.ls));
+  body.querySelectorAll('[data-dr]').forEach(b=>b.onclick=()=>{const d=l.drills[+b.dataset.dr];run(drillQs(l,d,d.all?l.q*2:l.q),d.name)});
+  body.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>verbSheet(verbBy(b.dataset.v)));
+  if(vs.length){document.getElementById('fl').onclick=()=>quiz(vs.map(qm),{title:'Flash cards',mode:'flash',back});
+    document.getElementById('mq').onclick=()=>quiz(shuffle(vs).map(qm),{title:'Meaning quiz',mode:'mc',back})}
+  document.getElementById('st').onclick=()=>quiz(levelQs(l),{title:l.name,level:l,pass:l.pass,back});
+}
+function todayQs(nl){
+  if(nl){const ds=[...nl.drills,...(nl.testX||[])].filter(d=>!d.all&&!d.choice&&!d.hide&&!d.tip&&!d.mean&&drillOK(nl,d));
+    if(ds.length){const qs=drillQs(nl,pick(ds),5);if(qs.length)return qs}
+    const sp=sentPool();if(sp.length)return shuffle(sp).slice(0,5).map(qs_)}
+  return build(['pret'],VERBS.filter(v=>v.irregular&&!v.refl&&v.rank<=150),5);
+}
 
 /* ---------- English glosses ---------- */
 const EN_IRR={have:['had','had'],do:['did','done'],undo:['undid','undone'],make:['made','made'],go:['went','gone'],say:['said','said'],tell:['told','told'],give:['gave','given'],see:['saw','seen'],know:['knew','known'],put:['put','put'],leave:['left','left'],let:['let','let'],find:['found','found'],come:['came','come'],think:['thought','thought'],take:['took','taken'],drink:['drank','drunk'],feel:['felt','felt'],begin:['began','begun'],write:['wrote','written'],lose:['lost','lost'],understand:['understood','understood'],get:['got','gotten'],read:['read','read'],fall:['fell','fallen'],hear:['heard','heard'],win:['won','won'],bring:['brought','brought'],split:['split','split'],run:['ran','run'],show:['showed','shown'],forget:['forgot','forgotten'],eat:['ate','eaten'],sleep:['slept','slept'],sell:['sold','sold'],buy:['bought','bought'],teach:['taught','taught'],sing:['sang','sung'],swim:['swam','swum'],drive:['drove','driven'],build:['built','built'],cost:['cost','cost'],fly:['flew','flown'],hurt:['hurt','hurt'],wake:['woke','woken'],choose:['chose','chosen'],catch:['caught','caught'],grow:['grew','grown'],send:['sent','sent'],break:['broke','broken'],sit:['sat','sat'],wear:['wore','worn'],become:['became','become'],keep:['kept','kept'],hold:['held','held'],spend:['spent','spent'],flee:['fled','fled'],lend:['lent','lent'],throw:['threw','thrown'],fight:['fought','fought'],sweep:['swept','swept'],sew:['sewed','sewn'],steal:['stole','stolen'],draw:['drew','drawn'],cut:['cut','cut'],hit:['hit','hit'],set:['set','set'],hide:['hid','hidden'],mean:['meant','meant'],lead:['led','led'],meet:['met','met'],pay:['paid','paid'],bite:['bit','bitten'],freeze:['froze','frozen'],shine:['shone','shone'],shoot:['shot','shot'],spit:['spat','spat'],shake:['shook','shaken'],bet:['bet','bet'],fit:['fit','fit'],hang:['hung','hung'],light:['lit','lit'],overcome:['overcame','overcome'],undertake:['undertook','undertaken'],withdraw:['withdrew','withdrawn'],forgive:['forgave','forgiven'],arise:['arose','arisen'],redo:['redid','redone'],ride:['rode','ridden'],deal:['dealt','dealt'],seek:['sought','sought']};
@@ -1307,6 +1826,7 @@ function english(v,t,i){
   const pres=be?BE[i]:i===2?en3(h):h,past=be?WAS[i]:pa,p=EP[i],hv=i===2?'has':'have';
   const body={pres:`${p} ${pres}`,subj:`${p} ${pres}`,pret:`${p} ${past}`,isubj:`${p} ${past}`,impf:`${p} used to ${h}`,fut:`${p} will ${h}`,cond:`${p} would ${h}`,
     prox:`${p} ${BE[i]} going to ${h}`,perf:`${p} ${hv} ${pp}`,psubj:`${p} ${hv} ${pp}`,plup:`${p} had ${pp}`,plsubj:`${p} had ${pp}`,futp:`${p} will have ${pp}`,condp:`${p} would have ${pp}`}[t];
+  if(t==='prog')return `${p} ${BE[i]} ${enIng(v)}`;
   if(body)return body+tail;
   const to=['','(to you) ','(to you, formal) ','','(to you all) ','(to you all, formal) '][i];
   if(t==='imp')return i===3?`let's ${h}${tail}!`:`${to}${h}${tail}!`;
@@ -1323,6 +1843,7 @@ function steps(v,t,i){
   if(v.o&&v.o[t])out.push(`${R} is irregular in this tense, so this form is learned by heart: ${q_(f)}.`);
   else if(AUX[t]){out.push(`Conjugate haber: ${q_(AUX[t][i])}.`);
     out.push(v.part?`Add the irregular past participle ${q_(v.part)}.`:`Add the past participle: drop -${c} and add ${c==='ar'?'-ado':'-ido'}: ${q_(participle(v))}.`)}
+  else if(t==='prog')out.push(`Conjugate estar in the present: ${q_(OVR.estar.pres[i])}.`,`Remove -${c} from ${R} and add ${c==='ar'?'-ando':'-iendo'} (the gerund): ${q_(gerundBare(v))}.`)
   else if(t==='prox'){out.push(`Conjugate ir in the present: ${q_(IRP[i])}.`,`Add ${q_('a')} and the infinitive: ${q_(f)}.`)}
   else if(t==='pres'){
     if(i===0&&v.yo)out.push(`The yo form is irregular: ${q_(v.yo)}.`);
@@ -1384,6 +1905,7 @@ const fresh=()=>({lv:{},xp:0,streak:0,last:'',st:{},miss:[],vos:true,strict:fals
   cq:{what:'conj',how:'type',tenses:['pres'],pron:[0,1,2,3,4,5],verbs:'top100',n:10,hideInf:false,hideEn:false,irrOnly:false}});
 let S;try{S=Object.assign(fresh(),JSON.parse(localStorage.getItem(KEY)||'{}'))}catch{S=fresh()}
 S.cq=Object.assign(fresh().cq,S.cq);
+migrateLv();
 const THEMES=[['system','System'],['light','Light'],['dark','Dark'],['sunset','Sunset'],['ocean','Ocean'],['contrast','Contrast']];
 const applyTheme=()=>{if(!THEMES.some(t=>t[0]===S.theme))S.theme='system';const r=document.documentElement;if(S.theme==='system')delete r.dataset.theme;else r.dataset.theme=S.theme};
 applyTheme();
@@ -1436,16 +1958,17 @@ const activeFilters=()=>(S.vf.pop?1:0)+(S.vf.end!=='all'?1:0)+(S.vf.refl!=='incl
 const VIEWS={
  learn(){
   const done=LEVELS.filter(l=>S.lv[l.id]).length,cur=nextLevel(),curStage=cur?cur.stage:STAGES.at(-1);
-  const lvlBtn=(l,i)=>{const s=S.lv[l.id]||0,open=i===0||s||S.lv[LEVELS[i-1].id]; // s: a reordered level already passed stays open
-    return `<button class="lvl${l===cur?' cur':''}" data-lvl="${i}" ${open?'':'disabled'}><span class="n">Level ${i+1}${l===cur?' · Current':''}</span><span class="g">${l.g.name}</span>${open?starHtml(s):'<span class="muted small">Locked</span>'}</button>`};
-  const runs=st=>{const out=[];LEVELS.forEach((l,i)=>{if(l.stage!==st)return;const r=out.at(-1);if(r&&r[0][0].t===l.t)r.push([l,i]);else out.push([[l,i]])});return out}; // one card per run of levels in the same tense
+  const lvlBtn=(l,i)=>{const s=S.lv[l.id]||0,open=i===0||s||S.lv[LEVELS[i-1].id]; // s: a level passed earlier stays open
+    return `<button class="lvl${l===cur?' cur':''}${l.ms?' ms':''}" data-lvl="${i}" ${open?'':'disabled'}><span class="n">${l.n}${l===cur?' · Current':''}</span><span class="g">${l.name}</span>${open?starHtml(s):'<span class="muted small">Locked</span>'}</button>`};
+  const runs=st=>{const out=[];LEVELS.forEach((l,i)=>{if(l.stage!==st)return;const r=out.at(-1);if(r&&r[0][0].tid===l.tid)r.push([l,i]);else out.push([[l,i]])});return out}; // one card per run of levels in the same tense
+  const head=t=>T[t]?`<div class="tense-head"><h2>${tn(t)}</h2><span class="ex">${T[t].ex[0][0]} · ${T[t].ex[0][1]}</span></div><p class="tense-sub"><b>${S.esNames?T[t].en:T[t].es}:</b> ${T[t].use}</p>${deep(t)}${tipLinks(t)}`:`<div class="tense-head"><h2>Everything together</h2></div>`;
   view.innerHTML=`<div class="row"><h1 style="font-size:26px">Your path</h1><span class="muted small">${done} / ${LEVELS.length} levels</span></div>
   <div class="meter" style="margin-top:8px"><i style="width:${done/LEVELS.length*100}%"></i></div>`+
   STAGES.map(st=>{const ls=LEVELS.filter(l=>l.stage===st);
    return `<details class="stage" ${st===curStage?'open':''}><summary><h2>${st.name}</h2><span class="muted small">${ls.filter(l=>S.lv[l.id]).length} / ${ls.length}</span><span class="tense-sub">${st.sub}</span></summary>`+
-   runs(st).map(r=>{const t=r[0][0].t;return `<section class="tense"><div class="tense-head"><h2>${tn(t.id)}</h2><span class="ex">${t.ex}</span></div><p class="tense-sub"><b>${S.esNames?T[t.id].en:T[t.id].es}:</b> ${T[t.id].use}</p>${deep(t.id)}${tipLinks(t.id)}<div class="levels">${r.map(([l,i])=>lvlBtn(l,i)).join('')}</div></section>`}).join('')+
+   runs(st).map(r=>`<section class="tense">${head(r[0][0].tid)}<div class="levels">${r.map(([l,i])=>lvlBtn(l,i)).join('')}</div></section>`).join('')+
    `</details>`}).join('');
-  view.querySelectorAll('[data-lvl]').forEach(b=>b.onclick=()=>intro(LEVELS[+b.dataset.lvl]));bindTipLinks(view);
+  view.querySelectorAll('[data-lvl]').forEach(b=>b.onclick=()=>levelSheet(LEVELS[+b.dataset.lvl]));bindTipLinks(view);
  },
  practice(){
   const C=S.cq,tog=(arr,id)=>arr.includes(id)?arr.filter(x=>x!==id):[...arr,id];
@@ -1456,14 +1979,14 @@ const VIEWS={
    const seg=(key,opts)=>`<div class="seg" role="group">${opts.map(([v,l])=>`<button data-seg="${key}" data-val="${v}" aria-pressed="${C[key]===v}">${l}</button>`).join('')}</div>`;
    const sw=(k,t,d)=>`<label class="switch" for="cq-${k}"><span>${t}<br><span class="muted small">${d}</span></span><input type="checkbox" id="cq-${k}" ${C[k]?'checked':''}></label>`;
    const n=make().length;
-   const nl=nextLevel(),ct=nl?nl.t.id:'pret',todayName=nl?`${tns(ct)} · ${nl.g.name}`:`${tns('pret')} irregulars`; // Today's set follows the path
+   const nl=nextLevel(),ct=nl&&T[nl.tid]?nl.tid:'pret',todayName=nl?`${nl.n} · ${nl.name}`:`${tns('pret')} irregulars`,sp=sentPool(); // Today's set follows the path; Sentences only use what the lessons have taught
    const vd=vod(),vf=conj(vd,ct)[1],td=tipOfDay();
    view.innerHTML=`<div class="stack"><div><p class="muted small" style="margin:0">${new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})}</p><h1 style="font-size:36px">Practice</h1></div>
    <div class="card stack"><h2 style="font-size:26px">Today's set</h2><p class="muted" style="margin:0">5 questions · ${todayName}</p>
    <p class="small" style="margin:0;color:var(--soft)">Type each form and press Enter. Accent keys sit under the answer box.</p><button class="btn" id="todaySet">Start</button></div>
    <div class="card stack"><h3>Sentences</h3>
-   <p class="muted small" style="margin:0">Fill the missing verb in a real sentence · mixed tenses. Level-up test: 10 sentences, pass with 8.</p>
-   <div class="row"><button class="btn" id="sent5">5 questions</button><button class="btn ghost" id="sentTest">Level-up test</button></div></div>
+   <p class="muted small" style="margin:0">Fill the missing verb in a real sentence. Only tenses and forms you have reached on the path. ${sp.length<10?`${sp.length} sentences so far.`:'Level-up test: 10 sentences, pass with 8.'}</p>
+   <div class="row"><button class="btn" id="sent5" ${sp.length?'':'disabled'}>5 questions</button><button class="btn ghost" id="sentTest" ${sp.length>=10?'':'disabled'}>Level-up test</button></div></div>
    <button class="card" id="vod" style="text-align:left;display:flex;justify-content:space-between;align-items:flex-end;gap:12px;color:var(--ink)"><span><span class="muted small" style="display:block">Verb of the day</span><span style="font-family:var(--display);font-size:40px;font-weight:700;display:block;line-height:1.1">${vd.inf}</span><span class="muted">${vd.en}</span></span>
    <span style="text-align:right"><span class="muted small" style="display:block">tú · ${tns(ct)}</span><span style="font-family:var(--display);font-size:26px;font-weight:600">${hl(vf,bare(plainOf(vd),ct)[1])}</span></span></button>
    <button class="card" id="tod" style="text-align:left;color:var(--ink)"><span class="muted small" style="display:block">💡 Tip of the day</span><span style="font-family:var(--display);font-size:24px;font-weight:700;display:block;margin:2px 0">${tt(td[0])}</span><span class="muted">${td[2][0][1].startsWith('<table')?td[1]:td[2][0][1]}</span></button>
@@ -1487,10 +2010,10 @@ const VIEWS={
    document.getElementById('qm').onclick=()=>{C.n=Math.max(5,C.n-5);save();draw()};
    document.getElementById('qp').onclick=()=>{C.n=Math.min(50,C.n+5);save();draw()};
    document.getElementById('go').onclick=()=>quiz(make(),{title:C.what==='conj'?(C.tenses.length===1?tn(C.tenses[0]):'Custom quiz'):'Meanings',mode:C.how,hideInf:C.what==='conj'&&C.hideInf,hideEn:C.what==='conj'&&C.hideEn});
-   document.getElementById('todaySet').onclick=()=>quiz(build([ct],nl?groupVerbs(nl.g.id):VERBS.filter(v=>v.irregular&&!v.refl&&v.rank<=150),5),{title:cap(todayName)});
+   document.getElementById('todaySet').onclick=()=>quiz(todayQs(nl),{title:cap(todayName)});
    document.getElementById('vod').onclick=()=>verbSheet(vd);document.getElementById('tod').onclick=()=>goTip(td[0]);
-   document.getElementById('sent5').onclick=()=>quiz(weightedPick(sentPool(),5,s=>COMMON_T.has(s.t)?3:1).map(qs_),{title:'Sentences'});
-   document.getElementById('sentTest').onclick=()=>quiz(shuffle(sentPool()).slice(0,10).map(qs_),{title:'Level-up test',pass:8});
+   document.getElementById('sent5').onclick=()=>quiz(weightedPick(sp,5,s=>COMMON_T.has(s.t)?3:1).map(qs_),{title:'Sentences'});
+   document.getElementById('sentTest').onclick=()=>quiz(shuffle(sp).slice(0,10).map(qs_),{title:'Level-up test',pass:8});
    document.getElementById('rev').onclick=()=>formQuiz(S.miss,'Smart review');
   };draw();
  },
@@ -1543,12 +2066,12 @@ const VIEWS={
   const mastered=n=>VERBS.filter(v=>v.rank<=n&&isM(v)).length;
   const fc=fmCounts(),sk=skillStats(),range=verbRange(sk);
   // next up: one action, most urgent first
-  const pathLvl=t=>LEVELS.find(l=>l.t.id===t);
+  const pathLvl=t=>LEVELS.find(l=>l.tid===t&&!l.ms);
   const firstGap=sk.find(x=>x.started&&x.pct<80),fresh=sk.find(x=>!x.started);
   const nu=fc.fading?{h:`${fc.fading} ${fc.fading===1?'form is':'forms are'} fading`,p:'A quick refresh brings them back before they slip away.',b:'Refresh',go:()=>formQuiz(fc.fadingKeys,'Refresh')}
    :fc.due.length?{h:`Lock in ${fc.due.length} ${fc.due.length===1?'form':'forms'}`,p:`You typed ${fc.due.length===1?'this':'these'} right on an earlier day. Get ${fc.due.length===1?'it':'them'} right again today and ${fc.due.length===1?'it counts':'they count'} as known.`,b:'Lock in',go:()=>formQuiz(fc.due,'Lock in')}
    :firstGap?{h:`Keep going: ${firstGap.name}`,p:`${firstGap.pct}% · aims at the patterns you haven’t got yet.`,b:'Practise',go:()=>skillQuiz(firstGap)}
-   :fresh?{h:`New skill: ${fresh.name}`,p:`<i>${fresh.es}</i>`,b:pathLvl(fresh.ts[0])?'Start lesson':'Start',go:()=>pathLvl(fresh.ts[0])?intro(pathLvl(fresh.ts[0])):skillQuiz(fresh)}
+   :fresh?{h:`New skill: ${fresh.name}`,p:`<i>${fresh.es}</i>`,b:pathLvl(fresh.ts[0])?'Start lesson':'Start',go:()=>pathLvl(fresh.ts[0])?levelSheet(pathLvl(fresh.ts[0])):skillQuiz(fresh)}
    :S.miss.length?{h:'Smart review',p:`${S.miss.length} forms you’ve missed before.`,b:'Review',go:()=>formQuiz(S.miss,'Smart review')}
    :{h:'Keep it fresh',p:'A mixed set from the top 100 verbs.',b:'Practise',go:()=>quiz(build(['pres','pret','impf','fut','subj'],VERBS.filter(v=>v.rank<=100),10),{title:'Mixed practice'})};
   const skRow=(x,i)=>`<button class="skill" data-sk="${i}"><span class="row"><b>${x.name}</b><span class="small ${x.pct>=80?'okc':'muted'}">${x.pct>=80?'✓ You can':x.pct+'%'}</span></span>
@@ -1645,7 +2168,7 @@ function settingsSheet(){
     try{d=JSON.parse(await f.text()).data}catch{}
     if(!d||typeof d!=='object'||Array.isArray(d)||typeof d.lv!=='object'||typeof d.xp!=='number')return msg('That file isn’t a Conjuga backup.');
     if(!confirm(`Replace your current progress with the backup from ${d.backedUp||'this file'}? This can’t be undone.`))return;
-    S=Object.assign(fresh(),d);S.cq=Object.assign(fresh().cq,S.cq);save();applyTheme();header();settingsSheet();document.getElementById('bk-msg').textContent='Progress restored.'};
+    S=Object.assign(fresh(),d);S.cq=Object.assign(fresh().cq,S.cq);migrateLv();save();applyTheme();header();settingsSheet();document.getElementById('bk-msg').textContent='Progress restored.'};
   const r=document.getElementById('reset');r.onclick=()=>{if(r.dataset.arm){S=fresh();save();applyTheme();settingsSheet()}else{r.dataset.arm=1;r.textContent='Yes, reset everything';document.getElementById('resetMsg').hidden=false}};
 }
 document.getElementById('gear').innerHTML=ICON.gear;document.getElementById('gear').onclick=settingsSheet;
@@ -1676,123 +2199,14 @@ function filterSheet(){
   };draw();
 }
 
-function endingsTable(t){
+function endingsTable(t,only){
   const P=persons(),lab=i=>LAB[i]+(S.enPro?`<span style="display:block;font-style:italic;font-weight:400;font-size:12px;color:color-mix(in srgb,var(--blue) 40%,var(--muted));margin-top:2px">${ENLAB[i]}</span>`:'');
   if(AUX[t])return `<table><tr><td>Pronoun</td><td><b>haber</b></td><td><b>+ participle</b></td></tr>${P.map(i=>`<tr><td>${lab(i)}</td><td>${AUX[t][i]}</td><td>-ado / -ido</td></tr>`).join('')}</table>`;
   if(t==='prox')return `<table><tr><td>Pronoun</td><td><b>ir + a</b></td><td><b>+ infinitive</b></td></tr>${P.map(i=>`<tr><td>${lab(i)}</td><td>${conj(verbBy('ir'),'pres')[i]} a</td><td>hablar, comer, vivir</td></tr>`).join('')}</table>`;
   const cols={pres:[END.pres.ar,END.pres.er,END.pres.ir],pret:[END.pret.ar,END.pret.er,END.pret.er],impf:[END.impf.ar,END.impf.er,END.impf.er],subj:[END.subj.ar,END.subj.er,END.subj.er],fut:[FUT,FUT,FUT],cond:[COND,COND,COND]}[t];
   if(!cols)return '';
-  return `<table><tr><td>Pronoun</td><td><b>-ar</b></td><td><b>-er</b></td><td><b>-ir</b></td></tr>${P.map(i=>`<tr><td>${lab(i)}</td>${cols.map(c=>`<td>-${c[i]}</td>`).join('')}</tr>`).join('')}</table>`;
-}
-const FORM_NOTE={prox:'Use the present tense of ir, then a, then the verb unchanged, as you would find it in a dictionary.',pres:'Remove -ar, -er or -ir and add the present ending.',pret:'Remove the infinitive ending and add the preterite ending. -er and -ir verbs share endings.',
-  impf:'Remove the infinitive ending and add the imperfect ending. -er and -ir verbs share endings.',fut:'Keep the whole infinitive and add the ending. All three groups share endings.',
-  cond:'Keep the whole infinitive and add the ending. All three groups share endings.',perf:'Conjugate haber in the present, then add the past participle.',
-  subj:'Take the yo present form, drop the -o, and add the "opposite" ending: -ar verbs take e, -er and -ir verbs take a.'};
-const PEX={ // one example per person, verb in *...*
- prox:[['Yo *voy a estudiar* esta noche.','I am going to study tonight.'],['¿Tú *vas a venir* mañana?','Are you going to come tomorrow?'],['Ella *va a llamar* a su madre.','She is going to call her mother.'],['Nosotros *vamos a comer* en casa.','We are going to eat at home.'],['Vosotros *vais a ver* la película.','You all are going to see the film.'],['Ellos *van a salir* temprano.','They are going to leave early.']],
- pres:[['Yo *hablo* con mi madre cada domingo.','I talk to my mother every Sunday.'],['Tú *trabajas* en una oficina.','You work in an office.'],['Él *come* fruta todas las mañanas.','He eats fruit every morning.'],['Nosotros *vivimos* cerca del parque.','We live near the park.'],['Vosotros *estudiáis* inglés.','You all study English.'],['Ellos *juegan* al tenis los sábados.','They play tennis on Saturdays.']],
- pret:[['Yo *compré* pan ayer.','I bought bread yesterday.'],['Tú *llegaste* tarde a la reunión.','You arrived late to the meeting.'],['Ella *escribió* una carta el lunes.','She wrote a letter on Monday.'],['Nosotros *vimos* la película anoche.','We saw the film last night.'],['Vosotros *bebisteis* todo el café.','You all drank all the coffee.'],['Ellos *salieron* a las diez.','They left at ten.']],
- impf:[['Yo *leía* mucho de niño.','I used to read a lot as a child.'],['Tú *vivías* en Sevilla entonces.','You lived in Seville back then.'],['Él siempre *llevaba* gafas.','He always wore glasses.'],['Nosotros *íbamos* a la playa cada verano.','We used to go to the beach every summer.'],['Vosotros *estabais* cansados.','You all were tired.'],['Ellas *cantaban* mientras cocinaban.','They were singing while they cooked.']],
- fut:[['Yo te *llamaré* mañana.','I will call you tomorrow.'],['Tú *aprenderás* rápido.','You will learn quickly.'],['Ella *viajará* a Perú en mayo.','She will travel to Peru in May.'],['Nosotros *cenaremos* a las nueve.','We will have dinner at nine.'],['Vosotros *tendréis* tiempo.','You all will have time.'],['Ellos *vendrán* el sábado.','They will come on Saturday.']],
- cond:[['Yo *viviría* en la costa.','I would live on the coast.'],['¿Tú *vendrías* conmigo?','Would you come with me?'],['Usted *debería* descansar.','You (formal) should rest.'],['Nosotros *compraríamos* un coche nuevo.','We would buy a new car.'],['Vosotros *podríais* ayudar.','You all could help.'],['Ellos *preferirían* quedarse.','They would prefer to stay.']],
- perf:[['Yo *he terminado* el libro.','I have finished the book.'],['Tú *has comido* demasiado.','You have eaten too much.'],['Él *ha salido* temprano hoy.','He has left early today.'],['Nosotros *hemos visto* esa película.','We have seen that film.'],['Vosotros *habéis hecho* un buen trabajo.','You all have done a good job.'],['Ellas *han vuelto* de Italia.','They have come back from Italy.']],
- subj:[['Mi madre quiere que yo *estudie* más.','My mother wants me to study more.'],['Espero que tú *vengas* a la fiesta.','I hope you come to the party.'],['Es importante que ella *duerma* bien.','It is important that she sleeps well.'],['Ojalá que nosotros *ganemos*.','I hope we win.'],['Quiero que vosotros *habléis* más despacio.','I want you all to speak more slowly.'],['Dudo que ellos *lleguen* a tiempo.','I doubt they will arrive on time.']]};
-const P_=s=>`<p style="margin:0">${s}</p>`;
-const STEM_LESSON={ // shown before the Stem-changers level of each tense; show = sample verbs, form = replaces FORM_NOTE
- pres:{show:['pensar','volver','pedir','jugar'],
-  note:P_('These verbs take the normal endings, but the <b>last vowel of the stem changes</b> when it is stressed. Spanish stresses the stem in every form except nosotros and vosotros, so those two keep the vowel of the infinitive.')+
-   `<table><tr><td><b>Change</b></td><td><b>Verb</b></td><td><b>Changes</b></td><td><b>Stays</b></td></tr><tr><td>e → ie</td><td>pensar</td><td>pienso</td><td>pensamos</td></tr><tr><td>o → ue</td><td>volver</td><td>vuelvo</td><td>volvemos</td></tr><tr><td>e → i (-ir only)</td><td>pedir</td><td>pido</td><td>pedimos</td></tr><tr><td>u → ue (only jugar)</td><td>jugar</td><td>juego</td><td>jugamos</td></tr></table>`+
-   P_('The infinitive does not tell you which verbs change, so learn each one with its yo form: <i>pensar, pienso</i>. <i>Seguir</i> and <i>conseguir</i> also drop the u in the yo form: <i>sigo, consigo</i>.'),
-  form:'Remove -ar, -er or -ir. Change the stem vowel, unless the form is nosotros or vosotros. Then add the present ending.',
-  pex:[['Yo *pienso* mucho en el futuro.','I think a lot about the future.'],['Tú *vuelves* tarde a casa.','You come home late.'],['Ella *pide* un café.','She orders a coffee.'],['Nosotros *pensamos* lo mismo.','We think the same.'],['Vosotros *volvéis* mañana.','You all come back tomorrow.'],['Ellos *juegan* al tenis los sábados.','They play tennis on Saturdays.']]},
- pret:{show:['pensar','volver','pedir','morir'],
-  note:P_('-ar and -er stem-changers <b>do not change</b> in the preterite: <i>pensé, pensó, volví, volvió</i>.')+
-   P_('Only -ir stem-changers change, only in the <b>él/ella and ellos/ellas</b> forms, and by a single letter: e → i (<i>pidió, pidieron, sintió</i>) and o → u (<i>murió, murieron</i>). Every other form keeps the infinitive vowel: <i>pedí, pediste, pedimos</i>.')+
-   P_('Some yo forms change spelling to keep their sound: <i>jugué, empecé, comencé</i>.'),
-  form:'Remove the infinitive ending and add the preterite ending. -er and -ir verbs share endings. Change the stem only for -ir verbs in the él/ella and ellos/ellas forms.',
-  pex:[['Yo *pensé* en ti ayer.','I thought about you yesterday.'],['Tú *volviste* tarde anoche.','You came back late last night.'],['Ella *pidió* un café.','She ordered a coffee.'],['Nosotros *pedimos* la cuenta.','We asked for the bill.'],['Vosotros *repetisteis* la pregunta.','You all repeated the question.'],['Ellos *siguieron* el mapa.','They followed the map.']]},
- subj:{show:['pensar','volver','pedir','morir'],
-  note:P_('Start from the yo present form, which already has the stem change: <i>pienso → piense, vuelvo → vuelva, pido → pida</i>.')+
-   P_('<b>Nosotros and vosotros do not follow the yo form.</b> -ar and -er verbs go back to the infinitive vowel: <i>pensemos, volvamos</i>. -ir verbs change by a single letter: e → i (<i>pidamos, sintamos</i>) and o → u (<i>muramos</i>).')+
-   P_('Some verbs also change spelling to keep their sound: <i>juegue, empiece</i>.'),
-  form:'Take the yo present form, drop the -o, and add the "opposite" ending: -ar verbs take e, -er and -ir verbs take a. For nosotros and vosotros, use the infinitive vowel instead (-ir verbs: e → i, o → u).',
-  pex:[['Es mejor que yo *piense* antes de hablar.','It is better that I think before speaking.'],['Espero que tú *vuelvas* pronto.','I hope you come back soon.'],['Quiero que ella *pida* ayuda.','I want her to ask for help.'],['Es importante que nosotros *pidamos* la cuenta.','It is important that we ask for the bill.'],['Quiero que vosotros *volváis* pronto.','I want you all to come back soon.'],['Dudo que ellos *jueguen* hoy.','I doubt they are playing today.']]}};
-const TB=(...rows)=>`<table>${rows.map((r,i)=>`<tr>${r.map(c=>`<td>${i?c:`<b>${c}</b>`}</td>`).join('')}</tr>`).join('')}</table>`;
-const SPELL_LESSON={
- pres:{show:['recoger','dirigir','distinguir','buscar'],
-  note:P_('Spanish changes some spellings to <b>keep the sound of the consonant</b>. In the present only the yo form is affected, because only yo ends in -o.')+
-   TB(['Ending','Change in yo','Example'],['-ger, -gir','g → j','<i>recojo, dirijo</i>'],['-guir','gu → g','<i>distingo</i>'])+
-   P_('Every other form is regular: <i>recoges, dirige, distinguimos</i>. Verbs in -car, -gar and -zar do not change in the present: <i>busco, llego</i>.'),
-  form:'Remove -ar, -er or -ir and add the present ending. In the yo form of -ger, -gir and -guir verbs, adjust the spelling first.',
-  pex:[['Yo *recojo* a los niños.','I pick up the children.'],['Tú *proteges* a tu familia.','You protect your family.'],['Él *dirige* la empresa.','He runs the company.'],['Nosotros *buscamos* las llaves.','We are looking for the keys.'],['Vosotros *exigís* respuestas.','You all demand answers.'],['Ellos *llegan* tarde.','They arrive late.']]},
- pret:{show:['buscar','llegar','realizar','recoger'],
-  note:P_('The yo ending <i>-é</i> would change the sound of the last consonant, so <b>-car, -gar and -zar verbs change spelling in the yo form only</b>.')+
-   TB(['Ending','Change in yo','Example'],['-car','c → qu','<i>busqué</i>'],['-gar','g → gu','<i>llegué</i>'],['-zar','z → c','<i>realicé</i>'])+
-   P_('Every other form is regular: <i>buscaste, llegó, realizamos</i>. Verbs in -ger, -gir and -guir do not change in the preterite: <i>recogí, dirigí, distinguí</i>.'),
-  form:'Remove the infinitive ending and add the preterite ending. -er and -ir verbs share endings. In the yo form of -car, -gar and -zar verbs, adjust the spelling first.',
-  pex:[['Yo *busqué* las llaves.','I looked for the keys.'],['Tú *pagaste* la cuenta.','You paid the bill.'],['Ella *llegó* tarde.','She arrived late.'],['Nosotros *sacamos* fotos.','We took photos.'],['Vosotros *explicasteis* el problema.','You all explained the problem.'],['Ellos *utilizaron* el coche.','They used the car.']]},
- subj:{show:['buscar','llegar','realizar','recoger'],
-  note:P_('The subjunctive endings would change the sound of the last consonant, so these verbs <b>change spelling in all six forms</b>.')+
-   TB(['Ending','Change','Example'],['-car','c → qu','<i>busque, busquemos</i>'],['-gar','g → gu','<i>llegue, lleguemos</i>'],['-zar','z → c','<i>realice, realicemos</i>'],['-ger, -gir','g → j','<i>recoja, dirija</i>'],['-guir','gu → g','<i>distinga, distingamos</i>']),
-  form:'Take the yo present form, drop the -o, and add the "opposite" ending: -ar verbs take e, -er and -ir verbs take a. Adjust the spelling to keep the sound.',
-  pex:[['Es mejor que yo *pague* la cuenta.','It is better that I pay the bill.'],['Espero que tú *llegues* a tiempo.','I hope you arrive on time.'],['Es importante que ella *explique* el problema.','It is important that she explains the problem.'],['Ojalá que nosotros *saquemos* buenas notas.','I hope we get good grades.'],['Quiero que vosotros *recojáis* la mesa.','I want you all to clear the table.'],['Dudo que ellos *utilicen* ese método.','I doubt they will use that method.']]}};
-const IRR_LESSON={
- pres:{show:['ser','ir','tener','hacer'],
-  note:P_('Irregular verbs do not share one rule, so <b>learn them in families</b>.')+
-   TB(['Family','Verbs','Forms'],['Only yo changes','hacer, poner, salir, saber, ver','<i>hago, pongo, salgo, sé, veo</i>'],['-cer, -cir: yo ends in -zco','conocer, parecer, aparecer, producir','<i>conozco, parezco, aparezco, produzco</i>'],['Yo in -go, plus a stem change','tener, venir, decir, mantener','<i>tengo, tienes, vengo, vienes, digo, dices</i>'],['Stem change only','poder, querer','<i>puedo, quiero</i>'],['Learn the whole table','ser, estar, ir, dar, haber','<i>soy, estoy, voy, doy, he</i>'])+
-   P_('In the first three families nosotros and vosotros stay regular: <i>hacemos, conocemos, tenemos, venimos, decimos</i>.'),
-  form:'Learn the yo form first. Most other forms use the normal endings. Ser, estar, ir, dar and haber have forms of their own.',
-  pex:[['Yo *hago* la cena.','I make dinner.'],['Tú *tienes* razón.','You are right.'],['Ella *es* profesora.','She is a teacher.'],['Nosotros *vamos* al cine.','We are going to the cinema.'],['Vosotros *estáis* en casa.','You all are at home.'],['Ellos *vienen* mañana.','They are coming tomorrow.']]},
- pret:{show:['tener','hacer','decir','ir'],
-  note:P_('Most of these verbs swap to a <b>new stem</b> and share one set of endings with <b>no written accents</b>: -e, -iste, -o, -imos, -isteis, -ieron.')+
-   TB(['New stem','Verbs','Forms'],['-uv-','estar, tener, mantener','<i>estuve, tuve, mantuve</i>'],['-ub-, -ud-, -us-, -up-','haber, poder, poner, saber','<i>hube, pude, puse, supe</i>'],['-i-','venir, querer, hacer','<i>vine, quise, hice</i>'],['-j- (ellos: -eron)','decir, producir','<i>dije, dijeron, produje, produjeron</i>'])+
-   P_('<i>Hacer</i> spells él/ella with z: <i>hizo</i>. <b>Ser and ir share the same forms</b>: <i>fui, fuiste, fue, fuimos, fuisteis, fueron</i>. <i>Dar</i> and <i>ver</i> take short forms with no accents: <i>di, dio, vi, vio</i>. Conocer, parecer, aparecer and salir are regular in this tense: <i>conocí, salí</i>.'),
-  form:'Use the new stem and add -e, -iste, -o, -imos, -isteis, -ieron. The table below shows the regular endings, for the verbs that keep them.',
-  pex:[['Yo *tuve* una idea.','I had an idea.'],['Tú *hiciste* la cena.','You made dinner.'],['Ella *fue* a Madrid.','She went to Madrid.'],['Nosotros *pudimos* ayudar.','We were able to help.'],['Vosotros *dijisteis* la verdad.','You all told the truth.'],['Ellos *vinieron* ayer.','They came yesterday.']]},
- impf:{show:['ser','ir','ver','tener'],
-  note:P_('<b>Only three verbs are irregular in the imperfect.</b> Learn these and every other verb is regular, even the ones that are difficult elsewhere: <i>tenía, hacía, decía</i>.')+
-   TB(['Verb','Forms'],['ser','<i>era, eras, era, éramos, erais, eran</i>'],['ir','<i>iba, ibas, iba, íbamos, ibais, iban</i>'],['ver','<i>veía, veías, veía, veíamos, veíais, veían</i>'])+
-   P_('Verbs with stem or spelling changes are regular in this tense too: <i>pensaba, volvía, pedía, buscaba, recogía</i>.'),
-  pex:[['Yo *era* muy joven.','I was very young.'],['Tú *ibas* al colegio en bici.','You used to go to school by bike.'],['Él *veía* mucho la tele.','He used to watch a lot of TV.'],['Nosotros *teníamos* un perro.','We had a dog.'],['Vosotros *erais* amigos.','You all were friends.'],['Ellas *iban* a la playa.','They used to go to the beach.']]},
- fut:{show:['tener','poder','hacer','decir'],
-  note:P_('The endings stay the same. A few verbs swap the infinitive for a <b>shorter stem</b>.')+
-   TB(['Pattern','Verbs','Forms'],['Drop the vowel','poder, querer, saber, haber','<i>podré, querré, sabré, habré</i>'],['Vowel becomes d','tener, venir, poner, salir, mantener','<i>tendré, vendré, pondré, saldré, mantendré</i>'],['Short stem','hacer, decir','<i>haré, diré</i>'])+
-   P_('Every other verb here keeps the whole infinitive: <i>seré, iré, estaré, conoceré</i>. So do verbs with stem or spelling changes: <i>pensaré, volveré, pediré, buscaré, recogeré</i>.'),
-  form:'Use the irregular stem if the verb has one, otherwise the whole infinitive. Then add the ending. All verbs share the endings.',
-  pex:[['Yo *tendré* tiempo.','I will have time.'],['Tú *podrás* venir.','You will be able to come.'],['Ella *hará* la cena.','She will make dinner.'],['Nosotros *diremos* la verdad.','We will tell the truth.'],['Vosotros *saldréis* temprano.','You all will leave early.'],['Ellos *vendrán* el sábado.','They will come on Saturday.']]},
- cond:{show:['tener','poder','hacer','decir'],
-  note:P_('The conditional uses <b>the same short stems as the future</b>, with the -ía endings.')+
-   TB(['Pattern','Verbs','Forms'],['Drop the vowel','poder, querer, saber, haber','<i>podría, querría, sabría, habría</i>'],['Vowel becomes d','tener, venir, poner, salir, mantener','<i>tendría, vendría, pondría, saldría, mantendría</i>'],['Short stem','hacer, decir','<i>haría, diría</i>'])+
-   P_('Every other verb here keeps the whole infinitive: <i>sería, iría, estaría, conocería</i>. So do verbs with stem or spelling changes: <i>pensaría, volvería, pediría, buscaría, recogería</i>.'),
-  form:'Use the irregular stem if the verb has one, otherwise the whole infinitive. Then add the ending. All verbs share the endings.',
-  pex:[['Yo *tendría* cuidado.','I would be careful.'],['¿Tú *podrías* ayudarme?','Could you help me?'],['Ella *haría* lo mismo.','She would do the same.'],['Nosotros *diríamos* que sí.','We would say yes.'],['Vosotros *saldríais* antes.','You all would leave earlier.'],['Ellos *vendrían* conmigo.','They would come with me.']]},
- perf:{show:['hacer','poner','volver','abrir'],pool:L('hacer decir ver poner volver devolver resolver morir romper escribir abrir cubrir descubrir').map(verbBy),
-  note:P_('Only the participle can be irregular, and <b>these are the common ones to memorise</b>.')+
-   TB(['Ending','Participles'],['-cho','<i>hacer → hecho, decir → dicho</i>'],['-sto','<i>ver → visto, poner → puesto</i>'],['-lto','<i>volver → vuelto, devolver → devuelto, resolver → resuelto</i>'],['-to','<i>morir → muerto, romper → roto, escribir → escrito</i>'],['-ierto','<i>abrir → abierto, cubrir → cubierto, descubrir → descubierto</i>'])+
-   P_('Every other verb is regular here, even if it is irregular or changes its stem or spelling in other tenses: <i>he tenido, he sido, he ido, he pensado, he buscado</i>.'),
-  pex:[['Yo *he hecho* la cena.','I have made dinner.'],['Tú *has dicho* la verdad.','You have told the truth.'],['Ella *ha puesto* la mesa.','She has set the table.'],['Nosotros *hemos visto* esa película.','We have seen that film.'],['Vosotros *habéis abierto* la ventana.','You all have opened the window.'],['Ellos *han vuelto* hoy.','They have come back today.']]},
- subj:{show:['tener','ser','ir','saber'],
-  note:P_('Most irregulars start from the yo present form and <b>keep that stem in all six forms</b>: <i>tengo → tenga, tengamos; hago → haga; conozco → conozca; digo → diga; veo → vea</i>.')+
-   P_('<i>Poder</i> and <i>querer</i> are stem-changers, so nosotros and vosotros go back to the infinitive vowel: <i>pueda, podamos, quiera, queramos</i>.')+
-   TB(['Six verbs to learn','Forms'],['ser','<i>sea, seamos</i>'],['estar','<i>esté, estemos</i>'],['ir','<i>vaya, vayamos</i>'],['saber','<i>sepa, sepamos</i>'],['haber','<i>haya, hayamos</i>'],['dar','<i>dé, demos</i>']),
-  form:'Take the yo present form, drop the -o, and add the "opposite" ending: -ar verbs take e, -er and -ir verbs take a. Ser, estar, ir, saber, haber and dar have stems of their own.',
-  pex:[['Es mejor que yo *haga* la cena.','It is better that I make dinner.'],['Espero que tú *vengas* a la fiesta.','I hope you come to the party.'],['Es importante que ella *sea* puntual.','It is important that she is on time.'],['Ojalá que nosotros *podamos* ir.','I hope we can go.'],['Quiero que vosotros *digáis* la verdad.','I want you all to tell the truth.'],['Dudo que ellos *sepan* la respuesta.','I doubt they know the answer.']]}};
-const GROUP_LESSON={stem:['The stem change',STEM_LESSON],spell:['The spelling change',SPELL_LESSON],irr:['The irregular forms',IRR_LESSON]};
-function intro(l){
-  const gl=GROUP_LESSON[l.g.id],sl=gl&&gl[1][l.t.id],vs=sl&&sl.pool||groupVerbs(l.g.id),sample=sl?sl.show.map(verbBy):groupVerbs(l.g.id).slice(0,2),t=T[l.t.id],pex=sl?sl.pex:PEX[l.t.id];
-  open(`<div class="qtop"><button class="x" aria-label="Close" id="cx">×</button><span class="muted small">Level ${LEVELS.indexOf(l)+1}</span></div>
-  <div><span class="tag">${tn(l.t.id)}</span><h1 style="font-size:30px;margin-top:8px">${l.g.name}</h1><p class="muted" style="margin-bottom:0">${l.t.ex}. Read the short lessons, then conjugate 10 forms. Score 6 or more to unlock the next level.</p></div>
-  <section class="card stack"><h2 style="font-size:20px">Usage</h2><p style="margin:0">${t.use}</p>${deep(t.id)}${tipLinks(t.id)}
-   ${sl?'':`<table>${t.ex.map(([es,en])=>`<tr><td style="color:var(--ink);width:50%">${es}</td><td class="muted">${en}</td></tr>`).join('')}</table>`}
-   ${pex?`<h3 style="margin:4px 0 0">One for each pronoun</h3><table>${persons().map(i=>{const[es,en]=pex[i];return `<tr><td class="muted small" style="white-space:nowrap">${LAB[i]}</td><td style="color:var(--ink)">${es.replace(/\*(.+?)\*/g,'<b>$1</b>')}</td><td class="muted">${en}</td></tr>`}).join('')}</table>`:''}</section>
-  ${sl?`<section class="card stack"><h2 style="font-size:20px">${gl[0]}</h2>${sl.note}</section>`:''}
-  <section class="card stack"><h2 style="font-size:20px">Formation</h2><p style="margin:0">${sl&&sl.form||FORM_NOTE[l.t.id]}</p><div style="overflow-x:auto">${endingsTable(l.t.id)}</div></section>
-  ${sl?'<p class="muted small" style="margin:0">Letters in <mark>this colour</mark> differ from the regular pattern.</p>':''}
-  <div class="grid2">${sample.map(v=>`<div class="card"><h3>${v.inf} <span class="muted small">${v.en}</span></h3>${table(v,l.t.id,sl?formsHtml(v,l.t.id):undefined)}</div>`).join('')}</div>
-  <div class="spacer"></div><div class="row"><button class="btn ghost" id="fl">Flash cards: meanings</button><button class="btn" id="st">Start level</button></div>`);
-  document.getElementById('cx').onclick=closeSheet;bindTipLinks(body);
-  document.getElementById('fl').onclick=()=>quiz(vs.slice(0,10).map(qm),{title:'Meanings',mode:'flash',back:()=>intro(l)});
-  document.getElementById('st').onclick=()=>quiz(sl?levelTest(l.t.id,vs):build([l.t.id],vs,10),{title:l.g.name,level:l});
+  const ix=only?[['ar','er','ir'].indexOf(only)]:[0,1,2];
+  return `<table><tr><td>Pronoun</td>${ix.map(j=>`<td><b>-${['ar','er','ir'][j]}</b></td>`).join('')}</tr>${P.map(i=>`<tr><td>${lab(i)}</td>${ix.map(j=>`<td>-${cols[j][i]}</td>`).join('')}</tr>`).join('')}</table>`;
 }
 function verbSheet(v){
   const collapsed=new Set(S.expand?[]:TT.map(t=>t.id));
@@ -2694,7 +3108,60 @@ neg|5|usar|usen|No ___ ustedes el móvil en clase.|Don't use your phones in clas
 neg|5|correr|corran|No ___ ustedes, hay tiempo de sobra.|Don't run, there's plenty of time.
 `;
 SENT.push(...SENT_RAW.trim().split('\n').map(l=>{const[t,p,v,a,s,en]=l.split('|');return{t,p:+p,v,a,s,en}}));
-const sentPool=()=>SENT.filter(s=>persons().includes(s.p));
+/* choice sentences (ch = the choice quizzes they serve, tense|person|verb|answer|sentence|English). Checked against the engine by checkLessons. */
+const CHX=`serest|pres|0|ser|soy|___ de Perú.|I am from Peru.
+serest|pres|0|estar|estoy|Hoy ___ muy cansado.|I am very tired today.
+serest|pres|1|ser|eres|¿___ estudiante?|Are you a student?
+serest|pres|1|estar|estás|¿Dónde ___?|Where are you?
+serest|pres|2|ser|es|Mi madre ___ médica.|My mother is a doctor.
+serest|pres|2|estar|está|La sopa ___ fría.|The soup is cold.
+serest|pres|3|ser|somos|___ hermanos.|We are brothers.
+serest|pres|3|estar|estamos|___ en el cine.|We are at the cinema.
+serest|pres|5|ser|son|Las mesas ___ de madera.|The tables are made of wood.
+serest|pres|5|estar|están|Mis padres ___ de viaje.|My parents are away on a trip.
+serest|pres|2|ser|es|La fiesta ___ en mi casa.|The party is at my house.
+serest|pres|2|estar|está|El museo ___ cerca del parque.|The museum is near the park.
+serest|pres|4|estar|estáis|¿Cómo ___ vosotros?|How are you all?
+serest|pres|4|ser|sois|¿De dónde ___ vosotros?|Where are you all from?
+ivs|subj|1|hablar|hables|Quiero que tú ___ más despacio.|I want you to speak more slowly.
+ivs|pres|2|trabajar|trabaja|Sé que ella ___ aquí.|I know she works here.
+ivs|subj|2|comer|coma|Es importante que él ___ bien.|It is important that he eats well.
+ivs|pres|3|vivir|vivimos|Creo que nosotros ___ cerca del mar.|I think we live near the sea.
+ivs|subj|3|estudiar|estudiemos|Es mejor que nosotros ___ juntos.|It is better that we study together.
+ivs|subj|5|escribir|escriban|Espero que ellos ___ pronto.|I hope they write soon.
+ivs|pres|5|vender|venden|Sé que ellos ___ coches.|I know they sell cars.
+ivs|subj|0|llamar|llame|Mi madre quiere que yo la ___ hoy.|My mother wants me to call her today.
+ivs|pres|1|bailar|bailas|Veo que tú ___ muy bien.|I see that you dance very well.
+ivs|subj|1|abrir|abras|Quiero que tú ___ la ventana.|I want you to open the window.
+ivs|pres|1|tener|tienes|Creo que ___ razón.|I think you are right.
+ivs|pres|2|venir|viene|Sé que mi hermano ___ mañana.|I know my brother is coming tomorrow.
+ivs|pres|2|ser|es|Es verdad que ella ___ muy lista.|It is true that she is very clever.
+ivs|pres|5|saber|saben|Estoy seguro de que ellos ___ la respuesta.|I am sure they know the answer.
+ivs|pres|3|llegar|llegamos|Creo que nosotros ___ a tiempo.|I think we are arriving on time.
+ivs|pres|1|hacer|haces|Veo que tú ___ los deberes.|I see you are doing your homework.
+ivs|pres|5|ir|van|Dicen que ellos ___ a la playa.|They say they are going to the beach.
+ivs|pres|2|estar|está|Es obvio que él ___ cansado.|It is obvious that he is tired.
+ivs|pres|0|poder|puedo|Sé que yo ___ hacerlo.|I know I can do it.
+ivs|pres|5|tener|tienen|Pienso que ellos ___ tiempo.|I think they have time.
+ivsPerf|perf|1|llegar|has llegado|Sé que tú ___ a tiempo.|I know you have arrived on time.
+ivsPerf|perf|2|hacer|ha hecho|Veo que ella ya ___ los deberes.|I see she has already done her homework.
+ivsPerf|perf|5|ver|han visto|Creo que ellos ya ___ la película.|I think they have already seen the film.
+ivsPerf|perf|0|terminar|he terminado|Estoy seguro de que yo ___ el trabajo.|I am sure I have finished the work.
+siFut|pres|2|llover|llueve|Si ___ mañana, me quedo en casa.|If it rains tomorrow, I stay at home.
+siFut|pres|1|estudiar|estudias|Si ___ mucho, aprobarás el examen.|If you study hard, you will pass the exam.
+siFut|pres|3|salir|salimos|Si ___ ahora, llegaremos a tiempo.|If we leave now, we will arrive on time.
+siFut|fut|3|ir|iremos|Si hace buen tiempo, ___ a la playa.|If the weather is good, we will go to the beach.
+siFut|fut|1|venir|vendrás|Si terminas pronto, ___ con nosotros.|If you finish soon, you will come with us.
+siFut|fut|5|poder|podrán|Si tienen tiempo, ___ visitarnos.|If they have time, they will be able to visit us.
+siFut|fut|2|ser|será|Si estudia mucho, él ___ médico.|If he studies hard, he will be a doctor.
+siFut|pres|2|hacer|hace|Si ___ buen tiempo, vamos a la playa.|If the weather is good, we go to the beach.
+siFut|pres|1|querer|quieres|Si ___ venir, avísame.|If you want to come, let me know.
+siFut|pres|0|tener|tengo|Si ___ tiempo, te llamo.|If I have time, I will call you.
+siFut|fut|0|llamar|llamaré|Si llego tarde, te ___.|If I am late, I will call you.
+realOrNot|pres|2|venir|viene|Si mi hermano ___ hoy, cenamos juntos.|If my brother comes today, we will have dinner together.
+realOrNot|pres|1|poder|puedes|Si ___ ayudarme mañana, te lo agradezco.|If you can help me tomorrow, I'll be grateful.`.split('\n').map(l=>{const[ch,t,p,v,a,s,en]=l.split('|');return{ch,t,p:+p,v,a,s,en}});
+SENTALL.push(...SENT,...CHX);
+const sentPool=()=>bankAt(curIdx()).filter(s=>persons().includes(s.p)); // only forms the lessons so far have taught
 // the quick set leans on everyday tenses (about 4 in 5 questions); the level-up test stays even across all tenses
 const COMMON_T=new Set([...TENSES.map(t=>t.id),'prox','imp']);
 function weightedPick(arr,n,w){ // n distinct items, each drawn with probability proportional to w(item)
@@ -2719,6 +3186,7 @@ function levelTest(t,vs,n=10){
 }
 function choices(x){ // four options: the answer plus plausible wrong ones
   if(x.kind==='tip')return shuffle([...x.opts]);
+  if(x.kind==='nf'){const set=new Set([x.ans]);for(const v of shuffle(VERBS.filter(v=>!v.refl)))if(set.size<4)set.add(formOf(v,'nf.'+x.nf,0));return shuffle([...set])}
   const set=new Set([x.ans]);
   if(x.kind==='sent'){const w=x.ans.split(' ').length;for(const f of shuffle(TT.flatMap(t=>conj(x.v,t.id)).filter(f=>f&&f.split(' ').length===w)))if(set.size<4)set.add(f)}
   else if(x.kind==='conj'){
@@ -2749,6 +3217,7 @@ function diagnose(x,got){
   const g=strip(got);
   if(x.kind==='tip')return['Not quite.',x.note];
   if(x.kind==='sent')return['Not quite.',x.note||steps(x.v,x.t,x.p).join(' ')];
+  if(x.kind==='nf')return['Not quite.',x.nf==='ger'?'Remove -ar and add -ando, or remove -er / -ir and add -iendo. Watch for e → i, o → u and the y.':'Remove -ar and add -ado, or remove -er / -ir and add -ido. Check the list of irregular participles.'];
   if(x.kind==='mean'){const v=VERBS.find(v=>strip(v.inf)===g);return v?['Wrong verb.',`${v.inf} means "${v.en}".`]:['Not a real verb.','That spelling does not match any verb in the dictionary.']}
   const hits=[];for(const t of TT)conj(x.v,t.id).forEach((f,i)=>{if(f&&strip(f)===g&&!(t.id===x.t&&i===x.p))hits.push([t.id,i])});
   const L_=(t,i)=>(t==='imp'||t==='neg'?IMPLAB:LAB)[i];
@@ -2852,9 +3321,11 @@ function quiz(qs,opt){
     cur=qs[i];phase='ask';typoUsed=false;tally();fb.innerHTML='';
     const c=cur.kind==='conj',gloss=c?english(cur.v,cur.t,cur.p):'';
     $('pr').innerHTML=cur.kind==='tip'?`<span class="tchip">${tt(cur.tip)}</span><div class="inf" style="font-size:26px;line-height:1.3">${cur.s.replace('___','<span style="color:var(--blue)">___</span>')}</div><div class="en">${cur.en}</div>${cur.opts.includes('—')?'<div class="muted small">— means nothing goes in the gap</div>':''}`
-      :cur.kind==='sent'?`<span class="tchip">${tn(cur.t)}</span><div class="inf" style="font-size:26px;line-height:1.3">${cur.s.replace('___',`<span style="color:var(--blue)">___</span> <span class="muted" style="font-weight:600">(${cur.v.inf})</span>`)}</div><div class="en">${cur.en}</div>`
+      :cur.kind==='sent'?`<span class="tchip">${tn(cur.t)}</span><div class="inf" style="font-size:26px;line-height:1.3">${cur.s.replace('___',`<span style="color:var(--blue)">___</span>${cur.hide?'':` <span class="muted" style="font-weight:600">(${cur.v.inf})</span>`}`)}</div><div class="en">${cur.en}</div>${cur.hide?'<button class="tiplink" id="rvl">Show the verb</button>':''}`
+      :cur.kind==='nf'?`<span class="tchip">${cur.nf==='ger'?'Gerund':'Past participle'}</span><div class="inf">${cur.v.inf}</div><div class="en">${nfEn(cur)}</div>`
       :c?`<span class="tchip">${tn(cur.t)}</span>${opt.hideInf?'':`<div class="inf">${cur.v.inf}</div>`}${opt.hideEn?'':`<div class="en">${gloss}</div>`}<div class="who">${SUBJ.has(cur.t)?'que ':''}${cur.who} …</div>`
       :`<span class="tchip">Meaning</span><div class="inf" style="font-size:30px">${cur.v.en}</div>${cur.v.refl?'<div class="en">reflexive</div>':''}`;
+    if(cur.hide)$('rvl').onclick=e=>{e.target.outerHTML=`<span class="muted">${cur.v.inf}</span>`};
     if(mode==='type'){
       io.innerHTML=`<input class="answer" id="ans" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Your answer" placeholder="${cur.kind==='mean'?'Type the Spanish verb':'Type the form'}">
         <div class="accents">${['á','é','í','ó','ú','ñ','ü'].map(ch=>`<button data-c="${ch}" aria-label="Insert ${ch}">${ch}</button>`).join('')}</div><div class="small" id="hint"></div>`;
@@ -2897,15 +3368,15 @@ function quiz(qs,opt){
       fb.innerHTML=`<div class="fb bad"><div>${near?'So close! Just a spelling slip – check the highlighted letters.':"That's incorrect…"}</div>
         <div class="cmp"><div>✓ <span class="c">${hl(cur.ans,got)}</span> <button class="speak" id="sa" aria-label="Hear it">${ICON.speak.replace('<svg','<svg width="20" height="20"')}</button></div>
         <div>✗ <span class="c wrongc">${hl(got,cur.ans)}</span></div>${c?`<div class="muted small"><i>${english(cur.v,cur.t,cur.p)}</i></div>`:''}</div>
-        ${d?`<p class="diag"><b>${d[0]}</b> ${d[1]}</p>`:''}${c&&d&&/tense/.test(d[0])?`<p class="small muted" style="margin:0">${T[cur.t].use}</p>`:''}</div>`;
+        ${d?`<p class="diag"><b>${d[0]}</b> ${d[1]}</p>`:''}${(c&&d&&/tense/.test(d[0]))||cur.kind==='sent'?`<p class="small muted" style="margin:0">${T[cur.t].use}</p>`:''}</div>`;
       $('sa').onclick=()=>speak(say,true);
     }
-    ctl.innerHTML=`<div class="row">${c?'<button class="btn ghost" id="stp">Steps</button>':''}<button class="btn" id="nx">${i>=total?'See results':'Next question'}</button></div>`;
-    if(c){const x=cur;$('stp').onclick=()=>showSteps(x.v,x.t,x.p)}
+    ctl.innerHTML=`<div class="row">${c||cur.kind==='sent'?'<button class="btn ghost" id="stp">Steps</button>':''}<button class="btn" id="nx">${i>=total?'See results':'Next question'}</button></div>`;
+    if(c||cur.kind==='sent'){const x=cur;$('stp').onclick=()=>showSteps(x.v,x.t,x.p)}
     $('nx').onclick=next;$('nx').focus();
   }
   function finish(){
-    const pct=Math.round(okN/total*100),stars=pct>=100?3:pct>=80?2:pct>=60?1:0;
+    const pct=Math.round(okN/total*100),stars=opt.level?(okN>=opt.pass?(okN===total?3:okN>=total-1?2:1):0):pct>=100?3:pct>=80?2:pct>=60?1:0;
     S.xp+=okN*10;const froze=bumpStreak();S.quizzes++;S.scoreSum+=pct;S.days[today()]=(S.days[today()]||0)+1;
     if(opt.level&&stars>(S.lv[opt.level.id]||0))S.lv[opt.level.id]=stars;
     save();header();
@@ -2917,8 +3388,8 @@ function quiz(qs,opt){
     body.innerHTML=`<div class="prompt stack" style="align-items:center"><div class="big" style="font-size:64px">${pct}%</div>
       <p class="muted" style="margin:0">${opt.title} – ${okN} of ${total} correct</p><p style="margin:0;font-size:18px">${msg}</p>
       ${opt.level?starHtml(stars):''}<span class="pill gold">🔥 ${S.streak} day streak</span>${froze?'<span class="pill">❄️ A freeze saved your streak</span>':''}${S.bestRun>run0&&S.bestRun>=10?`<span class="pill gold">🏅 New best: ${S.bestRun} right in a row</span>`:''}${fmHtml}
-      ${opt.level&&!stars?'<p class="muted small" style="margin:0">Score 60% or more to unlock the next level.</p>':''}</div>
-      ${mistakes.length?`<section class="stack"><h2 style="font-size:20px">Your mistakes</h2>${mistakes.map((m,k)=>`<div class="card mist"><div class="row"><span class="muted small">${m.x.kind==='conj'?`${m.x.who} (${m.x.v.inf.toUpperCase()}) · ${tn(m.x.t)}`:m.x.kind==='sent'?`${m.x.s} (${m.x.v.inf})`:m.x.kind==='tip'?m.x.s:m.x.v.en}</span>${m.x.kind==='conj'?`<button class="speak" data-ms="${k}" aria-label="Steps">${ICON.steps.replace('<svg','<svg width="20" height="20"')}</button>`:''}</div>
+      ${opt.level&&!stars?'<p class="muted small" style="margin:0">You need ${opt.pass} of ${total} to unlock the next level.</p>':''}</div>
+      ${mistakes.length?`<section class="stack"><h2 style="font-size:20px">Your mistakes</h2>${mistakes.map((m,k)=>`<div class="card mist"><div class="row"><span class="muted small">${m.x.kind==='conj'?`${m.x.who} (${m.x.v.inf.toUpperCase()}) · ${tn(m.x.t)}`:m.x.kind==='sent'?`${m.x.s} (${m.x.v.inf})`:m.x.kind==='tip'?m.x.s:m.x.kind==='nf'?`${m.x.v.inf} · ${m.x.nf==='ger'?'gerund':'past participle'}`:m.x.v.en}</span>${m.x.kind==='conj'?`<button class="speak" data-ms="${k}" aria-label="Steps">${ICON.steps.replace('<svg','<svg width="20" height="20"')}</button>`:''}</div>
         <div>✓ <b>${hl(m.x.ans,m.got)}</b> ${m.got?`&nbsp; ✗ <span class="wrongc">${hl(m.got,m.x.ans)}</span>`:''}</div></div>`).join('')}
         <p class="muted small" style="margin:0">${mistakes.filter(m=>m.x.kind==='conj').length?'These forms are in your Smart review and come back until you get them right twice.':''}</p></section>`:''}
       ${covered.length?`<section><div class="row"><h2 style="font-size:20px">Verbs covered</h2><span class="muted small">Star to add to My verbs</span></div>
@@ -2930,8 +3401,8 @@ function quiz(qs,opt){
     body.querySelectorAll('[data-ms]').forEach(b=>b.onclick=()=>{const m=mistakes[+b.dataset.ms].x;showSteps(m.v,m.t,m.p)});
     body.querySelectorAll('[data-star]').forEach(b=>b.onclick=()=>{toggleFav(b.dataset.star);b.setAttribute('aria-pressed',S.fav.includes(b.dataset.star))});
     body.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>verbSheet(verbBy(b.dataset.v)));
-    document.getElementById('again').onclick=()=>opt.level&&!stars?intro(opt.level):exit();
-    if(nextLvl)document.getElementById('nx').onclick=()=>intro(nextLvl);
+    document.getElementById('again').onclick=()=>opt.level&&!stars?levelSheet(opt.level):exit();
+    if(nextLvl)document.getElementById('nx').onclick=()=>levelSheet(nextLvl);
     const rq=document.getElementById('rq');if(rq)rq.onclick=()=>quiz(shuffle(mistakes.map(m=>({...m.x}))),{...opt,level:null,title:'Mistakes'});
   }
   next();
