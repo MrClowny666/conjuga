@@ -36,7 +36,8 @@ Rebuilt on 2026-11-09, with every lesson written from scratch.
 - [x] Lesson-coverage check: `node tools/check-lessons.js` (also `checkLessons()` in the page). Fails if any quiz or lesson example can ask for a form its own or earlier lessons have not taught. Sentences and Today's set only use what the path has reached; Forms you know is unchanged.
 - [x] Wrong answers show the tense's one-line use, and Steps now works on sentence questions too.
 - [x] Saved progress: old level ids map to the new levels (`OLD_LV`), so anything passed stays unlocked. A level is passed by the test pass mark; old saves count as passed.
-- [ ] Deferred: a c → z preterite/subjunctive quiz, -eír and o → u gerund variety, "adding j" beyond -ducir, and -oler/reír verbs, because Conjuga's verb list lacks those verbs. Present progressive has no sentence bank, so it is tested with forms only. Vocabulary lists leave out verbs missing from the 586-verb list. Placement test and Speaking are not built.
+- [x] Gap fill after comparing with Ella (2026-11-20): 28 verbs added (vencer, criar, oler, reír family, prever family and more). New rules: c → z (L7, L34), oler o → hue (L7, L34), dropped accent in criar, fiar, guiar, liar, piar (L20), -eír gerunds (L12). Irregular-verb lessons split to one page per verb (L21 to 23, L35, L40, L41), thin participle lessons filled in. M7 has clue-word and no-clue quizzes, M8 has present and past time-frame quizzes, M10 has a meanings quiz over all verbs. Vocab lists filled.
+- [ ] Still deferred: "adding j" beyond -ducir, o → u gerund variety beyond dormir and morir, pudrir and adquirir, M10 flash cards. Present progressive has no sentence bank, so it is tested with forms only. Vocabulary lists leave out verbs missing from the 586-verb list. Placement test and Speaking are not built.
 
 ## Ideas from other language apps
 
