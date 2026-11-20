@@ -1412,7 +1412,7 @@ const PATH=[
  drills:[dD('-ar','pres','pres.ar',{f:v=>cls(v)==='ar'}),dD('-er','pres','pres.er',{f:v=>cls(v)==='er'}),dD('-ir','pres','pres.ir',{f:v=>cls(v)==='ir'}),ALL]},
 {id:'l5',s:0,n:'Level 5',name:'Stem changes: e → ie',tid:'pres',teach:'pres.ie pres.acc',vocab:'comenzar convertir empezar entender pensar perder sentir',
  lessons:[
- ['What a stem change is',`<p>Some verbs keep the normal endings but change a vowel in the stem whenever that vowel is stressed. Spanish stresses the stem in every form except nosotros and vosotros, so those two keep the vowel of the infinitive.</p><p>Picture a boot: yo, tú, él and ellos sit inside it and change. Nosotros and vosotros stay outside.</p><p>The infinitive does not warn you, so learn each one with its yo form: <i>pensar, pienso</i>.</p>`],
+ ['What a stem change is',`<p>Some verbs keep the normal endings but change a vowel in the stem whenever that vowel is stressed. Spanish stresses the stem in every form except nosotros and vosotros, so those two keep the vowel of the infinitive.</p><p>Lay the six forms out with the singular on the left and the plural on the right. The forms that change are the whole left column plus ellos, and together they draw the shape of a <b>boot</b>. Nosotros and vosotros are outside the boot, so they keep the vowel of the infinitive.</p>[[boot pensar]]<p>Compare <i>pensar</i> with its forms: <i>pienso, piensas, piensa, piensan</i> have ie, while <i>pensamos, pensáis</i> keep the e.</p><p>The infinitive does not warn you, so learn each one with its yo form: <i>pensar, pienso</i>.</p>`],
  ['e → ie',`<p>The last e of the stem becomes ie.</p>[[pensar,entender,sentir pres]][[ex pensar pres 0|___ en ti.|I think about you.]][[ex empezar pres 2|La clase ___ a las ocho.|The class starts at eight.]][[ex entender pres 3|___ la pregunta.|We understand the question.]]`],
  ['Added accents',`<p>A few -iar and -uar verbs put a written accent on the i or u in those same four forms, so it is stressed as its own syllable.</p>[[enviar,continuar pres]]<p>Nosotros and vosotros are again untouched: <i>enviamos, continuáis</i>.</p>`]],
  drills:[dD('e → ie · top 100','pres','pres.ie',{rk:100}),dD('e → ie · top 300','pres','pres.ie',{rk:300}),dD('Accents','pres','pres.acc'),ALL]},
@@ -1701,10 +1701,14 @@ function fTable(v,t,ps){ // one verb, English under each form
 const egForm=(s,f)=>s.replace('___',`<b>${/^[¿¡]?___/.test(s)?cap(f):f}</b>`);
 const ppRows=(k,vs)=>`<div style="overflow-x:auto"><table>${vs.map(inf=>{const v=verbBy(inf),pl=plainOf(v);
   return `<tr><td>${inf}</td><td><b>${k==='pp'?hl(participle(v),participle(pl)):hl(gerund(v),gerundBare(pl))}</b></td><td class="muted small">${enParts(v.en).h} → ${k==='pp'?enPast(enParts(v.en).h)[1]:enIng(v)}</td></tr>`}).join('')}</table></div>`;
+function bootGrid(v,ps){ // the six forms laid out singular | plural: the shaded ones (the whole left column plus ellos) draw a boot
+  const fh=formsHtml(v,'pres'),cell=(i,inBoot)=>ps.includes(i)?`<td style="padding:10px 12px;border-radius:8px;${inBoot?'background:color-mix(in srgb,var(--blue) 16%,transparent);font-weight:700':''}"><div class="muted small">${LAB[i]}</div><div class="muted small" style="font-style:italic">${ENLAB[i]}</div>${fh[i]}</td>`:'<td></td>';
+  return `<div class="card"><h3>${v.inf} <span class="muted small">${v.en}</span></h3><table style="border-collapse:separate;border-spacing:6px">${[[0,3],[1,4],[2,5]].map(([a,b])=>`<tr>${cell(a,1)}${cell(b,b===5)}</tr>`).join('')}</table><p class="muted small" style="margin:0">The shaded forms make the shape of a boot. They are the ones that change.</p></div>`}
 function renderToken(x,ps){
   if(x.startsWith('ex ')){const[h,s,en]=x.slice(3).split('|'),[inf,t,p]=h.split(' ');if(!ps.includes(+p))return'';
     return `<div class="lex"><div>${egForm(s,conj(verbBy(inf),t)[+p])}</div><div class="muted small">${en}</div></div>`}
   const w=x.split(' ');
+  if(w[0]==='boot')return bootGrid(verbBy(w[1]),ps);
   if(w[0]==='end')return `<div style="overflow-x:auto">${endingsTable(w[1],w[2])}</div>`;
   if(w[0]==='pp'||w[0]==='ger')return ppRows(w[0],w[1].split(','));
   return `<div class="grid2">${w[0].split(',').map(inf=>fTable(verbBy(inf),w[1],ps)).join('')}</div>`;
@@ -1791,7 +1795,7 @@ function checkLessons(runs=30){
           if(!v||!T[t]||!s||!s.includes('___')||!en)say(l,`bad example ${x}`);
           else{if(!conj(v,t)[+p])say(l,`example has no form: ${x}`);
             const ns=needs(v,t,+p);if(!metBy(ns,T_))say(l,`example not yet taught: ${inf} ${t} ${p} (${ns.join(' ')})`)}}
-        else{const w0=x.split(' ');if(w0[0]!=='end'&&!(w0[0]==='pp'||w0[0]==='ger')){for(const inf of w0[0].split(','))if(!verbBy(inf)||!T[w0[1]])say(l,`bad table ${x}`)}
+        else{const w0=x.split(' ');if(w0[0]==='boot'){if(!verbBy(w0[1]))say(l,`bad table ${x}`)}else if(w0[0]!=='end'&&!(w0[0]==='pp'||w0[0]==='ger')){for(const inf of w0[0].split(','))if(!verbBy(inf)||!T[w0[1]])say(l,`bad table ${x}`)}
           else if(w0[0]==='pp'||w0[0]==='ger')for(const inf of w0[1].split(','))if(!verbBy(inf))say(l,`bad table ${x}`)}}
       segWords(g).forEach(x=>w.add(x))}
     if(l.noTest)return; // read-only level: nothing to quiz
