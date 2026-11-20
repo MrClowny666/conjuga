@@ -1905,11 +1905,11 @@ function todayQs(nl){
 }
 
 /* ---------- English glosses ---------- */
-const EN_IRR={have:['had','had'],do:['did','done'],undo:['undid','undone'],make:['made','made'],go:['went','gone'],say:['said','said'],tell:['told','told'],give:['gave','given'],see:['saw','seen'],know:['knew','known'],put:['put','put'],leave:['left','left'],let:['let','let'],find:['found','found'],come:['came','come'],think:['thought','thought'],take:['took','taken'],drink:['drank','drunk'],feel:['felt','felt'],begin:['began','begun'],write:['wrote','written'],lose:['lost','lost'],understand:['understood','understood'],get:['got','gotten'],read:['read','read'],fall:['fell','fallen'],hear:['heard','heard'],win:['won','won'],bring:['brought','brought'],split:['split','split'],run:['ran','run'],show:['showed','shown'],forget:['forgot','forgotten'],eat:['ate','eaten'],sleep:['slept','slept'],sell:['sold','sold'],buy:['bought','bought'],teach:['taught','taught'],sing:['sang','sung'],swim:['swam','swum'],drive:['drove','driven'],build:['built','built'],cost:['cost','cost'],fly:['flew','flown'],hurt:['hurt','hurt'],wake:['woke','woken'],choose:['chose','chosen'],catch:['caught','caught'],grow:['grew','grown'],send:['sent','sent'],break:['broke','broken'],sit:['sat','sat'],wear:['wore','worn'],become:['became','become'],keep:['kept','kept'],hold:['held','held'],spend:['spent','spent'],flee:['fled','fled'],lend:['lent','lent'],throw:['threw','thrown'],fight:['fought','fought'],sweep:['swept','swept'],sew:['sewed','sewn'],steal:['stole','stolen'],draw:['drew','drawn'],cut:['cut','cut'],hit:['hit','hit'],set:['set','set'],hide:['hid','hidden'],mean:['meant','meant'],lead:['led','led'],meet:['met','met'],pay:['paid','paid'],bite:['bit','bitten'],freeze:['froze','frozen'],shine:['shone','shone'],shoot:['shot','shot'],spit:['spat','spat'],shake:['shook','shaken'],bet:['bet','bet'],fit:['fit','fit'],hang:['hung','hung'],light:['lit','lit'],overcome:['overcame','overcome'],undertake:['undertook','undertaken'],withdraw:['withdrew','withdrawn'],forgive:['forgave','forgiven'],arise:['arose','arisen'],redo:['redid','redone'],ride:['rode','ridden'],deal:['dealt','dealt'],seek:['sought','sought']};
+const EN_IRR={spread:['spread','spread'],bear:['bore','borne'],speak:['spoke','spoken'],stand:['stood','stood'],sting:['stung','stung'],stick:['stuck','stuck'],have:['had','had'],do:['did','done'],undo:['undid','undone'],make:['made','made'],go:['went','gone'],say:['said','said'],tell:['told','told'],give:['gave','given'],see:['saw','seen'],know:['knew','known'],put:['put','put'],leave:['left','left'],let:['let','let'],find:['found','found'],come:['came','come'],think:['thought','thought'],take:['took','taken'],drink:['drank','drunk'],feel:['felt','felt'],begin:['began','begun'],write:['wrote','written'],lose:['lost','lost'],understand:['understood','understood'],get:['got','gotten'],read:['read','read'],fall:['fell','fallen'],hear:['heard','heard'],win:['won','won'],bring:['brought','brought'],split:['split','split'],run:['ran','run'],show:['showed','shown'],forget:['forgot','forgotten'],eat:['ate','eaten'],sleep:['slept','slept'],sell:['sold','sold'],buy:['bought','bought'],teach:['taught','taught'],sing:['sang','sung'],swim:['swam','swum'],drive:['drove','driven'],build:['built','built'],cost:['cost','cost'],fly:['flew','flown'],hurt:['hurt','hurt'],wake:['woke','woken'],choose:['chose','chosen'],catch:['caught','caught'],grow:['grew','grown'],send:['sent','sent'],break:['broke','broken'],sit:['sat','sat'],wear:['wore','worn'],become:['became','become'],keep:['kept','kept'],hold:['held','held'],spend:['spent','spent'],flee:['fled','fled'],lend:['lent','lent'],throw:['threw','thrown'],fight:['fought','fought'],sweep:['swept','swept'],sew:['sewed','sewn'],steal:['stole','stolen'],draw:['drew','drawn'],cut:['cut','cut'],hit:['hit','hit'],set:['set','set'],hide:['hid','hidden'],mean:['meant','meant'],lead:['led','led'],meet:['met','met'],pay:['paid','paid'],bite:['bit','bitten'],freeze:['froze','frozen'],shine:['shone','shone'],shoot:['shot','shot'],spit:['spat','spat'],shake:['shook','shaken'],bet:['bet','bet'],fit:['fit','fit'],hang:['hung','hung'],light:['lit','lit'],overcome:['overcame','overcome'],undertake:['undertook','undertaken'],withdraw:['withdrew','withdrawn'],forgive:['forgave','forgiven'],arise:['arose','arisen'],redo:['redid','redone'],ride:['rode','ridden'],deal:['dealt','dealt'],seek:['sought','sought']};
 const DBL=new Set(L('stop hug rob admit prefer refer occur permit omit commit regret control chat plan drop shop beg skip trip scrub submit emit transmit'));
 const ENLAB=['I','you','he / she / you (formal)','we','you all','they / you all (formal)'];
 const EP=['I','you','s/he','we','you all','they'],BE=L('am are is are are are'),WAS=L('was were was were were were');
-function enParts(m){m=m.split(',')[0].replace(/\(.*?\)/g,'').trim().replace(/^to /,'');const w=m.split(' ');return{h:w[0],tail:w.length>1?' '+w.slice(1).join(' '):''}}
+function enParts(m){m=m.replace(/\(.*?\)/g,'').split(',')[0].trim().replace(/^to /,'');const w=m.split(' ');return{h:w[0],tail:w.length>1?' '+w.slice(1).join(' '):''}}
 function enPast(h){if(EN_IRR[h])return EN_IRR[h];const p=h.endsWith('e')?h+'d':/[^aeiou]y$/.test(h)?h.slice(0,-1)+'ied':DBL.has(h)?h+h.at(-1)+'ed':h+'ed';return[p,p]}
 const DBL_ING=new Set(L('run swim sit win get put cut hit set begin forget stop hug rob admit prefer refer occur omit regret control chat plan drop shop bet spit trip scrub submit emit transmit beg'));
 function enIng(v){const{h,tail}=enParts(v.en);const g=h==='be'?'being':/ie$/.test(h)?h.slice(0,-2)+'ying':/[^e]e$/.test(h)?h.slice(0,-1)+'ing':DBL_ING.has(h)?h+h.at(-1)+'ing':h+'ing';return g+tail}
@@ -3306,17 +3306,32 @@ const SYN=`arreglar=reparar salvar=rescatar empezar=comenzar=iniciar terminar=ac
  aparecer>surgir cambiar>variar crear>generar conservar>mantener`;
 const synOf={};for(const e of SYN.trim().split(/\s+/)){const w=e.split(/[=>]/);for(const a of e.includes('=')?w:[w[0]])for(const b of w)if(a!==b)(synOf[a]||(synOf[a]=new Set)).add(b)}
 const covers=(u,v)=>u!==v&&(!!synOf[v.inf]?.has(u.inf)||!!u.refl===!!v.refl&&senses(v).every(s=>senses(u).includes(s)));
-function diagnose(x,got){
+const isForm=d=>!!d&&/^(Right|Wrong|Regular|That is)/.test(d[0]); // the answer is a real form of something, so it is a mix-up, not a typo
+function diagnose(x,got){ // sentences keep their own note for irregular-form slips; tense and person slips get the specific label
+  const r=diagnose0(x,got);
+  if(x.kind!=='sent'||x.p==null)return r;
+  if(!r||/^(Stem|Spelling|Regular)/.test(r[0]))return['Not quite.',x.note||steps(x.v,x.t,x.p).join(' ')];
+  return r;
+}
+function diagnose0(x,got){
   const g=strip(got);
   if(x.kind==='tip')return['Not quite.',x.note];
-  if(x.kind==='sent')return['Not quite.',x.note||steps(x.v,x.t,x.p).join(' ')];
+  if(x.kind==='sent'&&x.p==null)return['Not quite.',x.note||steps(x.v,x.t,x.p).join(' ')];
   if(x.kind==='nf')return['Not quite.',x.nf==='ger'?'Remove -ar and add -ando, or remove -er / -ir and add -iendo. Watch for e → i, o → u and the y.':'Remove -ar and add -ado, or remove -er / -ir and add -ido. Check the list of irregular participles.'];
   if(x.kind==='mean'){const v=VERBS.find(v=>strip(v.inf)===g);return v?['Wrong verb.',`${v.inf} means "${v.en}".`]:['Not a real verb.','That spelling does not match any verb in the dictionary.']}
   const hits=[];for(const t of TT)conj(x.v,t.id).forEach((f,i)=>{if(f&&strip(f)===g&&!(t.id===x.t&&i===x.p))hits.push([t.id,i])});
-  const L_=(t,i)=>(t==='imp'||t==='neg'?IMPLAB:LAB)[i];
-  let h=hits.find(([t,i])=>i===x.p);if(h)return['Right verb, wrong tense.',`That form is ${tns(h[0])}, but this one asks for ${tns(x.t)}.`];
-  h=hits.find(([t])=>t===x.t);if(h)return['Right tense, wrong person.',`That is the ${L_(h[0],h[1])} form. This one asks for ${x.who}.`];
-  if(hits[0])return['Right verb, wrong form.',`That is the ${L_(...hits[0])} form in ${tns(hits[0][0])}.`];
+  const L_=(t,i)=>(t==='imp'||t==='neg'?IMPLAB:LAB)[i],who=x.who||L_(x.t,x.p),W=h=>({t:h[0],i:h[1]}); // third item = which form the learner typed, for its English
+  if(x.t==='imp'&&hits.length){ // command mix-ups teach the rule, not just a person label
+    const tu=hits.find(([t,i])=>t==='imp'&&i===1),pi=hits.find(([t])=>t==='pres'),us=hits.find(([t,i])=>(t==='imp'&&(i===2||i===5))||t==='subj');
+    if((x.p===2||x.p===5)&&(tu||pi))return[tu?'That is the tú command.':'That is the present indicative.',`Usted and ustedes commands borrow the present subjunctive, so the ending flips: ${x.ans}.`,W(tu||pi)];
+    if(x.p===1&&us)return['That is the usted command.',`A tú command copies the él/ella present form: ${x.ans}.`,W(us)];
+  }
+  // Forms typed with the right accents rank first ("compro" is present yo, not preterite compró); same tense beats same person ("vive" for tú is a person slip, not the imperative).
+  const ex=hits.filter(([t,i])=>conj(x.v,t)[i]===got),sameT=a=>a.find(([t])=>t===x.t),sameP=a=>a.find(([t,i])=>i===x.p&&t!==x.t);
+  let h=sameT(ex)||sameP(ex)||sameT(hits)||sameP(hits);
+  if(h&&h[0]===x.t)return['Right verb and tense, wrong person.',`That is the ${L_(h[0],h[1])} form. This one asks for ${who}.`,W(h)];
+  if(h)return['Right verb, wrong tense.',`That form is ${tns(h[0])}, but this one asks for ${tns(x.t)}.`,W(h)];
+  if(hits[0])return['Right verb, wrong form.',`That is the ${L_(...hits[0])} form in ${tns(hits[0][0])}.`,W(hits[0])];
   if(!formIndex)buildIndex();const vs=formIndex.get(g);
   if(vs&&!vs.has(x.v)){const v=[...vs][0];return['Wrong verb.',`That is a form of ${v.inf} (${v.en}).`]}
   if(!x.v.refl&&strip(bare(plainOf(x.v),x.t)[x.p]||'')===g){
@@ -3324,6 +3339,53 @@ function diagnose(x,got){
     if(x.v.g==='spell'||x.v.g==='stem'&&x.t==='pret'&&x.p===0)return['Spelling change missed.',`${x.v.inf} changes its spelling in this form: ${x.ans}.`];
     return['Regular pattern, irregular verb.',`${x.v.inf} breaks the regular pattern in this form.`]}
   return null;
+}
+
+/* ---------- clue words: why this sentence takes this tense ----------
+   Per tense, in order: [pattern, reason]. The first pattern found in the sentence is its clue word. A sentence with no match
+   gets the tense's general rule instead. ponytail: keyword matching, add a per-sentence `cw` field if a sentence needs a hand-picked clue. */
+const CW={
+ pres:[[/\b(todos los (?:días|lunes|martes|sábados|domingos|meses|años)|cada (?:día|mañana|tarde|semana|lunes)|siempre|normalmente|a menudo|nunca|a veces|casi siempre)\b/i,'is a routine, and routines in the present use the present.'],
+  [/\b(los (?:lunes|martes|miércoles|jueves|viernes|sábados|domingos|fines de semana)|todas las \w+|cada \w+)\b/i,'is a routine, and routines in the present use the present.'],[/\b(ahora(?: mismo)?|en este momento|hoy)\b/i,'puts the action at this moment, so the present.'],[/\b(todavía|ya)\b/i,'is about how things stand now, so the present.']],
+ prog:[[/\b(ahora(?: mismo)?|en este momento|ya)\b/i,'says it is happening right now, so estar plus the gerund.'],[/\b(todavía|siempre)\b/i,'stresses an action still going on.']],
+ prox:[[/\b(mañana|esta (?:noche|tarde)|este (?:fin de semana|sábado|domingo)|pasado mañana|luego|pronto)\b/i,'looks ahead to a plan, so ir a plus an infinitive.'],[/\b(el (?:próximo|lunes|martes|viernes|sábado|domingo)|la semana que viene|en (?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)|este verano|en (?:\w+ )?(?:minutos|horas|días|semanas)|después de|hoy|ahora(?: mismo)?|mira esas nubes)\b/i,'looks ahead to a plan, so ir a plus an infinitive.']],
+ pret:[[/\b(ayer|anoche|anteayer|anteanoche|el año pasado|la semana pasada|el mes pasado|el (?:lunes|martes|miércoles|jueves|viernes|sábado|domingo) pasado|hace (?:\w+ )?(?:días?|semanas?|meses|años?|horas?|minutos?|rato)|(?:fin de semana|verano|invierno|mes|año|lunes|martes|sábado|domingo) pasado|el (?:lunes|martes|miércoles|jueves|viernes|sábado|domingo)|en (?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)|de repente|por fin|una vez|en (?:19|20)\d\d|aquel día|esa noche|entonces)\b/i,'names a finished moment, so the preterite.']],
+ impf:[[/\b(de niño|de niña|de pequeño|de pequeña|de joven|cuando era(?:s|mos|n)? (?:niño|niña|pequeño|pequeña|joven|jóvenes|niños))\b/i,'sets the scene of a past period with no end point, so the imperfect.'],
+  [/\bcuando\b.*\b(niño|niña|pequeño|pequeña|joven|años|colegio)\b/i,'sets the scene of a past period with no end point, so the imperfect.'],[/\bcuando\b[^.]*\b(sonó|llamé|llamaron|llamó|llegamos|llegué|salimos|nació|entré|entró|llegó|vino|vi|oí)\b/i,'is a second event that cuts in, so the main action was in progress: the imperfect.'],
+  [/\b(todos los (?:días|veranos|años|domingos|sábados|lunes)|cada (?:día|mañana|tarde|verano|semana|domingo)|siempre|a menudo|normalmente|a veces|antes|mientras|en aquella época|en esa época|entonces|nunca)\b/i,'shows something that used to repeat or was going on, so the imperfect.']],
+ fut:[[/\b(mañana|pasado mañana|el (?:próximo|año que viene)|la semana que viene|el año que viene|dentro de|algún día|pronto|en el futuro|más tarde)\b/i,'points to a time that has not come yet, so the future.'],[/\b(el \w+ que viene|la próxima semana|el (?:viernes|sábado|domingo)|en navidad|cuando llegue|el mes que viene)\b/i,'points to a time that has not come yet, so the future.'],[/\b(quizás?|tal vez|seguramente|probablemente)\b/i,'signals a guess, and the future can guess about the present.']],
+ cond:[[/\bsi\b[^,]*\b\w+(?:ara|iera|ase|iese|aras|ieras|aramos|iéramos|aran|ieran)\b/i,'follows an imagined "si" clause, so the conditional says what would happen.'],[/\b(en (?:tu|mi|su) (?:lugar|situación)|con más (?:dinero|tiempo|suerte)|sin dudarlo)\b/i,'imagines a different situation, so the conditional.'],[/\b(por favor|me gustaría|querría|podrías|podría)\b/i,'is a polite request, so the conditional.'],[/\bpero\b/i,'sets the idea against reality, so the conditional says what you would do.'],[/\b(dijo que|prometió que|creía que|pensaba que)\b/i,'reports a future seen from the past, so the conditional.']],
+ perf:[[/\b(hoy|esta (?:mañana|tarde|semana|noche)|este (?:año|mes|verano|invierno)|últimamente|todavía no|ya|alguna vez|nunca|todavía)\b/i,'belongs to a time that is not over yet, so the present perfect.']],
+ plup:[[/\b(ya|antes de|todavía no|nunca)\b/i,'places the action before another moment in the past, so the past perfect.'],[/\bcuando\b/i,'sets a past moment, and the action came before it, so the past perfect.']],
+ futp:[[/\b(para (?:el|la|las|los)? ?(?:\w+ ?){1,2}|dentro de|cuando)\b/i,'looks at a future moment and what will be finished by then, so the future perfect.'],[/\b(ya|seguramente|probablemente)\b/i,'signals a guess about something already done.']],
+ condp:[[/\bsi\b[^,]*\bhubi(?:era|ese|eras|eses|éramos|eran)\b/i,'follows an unreal past "si hubiera", so the conditional perfect says what would have happened.'],[/\b(sin|de no haber)\b/i,'imagines the past without something, so the conditional perfect.'],[/\bpero\b/i,'says it did not actually happen, so the conditional perfect gives what would have happened.'],[/\b(en (?:tu|mi|su) (?:lugar|situación)|con (?:más|un poco más de) \w+)\b/i,'imagines a different situation in the past, so the conditional perfect.']],
+ subj:[[/\b(ojalá|quizás?|tal vez)\b/i,'opens a wish or a doubt, so the subjunctive.'],[/\b(quiero|quieres|quiere|queremos|quieren|espero|esperamos|prefiero|prefiere|deseo|necesito|necesita|pido|pide|exijo|sugiero|recomiendo|permito|aconsejo) que\b/i,'expresses a wish or need about someone else, so the subjunctive follows "que".'],
+  [/\b(dudo|dudas|duda|no creo|no pienso|no estoy seguro|no es verdad|no es cierto) que\b/i,'expresses doubt, so the subjunctive follows "que".'],[/\b(me alegra|me alegro de|me gusta|me molesta|me sorprende|siento|temo|me da miedo|tengo miedo de|es una pena) que\b/i,'expresses a feeling about something, so the subjunctive follows "que".'],
+  [/\bes (?:importante|necesario|posible|probable|mejor|bueno|raro|increíble|una lástima) que\b/i,'is an opinion about what should or might happen, so the subjunctive follows "que".'],[/\b(para que|antes de que|a menos que|con tal de que|sin que|en caso de que|hasta que|cuando|en cuanto|tan pronto como)\b/i,'is a link word that takes the subjunctive when the action has not happened yet.']],
+ isubj:[[/\bsi\b/i,'opens an imagined "si" clause, so the imperfect subjunctive.'],[/\b(como si|ojalá)\b/i,'introduces something unreal, so the imperfect subjunctive.'],
+  [/\b(quería|querías|queríamos|querían|esperaba|esperábamos|prefería|necesitaba|pedía|pidió|dijo|era importante|era necesario|me alegró|me alegraba|dudaba|temía|no creía|sugirió|exigió|recomendó|propuso) que\b/i,'starts in the past, so the verb after "que" moves to the imperfect subjunctive.'],[/\b(para que|antes de que|sin que)\b/i,'is a link word, and with a past main verb it takes the imperfect subjunctive.']],
+ psubj:[[/\b(espero|dudo|no creo|me alegra|me alegro de|siento|temo|es posible|es una pena|ojalá) que\b/i,'reacts to something already done, so the present perfect subjunctive.'],[/\b(cuando|en cuanto|después de que|hasta que)\b/i,'looks at an action that will be finished first, so the present perfect subjunctive.']],
+ plsubj:[[/\bsi\b/i,'opens an unreal "si" clause about the past, so the past perfect subjunctive.'],[/\bojalá\b/i,'wishes for a past that did not happen, so the past perfect subjunctive.'],[/\b(sin que|como si|aunque)\b/i,'imagines the past as different, so the past perfect subjunctive.'],
+  [/\b(no creía|dudaba|me alegró|esperaba|quería|era posible|temía) que\b/i,'looks back at something already done from the past, so the past perfect subjunctive.']],
+ imp:[[/[¡!]/,'is an order or a request aimed at someone, so the command form.'],[/\b(por favor|ven|oye|mira|ahora mismo|usted|ustedes)\b/i,'addresses someone directly, so the command form.'],[/, ?(?:[A-ZÁÉÍÓÚ][a-záéíóúñ]+|hijo|hija|señor|señora)[.!?]?$/,'names the person spoken to, so a command.']],
+ neg:[[/\bno\b/i,'a negative command is "no" plus the present subjunctive.']]
+};
+function clueOf(x){
+  const sent=x.s.replace('___',' ').replace(/\s+/g,' ');
+  for(const[re,why]of CW[x.t]||[]){const m=sent.match(re);if(m)return{w:m[0].replace(/^[¡!]$/,'the exclamation marks'),raw:m[0],why}}
+  return null;
+}
+function whyTense(x,d){ // modal: the clue word, the rule, and what the learner's own form would have meant
+  const c=clueOf(x),full=x.s.replace('___',`<b style="color:var(--blue)">${x.ans}</b>`),hl_=c&&c.raw.length>1?full.replace(c.raw,m=>`<mark>${m}</mark>`):full,bad=d&&d[2];
+  popModal(`<h2 style="font-size:22px">Why this tense?</h2><div class="card"><div class="inf" style="font-size:22px;line-height:1.35">${hl_}</div><div class="en">${x.en}</div></div>
+  <p><b>${tn(x.t)}.</b> ${c?`<b>“${c.w}”</b> ${c.why}`:'No single clue word here. Read the whole sentence for the time and the mood.'}</p>
+  <p class="muted" style="margin:0">${T[x.t].use}</p>${bad&&bad.t!==x.t?`<p class="muted" style="margin:0">Your form is ${tns(bad.t)}: ${T[bad.t].use.charAt(0).toLowerCase()+T[bad.t].use.slice(1)}</p>`:''}
+  <button class="btn" id="mc">Close</button>`);document.getElementById('mc').onclick=closeModal;
+}
+function showTable(x,d){ // the asked tense in full, with the asked form and the learner's form marked
+  const t=x.t,lab=t==='imp'||t==='neg'?IMPLAB:LAB,bad=d&&d[2]&&d[2].t===t?d[2].i:-1,fh=formsHtml(x.v,t);
+  popModal(`<h2 style="font-size:22px">${x.v.inf} · ${tns(t)}</h2><div class="card">${fh.map((h,i)=>h&&persons().includes(i)?`<div class="frow"><div class="f"><span class="p">${lab[i]}</span>${h}${i===x.p?' ✓':i===bad?' ✗':''}</div><div class="en">${english(x.v,t,i)}</div></div>`:'').join('')}</div>
+  <p class="muted small" style="margin:0">✓ the form this question wanted${bad>=0?' · ✗ the form you typed':''}.</p><button class="btn" id="mc">Close</button>`);document.getElementById('mc').onclick=closeModal;
 }
 function showSteps(v,t,i){
   const f=conj(v,t)[i];
@@ -3444,11 +3506,11 @@ function quiz(qs,opt){
   function record(ok,got){if(navigator.vibrate&&navigator.userActivation?.hasBeenActive!==false)try{navigator.vibrate(ok?15:[30,40,30])}catch{}recordAnswer(cur,ok,mode==='type');ok?okN++:badN++;if(!ok)mistakes.push({x:cur,got});save();i++;tally()}
   function next2(){next()}
   function submit(got,typed){
-    if(!got)return;
+    if(!got)return;let dd=null;
     const exact=got===cur.ans,loose=strip(got)===strip(cur.ans);
     const syn=cur.kind==='mean'&&!loose&&VERBS.find(v=>(S.strict?v.inf===got:strip(v.inf)===strip(got))&&covers(v,cur.v));
     const ok=exact||(typed&&loose&&!S.strict)||!!syn;
-    if(!ok&&typed&&S.typo&&!typoUsed&&lev(strip(got),strip(cur.ans))<=2&&got.length>2){typoUsed=true;$('hint').innerHTML='<span class="badc">🤔 There might be a typo. Check it, then press Check again.</span>';return}
+    if(!ok&&typed&&S.typo&&!typoUsed&&lev(strip(got),strip(cur.ans))<=2&&got.length>2&&!isForm(diagnose(cur,got))){typoUsed=true;$('hint').innerHTML='<span class="badc">🤔 There might be a typo. Check it, then press Check again.</span>';return}
     phase='fb';record(ok,got);if($('hint'))$('hint').textContent='';
     const ans=$('ans');if(ans){ans.disabled=true;ans.className='answer '+(ok?'ok':'bad')}
     const c=cur.kind==='conj',say=(c&&SUBJ.has(cur.t)?'que ':'')+(c?cur.who+' ':'')+cur.ans;
@@ -3458,15 +3520,17 @@ function quiz(qs,opt){
       fb.innerHTML=syn?`<div class="fb ok">¡Correcto! ${syn.inf} works too. This one was looking for: <span class="c">${cur.ans}</span></div>`:`<div class="fb ok">${exact?'¡Correcto!':'Correct, but mind the accent:'} <span class="c">${exact?'':cur.ans}</span></div>`;
     }else{
       // near miss = within 2 letters and not some other real form (those get a specific diagnosis instead)
-      const d0=diagnose(cur,got),near=got.length>2&&lev(strip(got),strip(cur.ans))<=2&&!(d0&&/^(Right|Wrong|Regular)/.test(d0[0])),d=near&&d0&&d0[0]==='Not a real verb.'?null:d0;
-      fb.innerHTML=`<div class="fb bad"><div>${near?'So close! Just a spelling slip – check the highlighted letters.':"That's incorrect…"}</div>
+      const d0=diagnose(cur,got),near=got.length>2&&lev(strip(got),strip(cur.ans))<=2&&!isForm(d0),d=near&&d0&&d0[0]==='Not a real verb.'?null:d0;
+      dd=d;const named=d&&d[0]!=='Not quite.'&&!near,bd=d&&d[2];
+      fb.innerHTML=`<div class="fb bad"><div>${near?'So close! Just a spelling slip – check the highlighted letters.':named?d[0]:"That's incorrect…"}</div>
         <div class="cmp"><div>✓ <span class="c">${hl(cur.ans,got)}</span> <button class="speak" id="sa" aria-label="Hear it">${ICON.speak.replace('<svg','<svg width="20" height="20"')}</button></div>
-        <div>✗ <span class="c wrongc">${hl(got,cur.ans)}</span></div>${c?`<div class="muted small"><i>${english(cur.v,cur.t,cur.p)}</i></div>`:''}</div>
-        ${d?`<p class="diag"><b>${d[0]}</b> ${d[1]}</p>`:''}${(c&&d&&/tense/.test(d[0]))||cur.kind==='sent'?`<p class="small muted" style="margin:0">${T[cur.t].use}</p>`:''}</div>`;
+        <div>✗ <span class="c wrongc">${hl(got,cur.ans)}</span></div>${bd?`<div class="muted small"><i>= ${english(cur.v,bd.t,bd.i)}</i></div>`:''}${c?`<div class="muted small"><i>Asked: ${english(cur.v,cur.t,cur.p)}</i></div>`:''}</div>
+        ${d?`<p class="diag">${named?'':`<b>${d[0]}</b> `}${d[1]}</p>`:''}${(c&&d&&/wrong tense/.test(d[0]))?`<p class="small muted" style="margin:0">${T[cur.t].use}</p>`:''}</div>`;
       $('sa').onclick=()=>speak(say,true);
     }
-    ctl.innerHTML=`<div class="row">${c||cur.kind==='sent'?'<button class="btn ghost" id="stp">Steps</button>':''}<button class="btn" id="nx">${i>=total?'See results':'Next question'}</button></div>`;
-    if(c||cur.kind==='sent'){const x=cur;$('stp').onclick=()=>showSteps(x.v,x.t,x.p)}
+    const form=c||cur.kind==='sent'&&cur.p!=null;
+    ctl.innerHTML=`${!ok&&form?`<div class="row" style="flex-wrap:wrap">${ok?'':'<button class="btn ghost sm" id="tbl">Table</button>'}<button class="btn ghost sm" id="stp">Steps</button><button class="btn ghost sm" id="say">Say it</button>${cur.kind==='sent'?'<button class="btn ghost sm" id="why" style="flex-basis:100%">Why this tense?</button>':''}</div>`:''}<div class="row">${ok&&form?'<button class="btn ghost" id="stp">Steps</button>':''}<button class="btn" id="nx">${i>=total?'See results':'Next question'}</button></div>`;
+    if(form){const x=cur,d=dd;$('stp').onclick=()=>showSteps(x.v,x.t,x.p);if(!ok){$('tbl').onclick=()=>showTable(x,d);$('say').onclick=()=>speak(say,true);if(x.kind==='sent')$('why').onclick=()=>whyTense(x,d)}}
     $('nx').onclick=next;$('nx').focus();
   }
   function finish(){

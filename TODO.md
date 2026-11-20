@@ -67,6 +67,20 @@ Compared against Duolingo, Babbel, Anki, Memrise, Busuu and Conjuguemos on 2026-
 - [ ] **Voseo setting.** Option to practise vos forms (vos hablás, vos tenés, imperative hablá) for Argentina, Uruguay and Central America. Next to the existing "Include vosotros" setting. Needs vos forms in the engine for the present, imperative and present subjunctive, and sentences to match.
 - [ ] **Accent feedback in relaxed mode.** With "Check accents" off, a correct but unaccented answer already shows "Correct, but mind the accent" and the right spelling. Missing: when the unaccented answer is itself another form of the verb, say so ("hablo is the yo present, habló is the él preterite: the accent changes the meaning"), without counting it wrong.
 
+## Ideas from Ella 4.1
+
+Ella went from 3.18.60 to 4.1.4 (build 898). Details in `research/ella-4.1-update-notes.md`. Their level path is unchanged in order and count; the changes are around it. Level list re-scanned in full on 2026-11-20 (same lessons and quizzes); lesson body text not re-read. The v4.1 headline is the new answer screen with "Why this tense?".
+
+- [x] **"Why this tense?" on wrong sentence answers.** Done: `CW` clue-word table + `clueOf()` + `whyTense()` in `conjuga.html`; about 69% of the 846 bank sentences match a clue word, the rest show the tense's general rule. Original idea: Ella ties a one-sentence reason to a clue word in the sentence ("cada mañana tells us this used to happen again and again"). Conjuga shows only the tense's use line; add a per-sentence clue.
+- [x] **Named error types on wrong answers.** Done: headline names the error, wrong form's English, Table / Steps / Say it buttons. Original idea: Ella's sheet says "Right verb and tense, wrong pronoun", shows the wrong form's English and one explanatory line, with Table, Steps and Say it. Conjuga's `diagnose()` already labels the error; add the wrong form's English and a Table button. Same item as "Mistake patterns" above.
+- [ ] **Smart Quizzes in groups.** Their page has Review mistakes, Keep it fresh (a tense not studied for N days), Sharpen (a pattern such as "Add g", the pronoun that trips you up most, top-100 mastery). Fits the "Real spaced repetition" item: build the due queue first, then these shortcuts.
+- [ ] **Saved quiz presets.** Custom quiz settings saved under a name, with ready-made presets (past tense typing, participle and gerund, ser vs estar sentences). Small, since the custom quiz already has the options.
+- [ ] **Top 400 and 500 verb mastery.** Progress tops out at 300 here; Ella now goes to 500.
+- [ ] **Verb Sudoku hub.** Daily Beginner, Intermediate and Advanced grids plus build-your-own. Not built; only if wanted.
+- [ ] **Rioplatense / voseo.** Ella now offers European, Latin American, Rioplatense and Custom pronouns. Same as "Voseo setting" under Tier 3, with a free choice of pronouns.
+- [ ] **Keep the keyboard open** option between typed questions.
+- [ ] **"Report a verb issue"** on verb pages (would need somewhere to send it; skip while offline-only).
+
 ## Hints & tips
 
 - [x] Tips tab: 14 expandable cards (SER/ESTAR, POR/PARA, reflexive pronouns, possessives (tables), yo/me/mí/mi (tables), personal a, false friends, small words, verb pairs, preterite/imperfect, subjunctive, grammar traps, pronunciation, Spain vs. Latin America).
