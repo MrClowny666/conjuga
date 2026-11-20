@@ -1153,6 +1153,26 @@ const TIPS=[
   ['Words','computer: <i>ordenador / computadora</i> · car: <i>coche / carro, auto</i> · phone: <i>móvil / celular</i> · juice: <i>zumo / jugo</i>. <i>Coger</i> (to take) is rude in much of Latin America: use <i>tomar</i> or <i>agarrar</i>.']]]];
 /* Tip quizzes, one line per question: sentence with ___|English|answer|wrong options (comma separated)|note shown when wrong. "—" means "leave it blank". */
 const TIPQ={
+'Subject pronouns':`"I"|Pick the pronoun|yo|tú,ella|yo means I.
+"you", one friend|Pick the pronoun|tú|usted,él|tú is for one person you know well.
+"you", one person you want to be polite to|Pick the pronoun|usted|tú,ella|usted is the polite you.
+"she"|Pick the pronoun|ella|él,ellas|ella is she, and él is he.
+"we", a group of women|Pick the pronoun|nosotras|nosotros,ellas|-as is for an all-female group.
+"we", a mixed group|Pick the pronoun|nosotros|nosotras,ellos|One man or a mixed group takes -os.
+"they", four women and one man|Pick the pronoun|ellos|ellas,ustedes|One man in the group makes it ellos.
+"they", all women|Pick the pronoun|ellas|ellos,ella|An all-female group takes ellas.
+"you all", Latin America|Pick the pronoun|ustedes|ellos,tú|Latin America uses ustedes for a group of friends too.
+"he"|Pick the pronoun|él|ella,yo|él with an accent is he. el without one is the.
+"you" in "Are you coming, Mr. García?"|Pick the pronoun|usted|tú,él|A polite you to one person is usted.
+"you" to your best friend|Pick the pronoun|tú|usted,ella|A friend gets tú.
+"you all", in Latin America, to friends|Pick the pronoun|ustedes|nosotros,ellas|Latin America uses ustedes for groups of friends.
+"she"|Pick the pronoun|ella|él,tú|ella is she.
+"we", two men|Pick the pronoun|nosotros|nosotras,ellos|An all-male group takes -os.
+"we", two women|Pick the pronoun|nosotras|nosotros,ustedes|An all-female group takes -as.
+"they", two men|Pick the pronoun|ellos|ellas,él|An all-male group takes ellos.
+"I", written in Spanish|Pick the pronoun|yo|ella,usted|yo is I.
+The pronoun that means "he"|Pick the pronoun|él|el,ella|He has an accent: él. Without it, el means the.
+The pronoun that means "you" (one friend)|Pick the pronoun|tú|tu,él|You has an accent: tú. Without it, tu means your.`,
 'SER vs. ESTAR':`Mi hermana ___ médica.|My sister is a doctor.|es|está|Professions use SER.
 Madrid ___ en España.|Madrid is in Spain.|está|es|Where something is uses ESTAR.
 Hoy ___ muy cansado.|Today I am very tired.|estoy|soy|A temporary state uses ESTAR.
@@ -1274,7 +1294,7 @@ const tipLinks=id=>(TENSE_TIPS[id]||[]).map(h=>`<button class="tiplink" data-got
 const tipOfDay=()=>TIPS[Math.floor(Date.now()/864e5)%TIPS.length];
 function goTip(h){closeSheet();show('tips');const d=view.querySelector(`[data-tip="${h}"]`);if(d){d.open=true;d.scrollIntoView()}}
 const bindTipLinks=root=>root.querySelectorAll('[data-goto]').forEach(b=>b.onclick=e=>{e.preventDefault();goTip(b.dataset.goto)});
-const tipQs=title=>shuffle(TIPQ[title].split('\n').map(l=>{const[s,en,ans,w,note]=l.split('|');return{kind:'tip',tip:title,s,en,ans,opts:[ans,...w.split(',')],note}})).slice(0,8);
+const tipQs=(title,n=8)=>shuffle(TIPQ[title].split('\n').map(l=>{const[s,en,ans,w,note]=l.split('|');return{kind:'tip',tip:title,s,en,ans,opts:[ans,...w.split(',')],note}})).slice(0,n);
 const MOODS=[
  {es:'El Indicativo',en:'Indicative mood',desc:'For facts, events and things believed to be true.',groups:[['Simple tenses',['pres','prog','prox','pret','impf','fut','cond']],['Compound tenses',['perf','plup','futp','condp']]]},
  {es:'El Subjuntivo',en:'Subjunctive mood',desc:'For wishes, doubts, emotions and possibilities.',groups:[['Simple tenses',['subj','isubj']],['Compound tenses',['psubj','plsubj']]]},
@@ -1351,11 +1371,23 @@ const PRES_ALLOW='pres.ar pres.er pres.ir';
    [[pp volver,abrir]] participles, [[ger hablar,comer]] gerunds, [[ex hablar pres 0|Yo ___ mucho.|I talk a lot.]] an example whose form comes from the engine.
    id keys saved progress, so don't rename one. */
 const PATH=[
+{id:'b0',s:0,n:'Introduction 1',name:'Who is doing it: pronouns',tid:'pron',teach:'',q:5,tipTest:'Subject pronouns',
+ lessons:[
+ ['Welcome',`<p>Every level here works the same way. You read a few short lessons, try small quizzes on one thing at a time, then take a level-up test. From Beginner 1 on, you also learn the verbs on flash cards.</p><p>Pass the test and the next level opens. You will never be tested on something the lessons have not shown you.</p><p>We start with no verbs at all. First you learn the words that say <b>who</b> is doing something, because every verb form depends on them.</p>`],
+ ['Who is doing it',`<p>Before any verb, you need to know <b>who</b> is doing the action. These words are the <b>subject pronouns</b>.</p><table><tr><td><b>yo</b></td><td>I</td></tr><tr><td><b>tú</b></td><td>you (one friend)</td></tr><tr><td><b>él / ella / usted</b></td><td>he / she / you (polite)</td></tr><tr><td><b>nosotros / nosotras</b></td><td>we</td></tr><tr><td><b>vosotros / vosotras</b></td><td>you all (Spain, friends)</td></tr><tr><td><b>ellos / ellas / ustedes</b></td><td>they / you all</td></tr></table><p>That is six groups: one for I, one for you, one for he or she, and the same three again for more than one person. Every verb has six forms, one for each group, and each row of the table shares one form.</p><p>Mind the accents. <b>tú</b> is you, but <b>tu</b> without an accent means your. <b>él</b> is he, but <b>el</b> is the.</p>`],
+ ['You: tú, usted and ustedes',`<p>English has one word for you. Spanish has several, and the choice depends on who you are talking to.</p><table><tr><td><b>tú</b></td><td>one person you know well: a friend, family, a child</td></tr><tr><td><b>usted</b></td><td>one person you want to be polite to: a stranger, an older person, a boss</td></tr><tr><td><b>vosotros / vosotras</b></td><td>several people you know well (Spain only)</td></tr><tr><td><b>ustedes</b></td><td>several people, polite. In Latin America also for friends</td></tr></table><p>Usted and ustedes use the same verb forms as he, she and they. You are talking to someone, but the verb treats them as a third person.</p><p><b>Vosotros</b> is used in Spain. Latin America says <i>ustedes</i> instead. If you do not need it, turn off <b>Include vosotros</b> in Settings (the gear at the top) and it disappears from lessons and quizzes.</p><p><b>Vos</b> replaces tú in Argentina, Uruguay and parts of Central America. It has its own verb forms, which come later. Everywhere else, tú is the word for one friend.</p>`],
+ ['Groups, and leaving the pronoun out',`<p>Nosotros, vosotros and ellos have a feminine form that ends in -as: <b>nosotras, vosotras, ellas</b>. Use it for a group that is all women. One man in the group makes it -os again, whatever the numbers.</p><table><tr><td>four women</td><td><b>ellas</b></td></tr><tr><td>four women and one man</td><td><b>ellos</b></td></tr><tr><td>a mixed group, with you in it</td><td><b>nosotros</b></td></tr></table><p>Spanish verb endings already show who is acting, so Spanish usually <b>leaves the pronoun out</b>. <i>Hablo</i> on its own means "I speak". You add the pronoun only to stress or contrast: <i>Yo hablo, tú escuchas</i>.</p><p>You also need the pronoun when the verb form alone is unclear, because some forms are shared. Next comes how verbs are built. Try the pronoun quiz below once you have read these pages.</p>`],
+ ],
+ drills:[{name:'Subject pronouns',tip:'Subject pronouns'}]},
+{id:'b0v',s:0,n:'Introduction 2',name:'Verb families: -ar, -er, -ir',tid:'pron',teach:'',q:5,noTest:1,
+ lessons:[
+ ['What a verb is made of',`<p>The form you find in a dictionary is the <b>infinitive</b>. In English it has "to" in front: to speak. In Spanish it is a single word, and it always ends in <b>-ar</b>, <b>-er</b> or <b>-ir</b>.</p><table><tr><td><b>-ar</b></td><td><i>hablar</i></td><td>to speak</td></tr><tr><td><b>-er</b></td><td><i>comer</i></td><td>to eat</td></tr><tr><td><b>-ir</b></td><td><i>vivir</i></td><td>to live</td></tr></table><p>Cut off those last two letters and two parts remain: the <b>stem</b> and the <b>ending</b>. In <i>hablar</i> the stem is <b>habl-</b> and the ending is <b>-ar</b>.</p><p>Changing the ending to show who is acting is called <b>conjugating</b>. The ending decides which set of changes a verb follows, so the next lesson sorts verbs by it.</p>`],
+ ['Three families: -ar, -er, -ir',`<p>Every infinitive ends in one of three ways, and each ending is a <b>family</b> of verbs that behave alike.</p><table><tr><td><b>-ar</b></td><td><i>hablar</i> to speak · <i>cantar</i> to sing · <i>bailar</i> to dance · <i>trabajar</i> to work</td></tr><tr><td><b>-er</b></td><td><i>comer</i> to eat · <i>beber</i> to drink · <i>correr</i> to run · <i>leer</i> to read · <i>vender</i> to sell</td></tr><tr><td><b>-ir</b></td><td><i>vivir</i> to live · <i>abrir</i> to open · <i>escribir</i> to write · <i>decidir</i> to decide</td></tr></table><p>The -ar family is by far the biggest, so you start there. The -er and -ir families come next and are very close to each other.</p><p>To find a verb's family, look at the last two letters of the infinitive. The stem is everything before them: <i>habl-</i>, <i>com-</i>, <i>viv-</i>.</p>`],
+ ['Regular and irregular verbs',`<p>A <b>regular</b> verb follows the pattern of its family exactly. Learn the pattern once and you can use every regular verb in that family. <i>Hablar, comer</i> and <i>vivir</i> are regular.</p><p>An <b>irregular</b> verb breaks the pattern in some or all of its forms. There are not many, but they include the most common verbs of all: <i>ser</i> (to be), <i>ir</i> (to go), <i>tener</i> (to have) and <i>hacer</i> (to do, to make).</p><p>You do not need to worry about them yet. Regular verbs come first. Irregulars come later in the path, a few at a time, and each one gets its own lesson. Some verbs only change a vowel in the stem, and those come before the fully irregular ones.</p>`],
+ ],
+ drills:[]},
 {id:'b1',s:0,n:'Beginner 1',name:'Your first verbs: -ar',tid:'pres',teach:'pres.ar',vocab:'hablar bailar cantar cocinar trabajar',q:5,
  lessons:[
- ['Welcome',`<p>Every level here works the same way. You read a few short lessons, try small quizzes on one thing at a time, learn the verbs on flash cards, then take a level-up test.</p><p>Pass the test and the next level opens. You will never be tested on a form the lessons have not shown you.</p><p>We start with the present tense and only one kind of verb.</p>`],
- ['What a verb is made of',`<p>The form you find in a dictionary is the <b>infinitive</b>. In English it has "to" in front: to speak. In Spanish it is a single word, and it always ends in <b>-ar</b>, <b>-er</b> or <b>-ir</b>.</p><table><tr><td><b>-ar</b></td><td><i>hablar</i></td><td>to speak</td></tr><tr><td><b>-er</b></td><td><i>comer</i></td><td>to eat</td></tr><tr><td><b>-ir</b></td><td><i>vivir</i></td><td>to live</td></tr></table><p>Cut off those last two letters and two parts remain: the <b>stem</b> and the <b>ending</b>. In <i>hablar</i> the stem is <b>habl-</b> and the ending is <b>-ar</b>.</p><p>Changing the ending to show who is acting is called <b>conjugating</b>. This level covers -ar verbs only.</p>`],
- ['Who is doing it',`<p>These are the subject pronouns.</p><table><tr><td><b>yo</b></td><td>I</td></tr><tr><td><b>tú</b></td><td>you (one friend)</td></tr><tr><td><b>él / ella / usted</b></td><td>he / she / you (polite)</td></tr><tr><td><b>nosotros / nosotras</b></td><td>we</td></tr><tr><td><b>vosotros / vosotras</b></td><td>you all (Spain, friends)</td></tr><tr><td><b>ellos / ellas / ustedes</b></td><td>they / you all</td></tr></table><p>The -as forms are for all-female groups. One man in the group makes it -os.</p><p>Each row shares one verb form, so there are six forms to learn. Because the ending already says who is acting, Spanish usually leaves the pronoun out: <i>hablo</i> on its own means "I speak".</p><p><b>Vosotros</b> is used in Spain. Latin America says <i>ustedes</i> instead. If you do not need it, turn off <b>Include vosotros</b> in Settings (the gear at the top) and it disappears from lessons and quizzes.</p>`],
  ['Conjugating -ar verbs',`<p>Three steps, using <i>hablar</i>:</p><ol class="ol"><li>Start with the infinitive: <b>hablar</b>.</li><li>Remove -ar to get the stem: <b>habl-</b>.</li><li>Add the ending for the person you want.</li></ol>[[end pres ar]][[hablar pres]]<p>The ending carries the meaning, so the pronoun is optional. The stress falls on the stem, except in the nosotros and vosotros forms.</p>`],
  ['Your first five verbs',`<p>Each of these follows the same three steps. Flash cards for all five are on the level page.</p>[[ex hablar pres 0|___ español en casa.|I speak Spanish at home.]][[ex trabajar pres 2|Mi hermana ___ en un hospital.|My sister works in a hospital.]][[ex cantar pres 1|Tú ___ muy bien.|You sing very well.]][[ex cocinar pres 3|Los domingos ___ para toda la familia.|On Sundays we cook for the whole family.]][[ex bailar pres 5|Ellos ___ en la fiesta.|They dance at the party.]]`]],
  drills:pronounDrills('bailar cantar cocinar hablar trabajar').concat(ALL)},
@@ -1657,7 +1689,8 @@ const nextLevel=()=>LEVELS.find(l=>!S.lv[l.id]);
 const groupVerbs=g=>VERBS.filter(v=>!v.refl&&v.g===g).slice(0,20);
 // old level id (tense-group) -> the new levels that now cover it. Passing an old level counts for those.
 const OLD_LV={'pres-ar':'b1 l4','pres-erir':'b2 b3 l4','pres-irr':'l7 l8 l9','prox-top':'l13','perf-ar':'l14','perf-erir':'l14','pres-stem':'l5 l6','pres-spell':'l7','perf-irr':'l15 l16','pret-ar':'l17','pret-erir':'l17','pret-spell':'l18','pret-stem':'l19','pret-irr':'l20 l21 l22 l23','impf-ar':'l24','impf-erir':'l24','impf-irr':'l25','fut-ar':'l27','fut-erir':'l27','fut-irr':'l28','cond-ar':'l30','cond-erir':'l30','cond-irr':'l30','subj-ar':'l32','subj-erir':'l32','subj-stem':'l33','subj-spell':'l34','subj-irr':'l35'};
-function migrateLv(){for(const[o,ns]of Object.entries(OLD_LV))if(S.lv[o])for(const n of L(ns))S.lv[n]=Math.max(S.lv[n]||0,S.lv[o])}
+function migrateLv(){for(const n of['b0','b0v'])if(S.lv.b1&&!S.lv[n])S.lv[n]=S.lv.b1; // the intro levels were added before Beginner 1
+  for(const[o,ns]of Object.entries(OLD_LV))if(S.lv[o])for(const n of L(ns))S.lv[n]=Math.max(S.lv[n]||0,S.lv[o])}
 
 /* ---------- lessons: rendering and what they teach ---------- */
 const P_ALL=[0,1,2,3,4,5];
@@ -1710,6 +1743,7 @@ function drillQs(l,d,n=l.q){const i=LEVELS.indexOf(l);
 }
 const qKey=q=>q.kind==='sent'?q.s:q.kind==='nf'?q.v.inf+q.nf:q.kind==='conj'?q.v.inf+q.t+q.p:q.s||q.ans;
 function levelQs(l,n=l.total){ // a balanced test across the level's drills, no repeats
+  if(l.tipTest)return tipQs(l.tipTest,n); // the pronoun level has no verbs to test, so its test is the pronoun quiz
   const ds=[...l.drills,...(l.testX||[])].filter(d=>!d.all&&!d.choice&&!d.hide&&!d.tip&&!d.mean);
   const seen=new Set(),out=[],add=q=>{const k=qKey(q);if(!seen.has(k)&&out.length<n){seen.add(k);out.push(q)}};
   if(!ds.length)return out;
@@ -1744,7 +1778,7 @@ function reqsOf(q){return q.kind==='conj'||q.kind==='sent'?[[q.v,q.t,q.p]]:q.kin
 function checkLessons(runs=30){
   const bad=[],say=(l,m)=>bad.push(`${l.n}: ${m}`);
   LEVELS.forEach((l,i)=>{
-    if(l.pass!==(l.q===5?13:28)||l.total!==(l.q===5?15:30))say(l,'wrong pass mark');
+    if(!l.noTest&&(l.pass!==(l.q===5?13:28)||l.total!==(l.q===5?15:30)))say(l,'wrong pass mark');
     l.lessons.forEach(([t,h],k)=>{const txt=segs(h).filter(g=>g.txt).map(g=>g.txt.replace(/<[^>]+>/g,' ')).join(' ').trim();
       if(txt.length+segs(h).filter(g=>g.tok).length*120<150)say(l,`lesson ${k+1} "${t}" is nearly empty`)});
         for(const d of [...l.drills,...(l.testX||[])]){if(d.v)for(const v of L(d.v))if(!verbBy(v))say(l,`${d.name}: unknown verb ${v}`)}
@@ -1760,6 +1794,7 @@ function checkLessons(runs=30){
         else{const w0=x.split(' ');if(w0[0]!=='end'&&!(w0[0]==='pp'||w0[0]==='ger')){for(const inf of w0[0].split(','))if(!verbBy(inf)||!T[w0[1]])say(l,`bad table ${x}`)}
           else if(w0[0]==='pp'||w0[0]==='ger')for(const inf of w0[1].split(','))if(!verbBy(inf))say(l,`bad table ${x}`)}}
       segWords(g).forEach(x=>w.add(x))}
+    if(l.noTest)return; // read-only level: nothing to quiz
     // quizzes
     const T2=taughtAt(i);
     const test=(src,qs)=>{for(const q of qs){
@@ -1780,29 +1815,29 @@ function lessonSheet(l,k){
   open(`<div class="qtop"><button class="x" aria-label="Back to the level" id="cx">←</button><span class="muted small">${l.n} · lesson ${k+1} of ${l.lessons.length}</span></div>
   <section class="card stack"><h1 style="font-size:26px">${title}</h1>${r}${k===0&&!l.ms?deep(l.tid)+tipLinks(l.tid):''}</section>
   ${r.includes('<mark>')?'<p class="muted small" style="margin:0">Letters in <mark>this colour</mark> differ from the regular pattern.</p>':''}
-  <div class="spacer"></div><div class="row">${k?'<button class="btn ghost" id="pv">Back</button>':''}<button class="btn" id="nx">${last?'Go to the quizzes':'Next lesson'}</button></div>`);
+  <div class="spacer"></div><div class="row">${k?'<button class="btn ghost" id="pv">Back</button>':''}<button class="btn" id="nx">${last?(l.noTest?'Finish level':'Go to the quizzes'):'Next lesson'}</button></div>`);
   document.getElementById('cx').onclick=()=>levelSheet(l);bindTipLinks(body);
   if(k)document.getElementById('pv').onclick=()=>lessonSheet(l,k-1);
-  document.getElementById('nx').onclick=()=>last?levelSheet(l):lessonSheet(l,k+1);
+  document.getElementById('nx').onclick=()=>last?(l.noTest?(S.lv[l.id]=S.lv[l.id]||1,save(),closeSheet()):levelSheet(l)):lessonSheet(l,k+1); // a level with no test is done once its last lesson is read
 }
 function levelSheet(l){
   const s=S.lv[l.id]||0,back=()=>levelSheet(l),ds=l.drills.filter(d=>drillOK(l,d)),vs=l.verbs;
   const run=(qs,title)=>quiz(qs,{title,back,mode:qs.every(x=>x.kind==='tip')?'mc':undefined});
   open(`<div class="qtop"><button class="x" aria-label="Close" id="cx">×</button><span class="muted small">${l.stage.name}</span></div>
-  <div><span class="tag">${l.ms?'Milestone':'Level'}</span> ${s?starHtml(s):''}<h1 style="font-size:30px;margin-top:8px">${l.n}: ${l.name}</h1>
-   <p class="muted" style="margin-bottom:0">Read the short lessons, try the quizzes, then pass the level-up test to unlock the next level.</p></div>
+  <div><span class="tag">${l.ms?'Milestone':'Level'}</span> ${s?(l.noTest?'<span class="muted small">Done</span>':starHtml(s)):''}<h1 style="font-size:30px;margin-top:8px">${l.n}: ${l.name}</h1>
+   <p class="muted" style="margin-bottom:0">${l.noTest?'Read the short lessons to unlock the next level. There is no test.':'Read the short lessons, try the quizzes, then pass the level-up test to unlock the next level.'}</p></div>
   <section class="card stack"><h2 style="font-size:20px">Learn</h2><div>${l.lessons.map(([t],k)=>`<button class="skill" data-ls="${k}"><span class="row"><b>${k+1}. ${t}</b><span class="muted small">Read</span></span></button>`).join('')}</div></section>
-  <section class="card stack"><h2 style="font-size:20px">Practice</h2><p class="muted small" style="margin:0">${l.q} questions each. Each quiz sticks to one pattern.</p><div>${ds.map(d=>`<button class="skill" data-dr="${l.drills.indexOf(d)}"><span class="row"><b>${d.name}</b><span class="muted small">${d.choice||d.tip?'Choose':d.mean||d.hide?'Quiz':'Type'}</span></span></button>`).join('')}</div></section>
+  ${l.noTest?'':`<section class="card stack"><h2 style="font-size:20px">Practice</h2><p class="muted small" style="margin:0">${l.q} questions each. Each quiz sticks to one pattern.</p><div>${ds.map(d=>`<button class="skill" data-dr="${l.drills.indexOf(d)}"><span class="row"><b>${d.name}</b><span class="muted small">${d.choice||d.tip?'Choose':d.mean||d.hide?'Quiz':'Type'}</span></span></button>`).join('')}</div></section>`}
   ${vs.length?`<section class="card stack"><h2 style="font-size:20px">Verbs in this level</h2><div>${vs.map(v=>`<div class="vrow"><button class="open" data-v="${v.inf}"><b>${v.inf}</b><span class="m">${v.en}</span></button></div>`).join('')}</div>
    <div class="row"><button class="btn ghost" id="fl">Flash cards</button><button class="btn ghost" id="mq">Meaning quiz</button></div></section>`:''}
-  <section class="card stack"><h2 style="font-size:20px">Level up</h2><p style="margin:0">${l.total} questions, mixed. Get ${l.pass} right to pass.</p><button class="btn" id="st">Start the test</button></section>`);
+  ${l.noTest?'':`<section class="card stack"><h2 style="font-size:20px">Level up</h2><p style="margin:0">${l.total} questions, mixed. Get ${l.pass} right to pass.</p><button class="btn" id="st">Start the test</button></section>`}`);
   document.getElementById('cx').onclick=closeSheet;
   body.querySelectorAll('[data-ls]').forEach(b=>b.onclick=()=>lessonSheet(l,+b.dataset.ls));
   body.querySelectorAll('[data-dr]').forEach(b=>b.onclick=()=>{const d=l.drills[+b.dataset.dr];run(drillQs(l,d,d.all?l.q*2:l.q),d.name)});
   body.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>verbSheet(verbBy(b.dataset.v)));
   if(vs.length){document.getElementById('fl').onclick=()=>quiz(vs.map(qm),{title:'Flash cards',mode:'flash',back});
     document.getElementById('mq').onclick=()=>quiz(shuffle(vs).map(qm),{title:'Meaning quiz',mode:'mc',back})}
-  document.getElementById('st').onclick=()=>quiz(levelQs(l),{title:l.name,level:l,pass:l.pass,back});
+  if(!l.noTest)document.getElementById('st').onclick=()=>{const qs=levelQs(l);quiz(qs,{title:l.name,level:l,pass:l.pass,back,mode:qs.every(x=>x.kind==='tip')?'mc':undefined})};
 }
 function todayQs(nl){
   if(nl){const ds=[...nl.drills,...(nl.testX||[])].filter(d=>!d.all&&!d.choice&&!d.hide&&!d.tip&&!d.mean&&drillOK(nl,d));
@@ -1959,9 +1994,9 @@ const VIEWS={
  learn(){
   const done=LEVELS.filter(l=>S.lv[l.id]).length,cur=nextLevel(),curStage=cur?cur.stage:STAGES.at(-1);
   const lvlBtn=(l,i)=>{const s=S.lv[l.id]||0,open=i===0||s||S.lv[LEVELS[i-1].id]; // s: a level passed earlier stays open
-    return `<button class="lvl${l===cur?' cur':''}${l.ms?' ms':''}" data-lvl="${i}" ${open?'':'disabled'}><span class="n">${l.n}${l===cur?' · Current':''}</span><span class="g">${l.name}</span>${open?starHtml(s):'<span class="muted small">Locked</span>'}</button>`};
+    return `<button class="lvl${l===cur?' cur':''}${l.ms?' ms':''}" data-lvl="${i}" ${open?'':'disabled'}><span class="n">${l.n}${l===cur?' · Current':''}</span><span class="g">${l.name}</span>${open?(l.noTest?(s?'<span class="muted small">Done</span>':''):starHtml(s)):'<span class="muted small">Locked</span>'}</button>`};
   const runs=st=>{const out=[];LEVELS.forEach((l,i)=>{if(l.stage!==st)return;const r=out.at(-1);if(r&&r[0][0].tid===l.tid)r.push([l,i]);else out.push([[l,i]])});return out}; // one card per run of levels in the same tense
-  const head=t=>T[t]?`<div class="tense-head"><h2>${tn(t)}</h2><span class="ex">${T[t].ex[0][0]} · ${T[t].ex[0][1]}</span></div><p class="tense-sub"><b>${S.esNames?T[t].en:T[t].es}:</b> ${T[t].use}</p>${deep(t)}${tipLinks(t)}`:`<div class="tense-head"><h2>Everything together</h2></div>`;
+  const head=t=>t==='pron'?`<div class="tense-head"><h2>Before the verbs</h2></div><p class="tense-sub">Who is acting: the pronouns every verb form depends on.</p>`:T[t]?`<div class="tense-head"><h2>${tn(t)}</h2><span class="ex">${T[t].ex[0][0]} · ${T[t].ex[0][1]}</span></div><p class="tense-sub"><b>${S.esNames?T[t].en:T[t].es}:</b> ${T[t].use}</p>${deep(t)}${tipLinks(t)}`:`<div class="tense-head"><h2>Everything together</h2></div>`;
   view.innerHTML=`<div class="row"><h1 style="font-size:26px">Your path</h1><span class="muted small">${done} / ${LEVELS.length} levels</span></div>
   <div class="meter" style="margin-top:8px"><i style="width:${done/LEVELS.length*100}%"></i></div>`+
   STAGES.map(st=>{const ls=LEVELS.filter(l=>l.stage===st);
