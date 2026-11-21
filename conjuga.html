@@ -99,7 +99,9 @@ main{padding-block:16px 110px}
 .lvl:disabled{opacity:.45;cursor:not-allowed}
 .lvl .n{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
 .lvl .g{font-weight:700}
-.stars{color:var(--gold);letter-spacing:2px;font-size:15px}
+.stars{color:var(--gold);letter-spacing:3px;font-size:24px}
+.lvl .n{font-size:14px}
+.sheet-tag{font-size:15px;padding:4px 12px}
 .stars .off{color:var(--edge)}
 .card{background:var(--surface);border:0;border-radius:24px;padding:20px}
 .stack{display:flex;flex-direction:column;gap:12px}
@@ -1939,13 +1941,13 @@ function levelSheet(l){
   const s=S.lv[l.id]||0,back=()=>levelSheet(l),ds=l.drills.filter(d=>drillOK(l,d)),vs=l.verbs;
   const run=(qs,title)=>quiz(qs,{title,back,mode:qs.every(x=>x.kind==='tip')?'mc':undefined});
   open(`<div class="qtop"><button class="x" aria-label="Close" id="cx">×</button><span class="muted small">${l.stage.name}</span></div>
-  <div><span class="tag">${l.ms?'Milestone':'Level'}</span> ${s?(l.noTest?'<span class="muted small">Done</span>':starHtml(s)):''}<h1 style="font-size:30px;margin-top:8px">${l.n}: ${l.name}</h1>
+  <div><span class="tag sheet-tag">${l.ms?'Milestone':'Level'}</span> ${s?(l.noTest?'<span class="muted small">Done</span>':starHtml(s)):''}<h1 style="font-size:30px;margin-top:8px">${l.n}: ${l.name}</h1>
    <p class="muted" style="margin-bottom:0">${l.noTest?'Read the short lessons to unlock the next level. There is no test.':'Read the short lessons, try the quizzes, then pass the level-up test to unlock the next level.'}</p></div>
   <section class="card stack"><h2 style="font-size:20px">Learn</h2><div>${l.lessons.map(([t],k)=>`<button class="skill" data-ls="${k}"><span class="row"><b>${k+1}. ${t}</b><span class="muted small">Read</span></span></button>`).join('')}</div></section>
   ${l.noTest?'':`<section class="card stack"><h2 style="font-size:20px">Practice</h2><p class="muted small" style="margin:0">${l.q} questions each. Each quiz sticks to one pattern.</p><div>${ds.map(d=>`<button class="skill" data-dr="${l.drills.indexOf(d)}"><span class="row"><b>${d.name}</b><span class="muted small">${d.choice||d.tip?'Choose':d.mean||d.hide?'Quiz':'Type'}</span></span></button>`).join('')}</div></section>`}
   ${vs.length?`<section class="card stack"><h2 style="font-size:20px">Verbs in this level</h2><div>${vs.map(v=>`<div class="vrow"><button class="open" data-v="${v.inf}"><b>${v.inf}</b><span class="m">${v.en}</span></button></div>`).join('')}</div>
    <div class="row"><button class="btn ghost" id="fl">Flash cards</button><button class="btn ghost" id="mq">Meaning quiz</button></div></section>`:''}
-  ${l.noTest?'':`<section class="card stack"><h2 style="font-size:20px">Level up</h2><p style="margin:0">${l.total} questions, mixed. Get ${l.pass} right to pass.</p><button class="btn" id="st">Start the test</button></section>`}`);
+  ${l.noTest?'':`<section class="card stack"><h2 style="font-size:20px">Level up</h2><p style="margin:0">${l.total} questions, mixed. Get ${l.pass} right to pass.</p><button class="btn" id="st">${s?'Repeat Test':'Start the test'}</button></section>`}`);
   document.getElementById('cx').onclick=closeSheet;
   body.querySelectorAll('[data-ls]').forEach(b=>b.onclick=()=>lessonSheet(l,+b.dataset.ls));
   body.querySelectorAll('[data-dr]').forEach(b=>b.onclick=()=>{const d=l.drills[+b.dataset.dr];run(drillQs(l,d,d.all?l.q*2:l.q),d.name)});
