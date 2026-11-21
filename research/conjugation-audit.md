@@ -26,7 +26,12 @@ Wiktionary differences judged not to be app errors: haber `hay` vs `ha` (imperso
 ## Defective verbs
 Third person only: doler, llover, nevar, ocurrir, suceder, gustar, faltar, importar, molestar. Soler has no preterite, future, conditional, commands or compound-future forms.
 
+## Added after the audit
+- Reflexive verbs not in Jehle (arrepentirse, quejarse from their own Wiktionary pages; preocuparse, relajarse, atreverse via their base verbs): 235 forms compared, 0 real differences.
+- Voseo (Practice > Voseo): present (tenés, sos, vas, ves, das) and affirmative command (tené, sé, andá, dá, hablá, levantate). 319 forms compared with Wiktionary's vos column: 0 differences except haber, which has none in the app. One bug found: fiar, liar, piar, guiar, criar vos forms are one syllable and take no tilde (fias, fia); fixed. Not covered: vos in the subjunctive and negative commands (tengás, no hagás); the preterite and other tenses equal tú.
+- Commands with object pronouns (Practice > Commands with pronouns): single and double (dámelo, démelo, dígaselo, hagámoslo, no me lo des). 1,495 combinations checked with an independent accent-rule implementation, 0 mismatches; 29 forms I wrote by hand matched. These are my own rule knowledge, not a published table. Vosotros commands with pronouns are not generated.
+- Voseo and pronoun questions are practice sets: they do not feed per-tense scores, patterns or the review queue.
+
 ## Still unverified
-- Attached-pronoun commands: the accent rule was checked with an independent rule implementation (200 reflexive commands, 40 gerunds, 0 mismatches). Only reflexive pronouns are generated; object pronouns (dámelo) are not generated at all.
-- Voseo (tenés, sos, vení) is not supported.
-- Verbs that follow the tilde rule above are checked by logic and Wiktionary, not by the RAE tables directly.
+- Vosotros commands with pronouns, and vos in the subjunctive, are not generated.
+- The two new practice sets have no lesson on the path, only the Practice cards and a longer Vos tip.

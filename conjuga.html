@@ -929,12 +929,16 @@ function participle(v){if(v.part)return v.part;const b=base(v);return b+(cls(v)=
 const endsVowel=s=>/[aeiou]$/.test(s)&&!/[gq]u$/.test(s); // the u in gu/qu is silent (siguió, not siguyó)
 function gerundBare(v){if(v.ger)return v.ger;const b=base(v);if(cls(v)==='ar')return b+'ando';const s=shifts(v)?irShift(b,v.st):b;return s+(endsVowel(s)?'yendo':'iendo')}
 const memo=new Map(),DEF3=new Set(['doler','llover','nevar','ocurrir','gustar','faltar','importar','molestar','suceder']),SOLER=new Set(['pres','impf','perf','plup','subj','isubj','psubj']),WEATHER=new Set(['llover','nevar']);
+/* voseo (Argentina, Uruguay, Central America): present = infinitive stem + -ás/-és/-ís (no stem change), command = infinitive minus -r with the last vowel stressed */
+const VOSP={ser:'sos',ir:'vas',ver:'ves',dar:'das'},VOSI={ser:'sé',ir:'andá',ver:'ve',dar:'dá'};
+const vosForm=(root,t)=>t==='vpres'?VOSP[root]||root.slice(0,-2)+{ar:'ás',er:'és',ir:'ís','ír':'ís'}[root.slice(-2)]:VOSI[root]||root.slice(0,-2)+{ar:'á',er:'é',ir:'í','ír':'í'}[root.slice(-2)];
 function bareRaw(v,t){ // forms without reflexive pronouns; imperative slot 0 is null
   const k=v.inf+(v.plain?'~':'')+t;if(memo.has(k))return memo.get(k);
   let r;
   if(v.o&&v.o[t])r=v.o[t];
   else if(AUX[t])r=AUX[t].map(a=>a+' '+participle(v));
   else if(t==='prox')r=IRP.map(a=>a+' a '+v.root);
+  else if(t==='vpres'||t==='vimp')r=[null,v.root==='haber'?null:MONO.test(v.root)?unacc(vosForm(v.root,t)):vosForm(v.root,t),null,null,null,null]; // voseo: only the vos slot exists; haber has none; fiás is one syllable, so fias (RAE 2010)
   else if(t==='prog')r=OVR.estar.pres.map(a=>a+' '+gerundBare(v));
   else if(t==='isubj'){const s=bareRaw(v,'pret')[5].slice(0,-3),acc=s.slice(0,-1)+({a:'á',e:'é'}[s.at(-1)]||s.at(-1));r=['ra','ras','ra','ramos','rais','ran'].map((e,i)=>(i===3?acc:s)+e)}
   else if(t==='imp'){const p=bareRaw(v,'pres'),s=bareRaw(v,'subj');r=[null,v.tu||p[2],s[2],v.root==='ir'?'vamos':s[3],v.root.slice(0,-1)+'d',s[5]]}
@@ -986,7 +990,7 @@ function conj(v,t){ // full forms, with reflexive pronouns
   const b=bare(v,t);if(!v.refl)return b;
   return b.map((f,i)=>{
     if(f==null)return null;
-    if(t==='imp'){
+    if(t==='imp'||t==='vimp'){
       if(i===3)return attach(f.slice(0,-1),'nos',f);
       if(i===4)return v.root==='ir'?'idos':attach(f.slice(0,-1),'os',f);
       return attach(f,RP[i]);
@@ -1054,6 +1058,9 @@ const TT=[
  {id:'neg',es:'El Imperativo Negativo',en:'Negative commands',use:'Telling someone not to do something: "no" plus the present subjunctive.',ex:[['No hables tan alto.',"Don't speak so loudly."]]},
 ];
 const T=Object.fromEntries(TT.map(t=>[t.id,t]));
+T.vpres={id:'vpres',es:'Presente (voseo)',en:'Present (vos)',use:'The vos form used instead of tú in Argentina, Uruguay and Central America.',ex:[['Vos tenés razón.','You are right.']]}; // not in TT, so it never appears in the tense lists
+T.ipro={id:'ipro',es:'Mandato con pronombres',en:'Commands with pronouns',use:'Object pronouns join the end of an affirmative command (dámelo) and go before a negative one (no me lo des).',ex:[['Dámelo.','Give it to me.']]};
+T.vimp={id:'vimp',es:'Imperativo (voseo)',en:'Command (vos)',use:'The command for vos: the infinitive without -r, stressed.',ex:[['Vení acá.','Come here.']]};
 /* ---------- Detailed tense notes (the "More about this tense" dropdown) ---------- */
 const DEEP={
  pres:[['When to use it','Routines and habits (<i>trabajo los lunes</i>), facts that are always true (<i>el agua hierve a 100 grados</i>), and what is happening right now (<i>¿qué haces?</i> – what are you doing?). Spanish also uses it for the near future when there is a time word: <i>mañana salgo temprano</i> (I am leaving early tomorrow).'],
@@ -1198,7 +1205,7 @@ const TIPS=[
   ['Spelling changes in verbs','To keep the sound: <i>buscar → busqué, llegar → llegué, empezar → empecé, coger → cojo</i>.']]],
  ['Spain vs. Latin America','Same language, different habits',[
   ['You (plural)','Spain: <i>vosotros</i> (friends) and <i>ustedes</i> (formal). Latin America: <i>ustedes</i> for both.'],
-  ['Vos','Used for <i>tú</i> in Argentina, Uruguay and much of Central America: <i>vos tenés, vos sos</i>.'],
+  ['Vos','Used for <i>tú</i> in Argentina, Uruguay and much of Central America: <i>vos tenés, vos sos</i>. Present: the vosotros form without the i (<i>hablás, comés, vivís</i>), and no stem change (<i>podés, querés</i>). Command: the infinitive without -r, stressed (<i>hablá, comé, vení</i>). The preterite and the other tenses are the same as tú. Practice has a Voseo quiz.'],
   ['Past tense','Spain uses <i>he comido</i> for things done today; Latin America mostly says <i>comí</i>.'],
   ['Words','computer: <i>ordenador / computadora</i> · car: <i>coche / carro, auto</i> · phone: <i>móvil / celular</i> · juice: <i>zumo / jugo</i>. <i>Coger</i> (to take) is rude in much of Latin America: use <i>tomar</i> or <i>agarrar</i>.']]]];
 /* Tip quizzes, one line per question: sentence with ___|English|answer|wrong options (comma separated)|note shown when wrong. "—" means "leave it blank". */
@@ -1925,6 +1932,8 @@ const DBL_ING=new Set(L('run swim sit win get put cut hit set begin forget stop 
 function enIng(v){const{h,tail}=enParts(v.en);const g=h==='be'?'being':/ie$/.test(h)?h.slice(0,-2)+'ying':/[^e]e$/.test(h)?h.slice(0,-1)+'ing':DBL_ING.has(h)?h+h.at(-1)+'ing':h+'ing';return g+tail}
 function en3(h){if(h==='have')return'has';if(/(s|x|z|ch|sh|o)$/.test(h))return h+'es';if(/[^aeiou]y$/.test(h))return h.slice(0,-1)+'ies';return h+'s'}
 function english(v,t,i){
+  if(t==='ipro')return english(v,'imp',i);
+  if(t==='vpres')return english(v,'pres',1);if(t==='vimp')return english(v,'imp',1);
   const{h,tail}=enParts(v.en),be=h==='be',[pa,pp]=be?['','been']:enPast(h);
   const pres=be?BE[i]:i===2?en3(h):h,past=be?WAS[i]:pa,p=EP[i],hv=i===2?'has':'have';
   const body={pres:`${p} ${pres}`,subj:`${p} ${pres}`,pret:`${p} ${past}`,isubj:`${p} ${past}`,impf:`${p} used to ${h}`,fut:`${p} will ${h}`,cond:`${p} would ${h}`,
@@ -1941,6 +1950,9 @@ const CHG={ie:'e → ie',ue:'o → ue',i:'e → i',hue:'o → hue'};
 const LAB=['Yo','Tú','Él/Ella/Ud.','Nosotros','Vosotros','Ellos/Ellas/Uds.'],IMPLAB=['','Tú','Usted','Nosotros','Vosotros','Ustedes'];
 const q_=s=>`<b>${s}</b>`;
 function steps(v,t,i){
+  if(t==='vpres'||t==='vimp'){const R=v.root,c=R.slice(-2),f=bareRaw(v,t)[1],o=(t==='vpres'?VOSP:VOSI)[R];
+    if(o)return[`${R} is irregular for vos, so learn it by heart: ${q_(o)}.`];
+    return t==='vpres'?[`Take the infinitive stem: ${q_(R.slice(0,-2))}. Vos keeps it as it is: no stem change (<i>podés</i>, not <i>puedes</i>).`,`Add ${q_('-'+f.slice(R.length-2))} (the vosotros ending without the i).`]:[`Drop the -r from the infinitive: ${q_(R.slice(0,-1))}.`,`Stress the last vowel with a written accent: ${q_(f)}.`]}
   const out=[],c=cls(v),b=base(v),f=bareRaw(v,t)[i],R=v.root,P=plainOf(v);
   const spell=(stem,end)=>{if(fix(stem,end,v)!==stem+end)out.push(`Adjust the spelling to keep the sound: ${q_(stem+end)} becomes ${q_(fix(stem,end,v))}.`)};
   if(v.o&&v.o[t])out.push(`${R} is irregular in this tense, so this form is learned by heart: ${q_(f)}.`);
@@ -2029,7 +2041,7 @@ const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(M
 const persons=()=>[0,1,2,3,4,5].filter(i=>S.vos||i!==4);
 const tn=id=>S.esNames?T[id].es:T[id].en;
 // short lower-case name for use inside a sentence: "pretérito" / "preterite", not "el pretérito indefinido"
-const tns=id=>S.esNames?(id==='pret'?'pretérito':T[id].es.replace(/^El /,'').toLowerCase()):T[id].en.toLowerCase();
+const tns=id=>!T[id]?'voseo':S.esNames?(id==='pret'?'pretérito':T[id].es.replace(/^El /,'').toLowerCase()):T[id].en.toLowerCase();
 const cap=s=>s[0].toUpperCase()+s.slice(1);
 const starHtml=n=>`<span class="stars" aria-label="${n} of 3 stars">${[0,1,2].map(i=>i<n?'★':'<span class="off">★</span>').join('')}</span>`;
 const ICON={speak:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 010 6"/></svg>',
@@ -2094,6 +2106,8 @@ const VIEWS={
    <div class="card stack"><h3>Sentences</h3>
    <p class="muted small" style="margin:0">Fill the missing verb in a real sentence. Only tenses and forms you have reached on the path. ${sp.length<10?`${sp.length} sentences so far.`:'Level-up test: 10 sentences, pass with 8.'}</p>
    <div class="row"><button class="btn" id="sent5" ${sp.length?'':'disabled'}>5 questions</button><button class="btn ghost" id="sentTest" ${sp.length>=10?'':'disabled'}>Level-up test</button></div></div>
+ <div class="card stack"><h3>Commands with pronouns</h3><p class="muted small" style="margin:0">Attach the pronouns and place the accent: <i>dámelo, démelo, dígaselo</i>, and the negative <i>no me lo des</i>. Ten questions.</p><button class="btn" id="proGo">Start</button></div>
+ <div class="card stack"><h3>Voseo</h3><p class="muted small" style="margin:0">Vos instead of tú, as in Argentina, Uruguay and Central America: <i>tenés, sos, vení</i>. Ten questions, present and commands.</p><button class="btn" id="voseoGo">Start</button></div>
    <button class="card" id="vod" style="text-align:left;display:flex;justify-content:space-between;align-items:flex-end;gap:12px;color:var(--ink)"><span><span class="muted small" style="display:block">Verb of the day</span><span style="font-family:var(--display);font-size:40px;font-weight:700;display:block;line-height:1.1">${vd.inf}</span><span class="muted">${vd.en}</span></span>
    <span style="text-align:right"><span class="muted small" style="display:block">tú · ${tns(ct)}</span><span style="font-family:var(--display);font-size:26px;font-weight:600">${hl(vf,bare(plainOf(vd),ct)[1])}</span></span></button>
    <button class="card" id="tod" style="text-align:left;color:var(--ink)"><span class="muted small" style="display:block">💡 Tip of the day</span><span style="font-family:var(--display);font-size:24px;font-weight:700;display:block;margin:2px 0">${tt(td[0])}</span><span class="muted">${td[2][0][1].startsWith('<table')?td[1]:td[2][0][1]}</span></button>
@@ -2117,6 +2131,8 @@ const VIEWS={
    document.getElementById('qm').onclick=()=>{C.n=Math.max(5,C.n-5);save();draw()};
    document.getElementById('qp').onclick=()=>{C.n=Math.min(50,C.n+5);save();draw()};
    document.getElementById('go').onclick=()=>quiz(make(),{title:C.what==='conj'?(C.tenses.length===1?tn(C.tenses[0]):'Custom quiz'):'Meanings',mode:C.how,hideInf:C.what==='conj'&&C.hideInf,hideEn:C.what==='conj'&&C.hideEn});
+   document.getElementById('proGo').onclick=()=>quiz(proQs(),{title:'Commands with pronouns'});
+   document.getElementById('voseoGo').onclick=()=>quiz(voseoQs(),{title:'Voseo'});
    document.getElementById('todaySet').onclick=()=>quiz(todayQs(nl),{title:cap(todayName)});
    document.getElementById('vod').onclick=()=>verbSheet(vd);document.getElementById('tod').onclick=()=>goTip(td[0]);
    document.getElementById('sent5').onclick=()=>quiz(weightedPick(sp,5,s=>COMMON_T.has(s.t)?3:1).map(qs_),{title:'Sentences'});
@@ -2357,8 +2373,27 @@ function verbSheet(v){
 function lev(a,b){const d=Array.from({length:a.length+1},(_,i)=>[i]);for(let j=1;j<=b.length;j++)d[0][j]=j;
   for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return d[a.length][b.length]}
 const WHO={0:['yo'],1:['tú'],2:['él','ella','usted'],3:['nosotros','nosotras'],4:['vosotros','vosotras'],5:['ellos','ellas','ustedes']};
-function q(v,t,p){return{kind:'conj',v,t,p,who:t==='imp'||t==='neg'?IMPLAB[p].toLowerCase():pick(WHO[p]),ans:conj(v,t)[p]}}
+function q(v,t,p){return{kind:'conj',v,t,p,who:t==='vpres'||t==='vimp'?'vos':t==='imp'||t==='neg'?IMPLAB[p].toLowerCase():pick(WHO[p]),ans:conj(v,t)[p]}}
 const qm=v=>({kind:'mean',v,ans:v.inf});
+/* commands with object pronouns: dámelo, démelo, dígaselo, hagámoslo, no me lo des */
+const PRO_V='dar decir hacer comprar traer poner escribir mostrar enviar preparar explicar llevar pasar contar servir vender abrir leer dejar prestar ofrecer pedir buscar'.split(' ');
+const PRO_IO={1:['','me','nos','se'],2:['','me','nos','se'],3:['','se'],5:['','me','nos','se']},PRO_DO=['','lo','la','los','las'];
+const PRO_GLOSS={me:'to me',nos:'to us',se:'to him/her/them',lo:'it/him (m.)',la:'it/her (f.)',los:'them (m.)',las:'them (f.)'};
+function proQ(v,p,io,dobj,neg){
+  const pron=io+dobj,base=bare(v,neg?'neg':'imp')[p],how=[];let ans;
+  if(neg){ans='no '+[io,dobj].filter(Boolean).join(' ')+' '+base.slice(3);
+    how.push(`Start from the negative command: ${q_(base)}.`,`Pronouns go before the verb in a negative command, indirect before direct: ${q_(ans)}.`)}
+  else{const drop=p===3&&/^(se|nos)/.test(pron),src=base;ans=attach(drop?base.slice(0,-1):base,pron,src);
+    how.push(`Start from the command: ${q_(base)}.`);if(drop)how.push(`Nosotros drops its final -s before ${q_(pron.startsWith('se')?'se':'nos')}: ${q_(base.slice(0,-1))}.`);
+    how.push(`Attach the pronouns to the end, indirect before direct: ${q_(unacc(drop?base.slice(0,-1):base)+pron)}.`);
+    how.push(ans!==unacc(ans)?`The stress stays on the same syllable, so the word needs a written accent: ${q_(ans)}.`:`The stress already falls on the right syllable, so no accent is needed: ${q_(ans)}.`)}
+  if(io==='se'&&dobj)how.splice(1,0,`Le and les become ${q_('se')} before lo, la, los or las.`);
+  const hint=[io,dobj].filter(Boolean).map(w=>`${w} (${PRO_GLOSS[w]})`).join(' + ');
+  return{kind:'conj',v,t:'ipro',p,who:`${IMPLAB[p].toLowerCase()}${neg?', negative':''} · ${hint}`,ans,how}}
+const proQs=(n=10)=>{const vs=VERBS.filter(v=>PRO_V.includes(v.root)&&!v.refl),out=[];
+  while(out.length<n){const v=pick(vs),p=pick([1,1,2,2,3,5]),io=pick(PRO_IO[p]),dobj=pick(PRO_DO);if(!io&&!dobj)continue;if(p===3&&io==='se'&&!dobj)continue;out.push(proQ(v,p,io,dobj,Math.random()<.3&&p!==3))}
+  return out};
+const voseoQs=()=>shuffle(VERBS.filter(v=>v.rank<=150&&!DEF3.has(v.root)&&!['haber','soler'].includes(v.root))).slice(0,10).map((v,i)=>q(v,i%2?'vimp':'vpres',1));
 const vod=()=>{const l=VERBS.filter(v=>v.irregular&&!v.refl&&v.rank<=60);return l[Math.floor(Date.now()/864e5)%l.length]};
 /* ---------- sentence questions ----------
    p is the person index used everywhere else (0 yo, 1 tú, 2 él/ella/usted, 3 nosotros, 4 vosotros, 5 ellos/ellas/ustedes;
@@ -3340,6 +3375,13 @@ function diagnose(x,got){ // sentences keep their own note for irregular-form sl
 }
 function diagnose0(x,got){
   const g=strip(got);
+  if(x.t==='ipro')return strip(x.ans)===g?['So close: the written accent.',x.how.join(' ')]:['Not quite.',x.how.join(' ')];
+  if(x.t==='vpres'||x.t==='vimp'){ // voseo: the usual slips are the tú form and the vosotros form
+    const pt=x.t==='vpres'?'pres':'imp',C=t=>conj(x.v,t)[1];
+    if(got===C(pt))return['That is the tú form.',`Vos has its own ${x.t==='vpres'?'ending':'command'}: ${x.ans}.`];
+    if(x.t==='vpres'&&got===conj(x.v,'pres')[4])return['That is the vosotros form.',`Vos drops the i of the vosotros ending: ${x.ans}.`];
+    if(x.t==='vimp'&&got===conj(x.v,'imp')[4])return['That is the vosotros command.',`Vos drops the d and stresses the last vowel: ${x.ans}.`];
+    return['Not quite.',steps(x.v,x.t,1).join(' ')]}
   if(x.kind==='tip')return['Not quite.',x.note];
   if(x.kind==='sent'&&x.p==null)return['Not quite.',x.note||steps(x.v,x.t,x.p).join(' ')];
   if(x.kind==='nf')return['Not quite.',x.nf==='ger'?'Remove -ar and add -ando, or remove -er / -ir and add -iendo. Watch for e → i, o → u and the y.':'Remove -ar and add -ado, or remove -er / -ir and add -ido. Check the list of irregular participles.'];
@@ -3412,10 +3454,10 @@ function showTable(x,d){ // the asked tense in full, with the asked form and the
   popModal(`<h2 style="font-size:22px">${x.v.inf} · ${tns(t)}</h2><div class="card">${fh.map((h,i)=>h&&persons().includes(i)?`<div class="frow"><div class="f"><span class="p">${lab[i]}</span>${h}${i===x.p?' ✓':i===bad?' ✗':''}</div><div class="en">${english(x.v,t,i)}</div></div>`:'').join('')}</div>
   <p class="muted small" style="margin:0">✓ the form this question wanted${bad>=0?' · ✗ the form you typed':''}.</p><button class="btn" id="mc">Close</button>`);document.getElementById('mc').onclick=closeModal;
 }
-function showSteps(v,t,i){
-  const f=conj(v,t)[i];
+function showSteps(v,t,i,x){
+  const f=x&&x.ans||conj(v,t)[i];
   popModal(`<h2 style="font-size:22px">Conjugation steps</h2><div class="card" style="text-align:center"><b>${(t==='imp'||t==='neg'?IMPLAB:LAB)[i]} (${v.inf.toUpperCase()})</b> in ${tns(t)}<div style="font-family:var(--display);font-size:28px;font-weight:800;color:var(--blue)">${f}</div><div class="muted"><i>${english(v,t,+i)}</i></div></div>
-  <ol class="ol">${steps(v,t,+i).map(s=>`<li>${s}</li>`).join('')}</ol><button class="btn" id="mc">Close</button>`);
+  <ol class="ol">${(x&&x.how||steps(v,t,+i)).map(s=>`<li>${s}</li>`).join('')}</ol><button class="btn" id="mc">Close</button>`);
   document.getElementById('mc').onclick=closeModal;
 }
 /* ---------- form memory ----------
@@ -3477,6 +3519,7 @@ const YO_ID=y=>/zco$/.test(y)?'yozco':/go$/.test(y)?'yog':'yoother',ST_ID={ie:'i
 const PRET_ID=st=>/j$/.test(st)?'pretj':/u[^aeiou]*$/.test(st)?'pretu':'preti'; // dije/traje/condujeron; tuve/pude/puse/estuve; hice/quise/vine
 const FUT_ID=(v)=>{const r=v.root,st=v.fut;return st===r.slice(0,-2)+'r'?'futd':st===r.slice(0,-2)+'dr'?'futi':'futc'}; // podré/sabré/querré; tendré/pondré/saldré; diré/haré
 function patternsOf(v,t,i){
+  if(t==='vpres'||t==='vimp')return[];
   if(MONO.test(v.root)&&i===4&&(t==='pres'||t==='subj'))return['mono']; // fiais, fieis
   const out=[],c=cls(v),b=base(v),w=v.o&&v.o[t]&&bare(v,t)[i]!==bare(plainOf(v),t)[i]; // w: this tense is hand-written for the verb AND this form differs from the regular one (estamos, damos, vemos are regular)
   const spell=(s,e)=>{if(fix(s,e,v)!==s+e){const id=SPELL_ID(v.root);if(id)out.push(id)}};
@@ -3646,7 +3689,7 @@ function skillQuiz(s){ // aim at the patterns not covered yet, one question per 
 function formQuiz(keys,title){quiz(shuffle(keys).slice(0,15).map(k=>{const[inf,t,p]=k.split('|');const v=verbBy(inf);return v&&T[t]&&(S.vos||+p!==4)&&conj(v,t)[+p]?q(v,t,+p):null}).filter(Boolean),{title})}
 function recordAnswer(x,ok,typed,got){
   S.run=ok?(S.run||0)+1:0;if(S.run>(S.bestRun||0))S.bestRun=S.run;
-  if(x.kind==='tip')return;
+  if(x.kind==='tip'||x.t==='vpres'||x.t==='vimp'||x.t==='ipro')return; // voseo and pronoun commands are practice sets: no per-tense scores or review queue
   if(typed&&(x.kind==='conj'||x.kind==='sent'&&x.p!=null))fmRecord(x,ok);
   // Accuracy fades old answers: each new one shrinks the rest by 2%, so a tense's score reflects roughly its last 50 answers
   // and early mistakes stop dragging it down. n is the weighted count, so it tops out near 50.
@@ -3729,8 +3772,8 @@ function quiz(qs,opt){
       $('sa').onclick=()=>speak(say,true);
     }
     const form=c||cur.kind==='sent'&&cur.p!=null;
-    ctl.innerHTML=`${!ok&&form?`<div class="row" style="flex-wrap:wrap">${ok?'':'<button class="btn ghost sm" id="tbl">Table</button>'}<button class="btn ghost sm" id="stp">Steps</button><button class="btn ghost sm" id="say">Say it</button>${cur.kind==='sent'?'<button class="btn ghost sm" id="why" style="flex-basis:100%">Why this tense?</button>':''}</div>`:''}<div class="row">${ok&&form?'<button class="btn ghost" id="stp">Steps</button>':''}<button class="btn" id="nx">${i>=total?'See results':'Next question'}</button></div>`;
-    if(form){const x=cur,d=dd;$('stp').onclick=()=>showSteps(x.v,x.t,x.p);if(!ok){$('tbl').onclick=()=>showTable(x,d);$('say').onclick=()=>speak(say,true);if(x.kind==='sent')$('why').onclick=()=>whyTense(x,d)}}
+    ctl.innerHTML=`${!ok&&form?`<div class="row" style="flex-wrap:wrap">${ok||cur.t==='ipro'?'':'<button class="btn ghost sm" id="tbl">Table</button>'}<button class="btn ghost sm" id="stp">Steps</button><button class="btn ghost sm" id="say">Say it</button>${cur.kind==='sent'?'<button class="btn ghost sm" id="why" style="flex-basis:100%">Why this tense?</button>':''}</div>`:''}<div class="row">${ok&&form?'<button class="btn ghost" id="stp">Steps</button>':''}<button class="btn" id="nx">${i>=total?'See results':'Next question'}</button></div>`;
+    if(form){const x=cur,d=dd;$('stp').onclick=()=>showSteps(x.v,x.t,x.p,x);if(!ok){if($('tbl'))$('tbl').onclick=()=>showTable(x,d);$('say').onclick=()=>speak(say,true);if(x.kind==='sent')$('why').onclick=()=>whyTense(x,d)}}
     $('nx').onclick=next;$('nx').focus();
   }
   function finish(){
@@ -3756,7 +3799,7 @@ function quiz(qs,opt){
       ${nextLvl?'<button class="btn" id="nx">Next level</button>':''}
       ${mistakes.length?`<button class="btn ${nextLvl?'ghost':''}" id="rq">Quiz my mistakes</button>`:''}
       <button class="btn ghost" id="again">${opt.level&&!stars?'Try again':'Done'}</button>`;
-    body.querySelectorAll('[data-ms]').forEach(b=>b.onclick=()=>{const m=mistakes[+b.dataset.ms].x;showSteps(m.v,m.t,m.p)});
+    body.querySelectorAll('[data-ms]').forEach(b=>b.onclick=()=>{const m=mistakes[+b.dataset.ms].x;showSteps(m.v,m.t,m.p,m)});
     body.querySelectorAll('[data-star]').forEach(b=>b.onclick=()=>{toggleFav(b.dataset.star);b.setAttribute('aria-pressed',S.fav.includes(b.dataset.star))});
     body.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>verbSheet(verbBy(b.dataset.v)));
     document.getElementById('again').onclick=()=>opt.level&&!stars?levelSheet(opt.level):exit();
