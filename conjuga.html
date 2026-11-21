@@ -61,6 +61,7 @@ main{padding-block:16px 110px}
 .tabs .wrap{display:grid;grid-template-columns:repeat(5,1fr)}
 .tabs button{background:none;border:0;padding:12px 0 14px;font-size:12px;font-weight:700;color:var(--soft);display:flex;flex-direction:column;align-items:center;gap:4px}
 .tabs button[aria-selected="true"]{color:var(--ink)}
+.tabs button{position:relative}.tabdot{position:absolute;top:6px;left:calc(50% + 8px);min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--bad);color:#fff;font-size:11px;font-weight:700;line-height:17px;text-align:center}.tabdot[hidden]{display:none}
 .tabs svg{width:56px;height:32px;padding:5px 17px;box-sizing:border-box;border-radius:16px}
 .tabs button[aria-selected="true"] svg{background:var(--blue-soft)}
 .muted{color:var(--muted)}
@@ -241,7 +242,7 @@ mark{background:none;color:var(--irr);font-weight:700;text-decoration:underline 
 
 <nav class="tabs"><div class="wrap" role="tablist">
   <button role="tab" data-tab="learn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5l8 4 8-4v14l-8 4-8-4z"/></svg>Levels</button>
-  <button role="tab" data-tab="practice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>Practice</button>
+  <button role="tab" data-tab="practice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>Practice<span class="tabdot" id="dueDot" hidden></span></button>
   <button role="tab" data-tab="verbs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h11l3 3v13H5z"/><path d="M9 10h6M9 14h6"/></svg>Verbs</button>
   <button role="tab" data-tab="tips"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 21h4M12 3a6 6 0 00-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0012 3z"/></svg>Tips</button>
   <button role="tab" data-tab="stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Progress</button>
@@ -863,7 +864,7 @@ cancelar|to cancel
 girar|to turn
 aconsejar|to advise
 contradecir|to contradict|like=decir tu=contradice
-predecir|to predict|like=decir tu=predice
+predecir|to predict|like=decir tu=predice fut=predecir
 prever|to foresee|yo=preveo part=previsto
 entrever|to glimpse|yo=entreveo part=entrevisto
 rever|to review|yo=reveo part=revisto
@@ -927,17 +928,17 @@ function subjStem(v,i){const b=base(v);if(v.yo)return v.yo.slice(0,-1);return v.
 function participle(v){if(v.part)return v.part;const b=base(v);return b+(cls(v)==='ar'?'ado':/[aeo]$/.test(b)?'ído':'ido')}
 const endsVowel=s=>/[aeiou]$/.test(s)&&!/[gq]u$/.test(s); // the u in gu/qu is silent (siguió, not siguyó)
 function gerundBare(v){if(v.ger)return v.ger;const b=base(v);if(cls(v)==='ar')return b+'ando';const s=shifts(v)?irShift(b,v.st):b;return s+(endsVowel(s)?'yendo':'iendo')}
-const memo=new Map();
-function bare(v,t){ // forms without reflexive pronouns; imperative slot 0 is null
+const memo=new Map(),DEF3=new Set(['doler','llover','nevar','ocurrir','gustar','faltar','importar','molestar','suceder']),SOLER=new Set(['pres','impf','perf','plup','subj','isubj','psubj']),WEATHER=new Set(['llover','nevar']);
+function bareRaw(v,t){ // forms without reflexive pronouns; imperative slot 0 is null
   const k=v.inf+(v.plain?'~':'')+t;if(memo.has(k))return memo.get(k);
   let r;
   if(v.o&&v.o[t])r=v.o[t];
   else if(AUX[t])r=AUX[t].map(a=>a+' '+participle(v));
   else if(t==='prox')r=IRP.map(a=>a+' a '+v.root);
   else if(t==='prog')r=OVR.estar.pres.map(a=>a+' '+gerundBare(v));
-  else if(t==='isubj'){const s=bare(v,'pret')[5].slice(0,-3),acc=s.slice(0,-1)+({a:'á',e:'é'}[s.at(-1)]||s.at(-1));r=['ra','ras','ra','ramos','rais','ran'].map((e,i)=>(i===3?acc:s)+e)}
-  else if(t==='imp'){const p=bare(v,'pres'),s=bare(v,'subj');r=[null,v.tu||p[2],s[2],v.root==='ir'?'vamos':s[3],v.root.slice(0,-1)+'d',s[5]]}
-  else if(t==='neg'){const s=bare(v,'subj');r=[null,...s.slice(1).map(f=>'no '+f)]}
+  else if(t==='isubj'){const s=bareRaw(v,'pret')[5].slice(0,-3),acc=s.slice(0,-1)+({a:'á',e:'é'}[s.at(-1)]||s.at(-1));r=['ra','ras','ra','ramos','rais','ran'].map((e,i)=>(i===3?acc:s)+e)}
+  else if(t==='imp'){const p=bareRaw(v,'pres'),s=bareRaw(v,'subj');r=[null,v.tu||p[2],s[2],v.root==='ir'?'vamos':s[3],v.root.slice(0,-1)+'d',s[5]]}
+  else if(t==='neg'){const s=bareRaw(v,'subj');r=[null,...s.slice(1).map(f=>'no '+f)]}
   else{
     const c=cls(v),b=base(v);r=[];
     for(let i=0;i<6;i++){
@@ -953,9 +954,18 @@ function bare(v,t){ // forms without reflexive pronouns; imperative slot 0 is nu
       else if(t==='fut')r.push((v.fut||v.root)+FUT[i]);
       else if(t==='cond')r.push((v.fut||v.root)+COND[i]);
       else if(t==='subj')r.push(v.yo?subjStem(v,i)+END.subj[c==='ar'?'ar':'er'][i]:fix(subjStem(v,i),END.subj[c==='ar'?'ar':'er'][i],v));
+      if(MONO.test(v.root)&&i===4&&(t==='pres'||t==='subj'))r[4]=unacc(r[4]); // fiais, fieis: one syllable, so no accent (RAE 2010)
     }
   }
   memo.set(k,r);return r;
+}
+const defMemo=new Map();
+function bare(v,t){ // bareRaw minus forms the verb does not have. Verbs used only in the third person (doler, llover, nevar, ocurrir, suceder and the gustar type: gustar, faltar, importar, molestar; checked against Fred Jehle's verb database) keep only those forms, weather verbs only the singular; haber has no command.
+  const r=bareRaw(v,t),d=DEF3.has(v.root);if(v.root==='soler'&&!SOLER.has(t))return r.map(()=>null); // soler has no future, conditional, preterite or command
+  if(!d&&v.root!=='haber')return r;
+  const k=v.inf+(v.plain?'~':'')+t;if(defMemo.has(k))return defMemo.get(k);
+  const f=(t==='imp'||t==='neg')?r.map(()=>null):d?r.map((x,i)=>i===2||i===5&&!WEATHER.has(v.root)?x:null):r;
+  defMemo.set(k,f);return f;
 }
 /* stress: find the stressed vowel, so attaching a pronoun can add the written accent */
 const VOW='aeiouáéíóúü',STRONG='aeoáéó',ACC={a:'á',e:'é',i:'í',o:'ó',u:'ú'};
@@ -1690,7 +1700,7 @@ const PATH=[
  lessons:[
  ['When to use it',`<p>The same triggers as the present subjunctive, when the main verb is in the past or conditional. It also makes the unreal side of an "if": <i>Si tuviera tiempo, viajaría</i>.</p>[[ex hablar isubj 1|Quería que ___ con él.|I wanted you to speak with him.]]`],
  ['How to build it',`<p>Take the ellos preterite, drop -ron, add -ra, -ras, -ra, -ramos, -rais, -ran. Nosotros gets an accent.</p>[[hablar,comer,vivir isubj]]`],
- ['Irregulars',`<p>Any irregular preterite carries straight over.</p>[[tener,ser isubj]][[ex tener isubj 0|Si ___ dinero, viajaría.|If I had money, I would travel.]]`]],
+ ['Irregulars',`<p>Any irregular preterite carries straight over.</p><p>There is a second set of endings: <i>-se, -ses, -se, -semos, -seis, -sen</i> (<i>hablase, tuviese</i>). It means the same, you hear it in Spain and read it in books, and the app accepts both.</p>[[tener,ser isubj]][[ex tener isubj 0|Si ___ dinero, viajaría.|If I had money, I would travel.]]`]],
  drills:[dD('Preterite recap','pret','pret.ar pret.erir',{rk:100}),dD('-ar','isubj','isubj.reg',{f:v=>cls(v)==='ar',rk:150}),dD('-er / -ir','isubj','isubj.reg',{f:v=>cls(v)!=='ar',rk:300}),dV('Irregulars','isubj','tener ser ir hacer poder venir decir saber'),dC('Si clauses','siIsubj'),dC('Real or imagined','realOrNot'),ALL]},
 {id:'l37',s:2,n:'Level 37',name:'Perfect subjunctive',tid:'psubj',teach:'psubj.aux',vocab:'asistir contener descansar nadar regresar saltar secar sentar soñar oler',
  lessons:[
@@ -1931,7 +1941,7 @@ const CHG={ie:'e → ie',ue:'o → ue',i:'e → i',hue:'o → hue'};
 const LAB=['Yo','Tú','Él/Ella/Ud.','Nosotros','Vosotros','Ellos/Ellas/Uds.'],IMPLAB=['','Tú','Usted','Nosotros','Vosotros','Ustedes'];
 const q_=s=>`<b>${s}</b>`;
 function steps(v,t,i){
-  const out=[],c=cls(v),b=base(v),f=bare(v,t)[i],R=v.root,P=plainOf(v);
+  const out=[],c=cls(v),b=base(v),f=bareRaw(v,t)[i],R=v.root,P=plainOf(v);
   const spell=(stem,end)=>{if(fix(stem,end,v)!==stem+end)out.push(`Adjust the spelling to keep the sound: ${q_(stem+end)} becomes ${q_(fix(stem,end,v))}.`)};
   if(v.o&&v.o[t])out.push(`${R} is irregular in this tense, so this form is learned by heart: ${q_(f)}.`);
   else if(AUX[t]){out.push(`Conjugate haber: ${q_(AUX[t][i])}.`);
@@ -1957,18 +1967,18 @@ function steps(v,t,i){
   else if(t==='subj'){
     const e=END.subj[c==='ar'?'ar':'er'][i];
     if(v.yo)out.push(`Take the yo present form ${q_(v.yo)} and drop the -o: ${q_(subjStem(v,i))}.`);
-    else if(BOOT[i]||!v.st)out.push(`Take the yo present form ${q_(bare(v,'pres')[0])} and drop the -o: ${q_(subjStem(v,i))}.`);
+    else if(BOOT[i]||!v.st)out.push(`Take the yo present form ${q_(bareRaw(v,'pres')[0])} and drop the -o: ${q_(subjStem(v,i))}.`);
     else out.push(`Nosotros and vosotros keep the infinitive stem${shifts(v)?`, with the -ir shift ${v.st==='ue'?'o → u':'e → i'}`:''}: ${q_(subjStem(v,i))}.`);
     out.push(`Add the ${c==='ar'?'-ar':'-er/-ir'} subjunctive ending ${q_('-'+e)} (the "opposite" vowel).`);if(!v.yo)spell(subjStem(v,i),e);
   }
-  else if(t==='isubj'){const p=bare(v,'pret')[5];out.push(`Take the ellos preterite form ${q_(p)} and drop -ron: ${q_(p.slice(0,-3))}.`,`Add ${q_('-'+['ra','ras','ra','ramos','rais','ran'][i])}.`);if(i===3)out.push('Nosotros adds a written accent on the vowel before -ramos.')}
+  else if(t==='isubj'){const p=bareRaw(v,'pret')[5];out.push(`Take the ellos preterite form ${q_(p)} and drop -ron: ${q_(p.slice(0,-3))}.`,`Add ${q_('-'+['ra','ras','ra','ramos','rais','ran'][i])}.`);if(i===3)out.push('Nosotros adds a written accent on the vowel before -ramos.')}
   else if(t==='imp'){
     if(i===1)out.push(v.tu?`The tú command is irregular: ${q_(v.tu)}.`:`Use the él/ella present form: ${q_(f)}.`);
     else if(i===4)out.push(`Replace the final -r of ${R} with -d: ${q_(f)}.`);
     else if(i===3&&R==='ir')out.push(`Ir uses ${q_('vamos')} for "let's go".`);
     else out.push(`Use the present subjunctive form: ${q_(f)}.`);
   }
-  else if(t==='neg')out.push(`Take the present subjunctive form ${q_(bare(v,'subj')[i])}.`,`Put ${q_('no')} in front.`);
+  else if(t==='neg')out.push(`Take the present subjunctive form ${q_(bareRaw(v,'subj')[i])}.`,`Put ${q_('no')} in front.`);
   if(v.refl){
     const full=conj(v,t)[i];
     out.push(t==='imp'?`Attach the reflexive pronoun ${q_(i===3?'nos':i===4?'os':RP[i])} to the end${i===3||i===4?' (dropping the final letter)':''}${/[áéíóú]/.test(full)&&!/[áéíóú]/.test(f)?' and add an accent to keep the stress':''}: ${q_(full)}.`
@@ -1994,7 +2004,7 @@ const norm=s=>s.trim().toLowerCase().replace(/\s+/g,' ');
 const KEY='conjuga-v1';
 const fresh=()=>({lv:{},xp:0,streak:0,last:'',st:{},miss:[],vos:true,strict:false,tts:true,pt:['pres'],pg:['ar','erir','stem','spell','irr'],
   fav:[],vf:{pop:0,end:'all',refl:'include',irr:[]},favOnly:false,hidePro:false,enPro:false,esNames:false,expand:true,
-  typo:true,auto:false,pause:'never',theme:'system',stp:{},days:{},fm:{},quizzes:0,scoreSum:0,vs:{},missOk:{},
+  typo:true,auto:false,pause:'never',theme:'system',stp:{},tl:{},pt:{},days:{},fm:{},quizzes:0,scoreSum:0,vs:{},missOk:{},
   cq:{what:'conj',how:'type',tenses:['pres'],pron:[0,1,2,3,4,5],verbs:'top100',n:10,hideInf:false,hideEn:false,irrOnly:false}});
 let S;try{S=Object.assign(fresh(),JSON.parse(localStorage.getItem(KEY)||'{}'))}catch{S=fresh()}
 S.cq=Object.assign(fresh().cq,S.cq);
@@ -2033,7 +2043,8 @@ const primaryTag=v=>v.irregular?'<span class="tag irr">Irregular</span>':v.stem?
 /* ---------- views ---------- */
 const view=document.getElementById('view');
 let tab='learn';
-function header(){document.getElementById('xp').textContent=S.xp;document.getElementById('streak').textContent=S.streak}
+function header(){document.getElementById('xp').textContent=S.xp;document.getElementById('streak').textContent=S.streak;
+  const n=dueList().length,dot=document.getElementById('dueDot');dot.hidden=!n;dot.textContent=n>99?'99+':n}
 function show(t){tab=t;document.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===t));VIEWS[t]();header();window.scrollTo(0,0)}
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>show(b.dataset.tab));
 
@@ -2071,19 +2082,22 @@ const VIEWS={
   const draw=()=>{
    const seg=(key,opts)=>`<div class="seg" role="group">${opts.map(([v,l])=>`<button data-seg="${key}" data-val="${v}" aria-pressed="${C[key]===v}">${l}</button>`).join('')}</div>`;
    const sw=(k,t,d)=>`<label class="switch" for="cq-${k}"><span>${t}<br><span class="muted small">${d}</span></span><input type="checkbox" id="cq-${k}" ${C[k]?'checked':''}></label>`;
-   const n=make().length;
+   const n=make().length,dl=dueList();
    const nl=nextLevel(),ct=nl&&T[nl.tid]?nl.tid:'pret',todayName=nl?`${nl.n} · ${nl.name}`:`${tns('pret')} irregulars`,sp=sentPool(); // Today's set follows the path; Sentences only use what the lessons have taught
    const vd=vod(),vf=conj(vd,ct)[1],td=tipOfDay();
    view.innerHTML=`<div class="stack"><div><p class="muted small" style="margin:0">${new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})}</p><h1 style="font-size:36px">Practice</h1></div>
    <div class="card stack"><h2 style="font-size:26px">Today's set</h2><p class="muted" style="margin:0">5 questions · ${todayName}</p>
    <p class="small" style="margin:0;color:var(--soft)">Type each form and press Enter. Accent keys sit under the answer box.</p><button class="btn" id="todaySet">Start</button></div>
+   <div class="card stack"><div class="row"><h3>Smart quizzes</h3><span class="pill ${dl.length?'gold':''}">${dl.length} due</span></div>
+   <p class="muted small" style="margin:0">${dl.length?'Forms whose review day has come, plus recaps and the pronoun you miss most.':'Nothing due today. See recaps, weak spots and top-100 practice.'}</p>
+   <div class="row"><button class="btn" id="dueBtn" ${dl.length?'':'disabled'}>Review due</button><button class="btn ghost" id="smartAll">See all</button></div></div>
    <div class="card stack"><h3>Sentences</h3>
    <p class="muted small" style="margin:0">Fill the missing verb in a real sentence. Only tenses and forms you have reached on the path. ${sp.length<10?`${sp.length} sentences so far.`:'Level-up test: 10 sentences, pass with 8.'}</p>
    <div class="row"><button class="btn" id="sent5" ${sp.length?'':'disabled'}>5 questions</button><button class="btn ghost" id="sentTest" ${sp.length>=10?'':'disabled'}>Level-up test</button></div></div>
    <button class="card" id="vod" style="text-align:left;display:flex;justify-content:space-between;align-items:flex-end;gap:12px;color:var(--ink)"><span><span class="muted small" style="display:block">Verb of the day</span><span style="font-family:var(--display);font-size:40px;font-weight:700;display:block;line-height:1.1">${vd.inf}</span><span class="muted">${vd.en}</span></span>
    <span style="text-align:right"><span class="muted small" style="display:block">tú · ${tns(ct)}</span><span style="font-family:var(--display);font-size:26px;font-weight:600">${hl(vf,bare(plainOf(vd),ct)[1])}</span></span></button>
    <button class="card" id="tod" style="text-align:left;color:var(--ink)"><span class="muted small" style="display:block">💡 Tip of the day</span><span style="font-family:var(--display);font-size:24px;font-weight:700;display:block;margin:2px 0">${tt(td[0])}</span><span class="muted">${td[2][0][1].startsWith('<table')?td[1]:td[2][0][1]}</span></button>
-   <h2 style="font-size:22px;margin-top:8px">Custom quiz</h2>
+   <h2 style="font-size:22px;margin-top:8px" id="cqh">Custom quiz</h2>
    <div class="card stack"><h3><span class="stepn">1</span> What to practise</h3>${seg('what',[['conj','Conjugations'],['mean','Meanings']])}
    ${C.what==='conj'?`<div class="lbl">Tenses</div><div class="chips">${TT.map(t=>`<button class="chip" data-t="${t.id}" aria-pressed="${C.tenses.includes(t.id)}">${tn(t.id)}</button>`).join('')}</div>
    <div class="lbl">Pronouns</div><div class="chips">${[0,1,2,3,4,5].filter(i=>S.vos||i!==4).map(i=>`<button class="chip" data-p="${i}" aria-pressed="${C.pron.includes(i)}">${LAB[i]}</button>`).join('')}</div>`:''}
@@ -2108,6 +2122,7 @@ const VIEWS={
    document.getElementById('sent5').onclick=()=>quiz(weightedPick(sp,5,s=>COMMON_T.has(s.t)?3:1).map(qs_),{title:'Sentences'});
    document.getElementById('sentTest').onclick=()=>quiz(shuffle(sp).slice(0,10).map(qs_),{title:'Level-up test',pass:8});
    document.getElementById('rev').onclick=()=>formQuiz(S.miss,'Smart review');
+   document.getElementById('dueBtn').onclick=()=>dueQuiz();document.getElementById('smartAll').onclick=smartSheet;
   };draw();
  },
  verbs(){
@@ -2155,7 +2170,6 @@ const VIEWS={
   const days=[...Array(7)].map((_,k)=>{const d=new Date(Date.now()-(6-k)*864e5);return{key:d.toISOString().slice(0,10),lab:k===6?'Today':d.toLocaleDateString('en',{weekday:'short'})}});
   const mx=Math.max(1,...days.map(d=>S.days[d.key]||0)),wk=days.filter(d=>S.days[d.key]).length,GOAL=5;
   const weak=Object.entries(S.stp).filter(([,s])=>s.n>=3).map(([k,s])=>{const[t,p]=k.split('|');return{t,p:+p,pct:Math.round(s.c/s.n*100)}}).filter(w=>T[w.t]).sort((a,b)=>a.pct-b.pct)[0];
-  const isM=v=>S.vs[v.inf]&&S.vs[v.inf].c>=5&&S.vs[v.inf].c/S.vs[v.inf].n>=.9;
   const mastered=n=>VERBS.filter(v=>v.rank<=n&&isM(v)).length;
   const fc=fmCounts(),sk=skillStats(),range=verbRange(sk);
   // next up: one action, most urgent first
@@ -3307,6 +3321,17 @@ const SYN=`arreglar=reparar salvar=rescatar empezar=comenzar=iniciar terminar=ac
 const synOf={};for(const e of SYN.trim().split(/\s+/)){const w=e.split(/[=>]/);for(const a of e.includes('=')?w:[w[0]])for(const b of w)if(a!==b)(synOf[a]||(synOf[a]=new Set)).add(b)}
 const covers=(u,v)=>u!==v&&(!!synOf[v.inf]?.has(u.inf)||!!u.refl===!!v.refl&&senses(v).every(s=>senses(u).includes(s)));
 const isForm=d=>!!d&&/^(Right|Wrong|Regular|That is)/.test(d[0]); // the answer is a real form of something, so it is a mix-up, not a typo
+/* Answers the dictionaries also accept: ALT[verb|tense] by person, ALT[verb|nf.part] a list. The app asks for the main form, a right alternative is never marked wrong. */
+const ALT={'predecir|fut':['prediré','predirás','predirá','prediremos','prediréis','predirán'],'predecir|cond':['prediría','predirías','prediría','prediríamos','prediríais','predirían']};
+const PART_ALT={frito:['freído'],elegido:['electo'],impreso:['imprimido']}; // participle doublets the RAE lists as correct
+const altOf=x=>{ // every other right answer: ALT table, the -se subjunctive (hablase = hablara), participle doublets
+  const out=[],a=x.v&&ALT[x.v.inf+'|'+(x.kind==='nf'?'nf.'+x.nf:x.t)];
+  if(a)out.push(...(x.kind==='nf'?a:[a[x.p]]));
+  if(x.v&&typeof x.ans==='string'){
+    const bases=[x.ans];if(x.t==='isubj'||x.t==='plsubj')bases.push(x.ans.replace(/ra(s|mos|is|n)?(?=\s|$)/,'se$1'));
+    for(const b of bases){out.push(b);const w=b.split(' '),l=w.pop();for(const p of PART_ALT[l]||[])out.push([...w,p].join(' '))}
+  }
+  return out.filter(y=>y&&y!==x.ans)};
 function diagnose(x,got){ // sentences keep their own note for irregular-form slips; tense and person slips get the specific label
   const r=diagnose0(x,got);
   if(x.kind!=='sent'||x.p==null)return r;
@@ -3413,6 +3438,181 @@ function fmCounts(){const d=DAY(),c={known:0,fading:0,half:0,due:[],week:0,fadin
   for(const[k,r]of Object.entries(S.fm)){const s=fmState(r,d);
     if(s==='known'){c.known++;if(d-r[2]<7)c.week++}else if(s==='fading'){c.fading++;c.fadingKeys.push(k)}else if(s==='half'){c.half++;if(r[1]<d)c.due.push(k)}}
   return c}
+/* ---------- due queue and Smart Quizzes ----------
+   A form in S.fm is due once its box interval (FMI days) has passed since it was last answered. Missed forms (S.miss) are due now.
+   Most overdue first (days late ÷ interval). S.tl[tense] = last day any question in that tense was answered, for "Keep it fresh".
+   ponytail: no cap on how far behind a form can fall; the quiz takes the 15 most overdue and the rest wait. */
+const FRESH_DAYS=5,isM=v=>S.vs[v.inf]&&S.vs[v.inf].c>=5&&S.vs[v.inf].c/S.vs[v.inf].n>=.9;
+const keyOk=k=>{const[inf,t,p]=String(k).split('|'),v=verbBy(inf);return!!(v&&T[t]&&(S.vos||+p!==4)&&conj(v,t)[+p])};
+const keyQ=k=>{const[inf,t,p]=k.split('|');return q(verbBy(inf),t,+p)};
+function dueList(d=DAY()){
+  const out=[];
+  for(const[k,r]of Object.entries(S.fm||{})){
+    if(!Array.isArray(r)||!(r[0]>=1)||!Number.isFinite(r[1]))continue;
+    const iv=FMI[Math.min(r[0],FMI.length-1)],late=d-r[1];
+    if(late>=iv)out.push([k,late/iv]);
+  }
+  const have=new Set(out.map(o=>o[0]));
+  for(const k of S.miss||[])if(!have.has(k))out.push([k,1.5]);
+  return out.filter(([k])=>keyOk(k)).sort((a,b)=>b[1]-a[1]).map(o=>o[0]);
+}
+const dueQuiz=(back)=>{const ks=dueList().slice(0,15);if(ks.length)quiz(shuffle(ks).map(keyQ),{title:'Review due',back})};
+function tenseDays(d=DAY()){ // days since each tense was last answered; only tenses ever answered appear
+  const last={};
+  for(const[k,r]of Object.entries(S.fm||{})){const t=k.split('|')[1];if(T[t]&&Array.isArray(r)&&Number.isFinite(r[1])&&r[1]>(last[t]||0))last[t]=r[1]}
+  for(const[t,day]of Object.entries(S.tl||{}))if(T[t]&&Number.isFinite(day)&&day>(last[t]||0))last[t]=day;
+  return Object.fromEntries(Object.entries(last).filter(([,day])=>day>0).map(([t,day])=>[t,Math.max(0,d-day)]));
+}
+const freshList=(n=FRESH_DAYS)=>Object.entries(tenseDays()).filter(([,a])=>a>=n).sort((a,b)=>b[1]-a[1]).slice(0,3);
+const startedTenses=()=>{const a=Object.keys(S.st||{}).filter(t=>T[t]&&S.st[t].n>0),b=Object.keys(tenseDays());return[...new Set([...a,...b])]};
+function weakPerson(){ // the pronoun with the lowest accuracy across tenses, once there are enough answers
+  const agg={};for(const[k,r]of Object.entries(S.stp||{})){const p=+k.split('|')[1];if(!Number.isInteger(p)||!(S.vos||p!==4))continue;const a=agg[p]||(agg[p]={c:0,n:0});a.c+=r.c;a.n+=r.n}
+  return Object.entries(agg).filter(([,a])=>a.n>=6).map(([p,a])=>({p:+p,pct:Math.round(a.c/a.n*100)})).filter(w=>w.pct<90).sort((a,b)=>a.pct-b.pct)[0]||null;
+}
+/* ---------- verb patterns ----------
+   patternsOf(v,t,i) names the irregular pattern(s) one exact form exercises, using the same rules bare() builds it with. [] = a regular form.
+   Answers are tagged with it (S.pt), so a pattern's score comes only from forms that really test it. Compound tenses use the participle only. */
+const SPELL_ID=r=>/guar$/.test(r)?'gar':/car$/.test(r)?'car':/gar$/.test(r)?'gar':/zar$/.test(r)?'zar':/guir$/.test(r)?'guir':/g[ei]r$/.test(r)?'ger':/[^aeiou]c[ei]r$/.test(r)?'cer':null;
+const YO_ID=y=>/zco$/.test(y)?'yozco':/go$/.test(y)?'yog':'yoother',ST_ID={ie:'ie',ue:'ue',i:'ei',acc:'acc',hue:'ue'};
+const PRET_ID=st=>/j$/.test(st)?'pretj':/u[^aeiou]*$/.test(st)?'pretu':'preti'; // dije/traje/condujeron; tuve/pude/puse/estuve; hice/quise/vine
+const FUT_ID=(v)=>{const r=v.root,st=v.fut;return st===r.slice(0,-2)+'r'?'futd':st===r.slice(0,-2)+'dr'?'futi':'futc'}; // podré/sabré/querré; tendré/pondré/saldré; diré/haré
+function patternsOf(v,t,i){
+  if(MONO.test(v.root)&&i===4&&(t==='pres'||t==='subj'))return['mono']; // fiais, fieis
+  const out=[],c=cls(v),b=base(v),w=v.o&&v.o[t]&&bare(v,t)[i]!==bare(plainOf(v),t)[i]; // w: this tense is hand-written for the verb AND this form differs from the regular one (estamos, damos, vemos are regular)
+  const spell=(s,e)=>{if(fix(s,e,v)!==s+e){const id=SPELL_ID(v.root);if(id)out.push(id)}};
+  if(t==='imp')return i===1?(v.tu?['tu']:[]):i===4||(i===3&&v.root==='ir')?[]:patternsOf(v,'subj',i);
+  if(t==='neg')return i>0?patternsOf(v,'subj',i):[];
+  if(t==='isubj')return patternsOf(v,'pret',5);
+  if(AUX[t])return v.part?['part']:/ído$/.test(participle(v))?['partacc']:[];
+  if(t==='prog')return v.ger?['ger3']:shifts(v)?['ger1']:c!=='ar'&&endsVowel(b)?['ger2']:[];
+  if(t==='impf')return w?['impfirr']:[];
+  if(t==='fut'||t==='cond')return v.fut?strip(v.fut)!==strip(v.root)?[FUT_ID(v)]:v.fut!==v.root?['accdrop']:[]:[]; // oiré, reiré: regular, but the í loses its accent
+  if(t==='pres'){
+    if(w)return i===0&&/oy$/.test(bare(v,'pres')[0])?['yoy']:['whole'];
+    if(v.uy&&BOOT[i])return['uy'];
+    if(i===0&&v.yo)return[YO_ID(v.yo)];
+    const s=presStem(v,i);if(s!==b&&ST_ID[v.st])out.push(ST_ID[v.st]);spell(s,END.pres[c][i]);return out;
+  }
+  if(t==='subj'){
+    if(w)return['subjirr'];
+    if(v.yo)return[v.uy?'uy':YO_ID(v.yo)];
+    if(v.st&&BOOT[i]&&ST_ID[v.st])out.push(ST_ID[v.st]);else if(shifts(v))out.push('irshift');
+    spell(subjStem(v,i),END.subj[c==='ar'?'ar':'er'][i]);return out;
+  }
+  if(t==='pret'){
+    if((i===0||i===2)&&(MONO.test(v.root)||v.o&&v.o.pret&&/^(ser|ir|dar|ver)$/.test(v.root)))return['mono']; // fue, fui, di, dio, vi, vio, crie: one syllable, no accent
+    if(v.pret)return[PRET_ID(v.pret)];
+    if(w)return/hacer$/.test(v.root)?['preti']:['whole'];
+    const sh=shifts(v)&&(i===2||i===5),s=sh?irShift(b,v.st):b;if(sh)out.push('irshift3');
+    if(c!=='ar'&&endsVowel(s)){if(i===2||i===5)out.push('yy');else if(/[aeo]$/.test(s))out.push('hiatus')}else spell(s,END.pret[c==='ar'?'ar':'er'][i]);
+    return out;
+  }
+  return out;
+}
+const PAT=[ // [id, name, example forms, tenses a quiz on it draws from]
+ ['whole','Fully irregular verbs','soy, voy, estoy, fui, di',['pres','pret']],
+ ['subjirr','Irregular present subjunctive','sea, vaya, dé, esté, sepa, haya',['subj']],
+ ['impfirr','Irregular imperfect','era, iba, veía',['impf']],
+ ['yog','Yo forms in -go','tengo, hago, salgo, digo',['pres','subj']],
+ ['yozco','Yo forms in -zco','parezco, conozco, traduzco',['pres','subj']],
+ ['yoy','Yo forms in -oy','soy, voy, doy, estoy',['pres']],
+ ['yoother','Other irregular yo forms','veo, quepo',['pres']],
+ ['uy','-uir verbs add y','construyo, huyes, construya',['pres','subj']],
+ ['ie','Stem change e → ie','quiero, piensas, entiende',['pres','subj']],
+ ['ue','Stem change o → ue (and huelo)','puedo, vuelves, duerme, huelo',['pres','subj']],
+ ['ei','Stem change e → i','pido, sirves, viste',['pres','subj']],
+ ['acc','Accent moves onto the stem','envío, continúo, actúas',['pres','subj']],
+ ['irshift','-ir stem shift in nosotros (subjunctive)','durmamos, pidamos',['subj']],
+ ['irshift3','-ir stem shift in the preterite','durmió, pidieron, sintió',['pret','isubj']],
+ ['pretu','Preterite u-stems','tuve, pude, puse, estuve, supe',['pret','isubj']],
+ ['preti','Preterite i-stems','hice, quise, vine',['pret','isubj']],
+ ['pretj','Preterite j-stems (-eron, not -ieron)','dije, traje, condujeron',['pret','isubj']],
+ ['mono','One syllable, no written accent','fui, fue, di, dio, vi, vio',['pret']],
+ ['hiatus','Accent on í after a vowel','leí, caíste, oímos, creíste',['pret']],
+ ['futd','Future and conditional: vowel dropped','podré, sabré, querré, cabría',['fut','cond']],
+ ['futi','Future and conditional: d added','tendré, pondré, saldré, vendría',['fut','cond']],
+ ['futc','Future and conditional: contracted','diré, haré, diría',['fut','cond']],
+ ['accdrop','Accent dropped: oiré, reiré','oiré, oirás, reiría',['fut','cond']],
+ ['part','Irregular participles','hecho, dicho, escrito, visto',['perf','plup']],
+ ['partacc','Participles in -ído','leído, caído, creído, oído',['perf','plup']],
+ ['tu','Irregular tú commands','ten, haz, sal, pon, di',['imp']],
+ ['car','Spelling c → qu','busqué, expliqué, toque',['pret','subj']],
+ ['gar','Spelling g → gu (and gu → gü)','pagué, llegue, averigüé',['pret','subj']],
+ ['zar','Spelling z → c','empecé, almorcé, empiece',['pret','subj']],
+ ['ger','Spelling g → j','escojo, dirijo, elija',['pres','subj']],
+ ['guir','Spelling gu → g','sigo, consigo, siga',['pres','subj']],
+ ['cer','Spelling c → z','venzo, ejerzo, venza',['pres','subj']],
+ ['yy','Vowel i → y between vowels','leyó, creyeron, cayó',['pret','isubj']],
+ ['ger1','Gerund stem change','pidiendo, durmiendo, sintiendo',['prog']],
+ ['ger2','Gerund with y','leyendo, construyendo, cayendo',['prog']],
+ ['ger3','Irregular gerunds','yendo, friendo, pudiendo',['prog']]
+].map(([id,name,ex,ts])=>({id,name,ex,ts}));
+let patIdx=null;
+function patIndex(){ // id → every [verb, tense, person] that exercises it (all non-reflexive verbs)
+  if(patIdx)return patIdx;patIdx=new Map(PAT.map(p=>[p.id,[]]));
+  for(const v of VERBS)if(!v.refl)for(const t of TT)for(let i=0;i<6;i++){if(!conj(v,t.id)[i])continue;for(const id of patternsOf(v,t.id,i))patIdx.get(id)?.push([v,t.id,i])}
+  return patIdx;
+}
+const SPELL_SET=new Set(['car','gar','zar','ger','guir','cer']),STEM_SET=new Set(['ie','ue','ei','acc']),SIMPLE=new Set(['pres','pret','subj','impf','fut','cond']);
+function blame(x,ids,got){ // a wrong answer that equals the form WITHOUT one rule shows that rule was missed: "empece" for empiece misses e → ie, not z → c
+  if(ids.length<2||!got||x.v.refl||!SIMPLE.has(x.t))return ids;
+  const g=norm(got),hit=ids.filter(id=>{
+    const v2=SPELL_SET.has(id)?{...x.v,plain:true,inf:x.v.inf+'#sp'}:STEM_SET.has(id)?{...x.v,st:undefined,inf:x.v.inf+'#st'}:null;
+    return v2&&bareRaw(v2,x.t)[x.p]===g});
+  return hit.length?hit:ids;
+}
+function recordPattern(x,ok,got){ // called for every answered form question
+  if(!x.v||!x.t||x.p==null)return;
+  let ids;try{ids=patternsOf(x.v,x.t,x.p);if(!ok)ids=blame(x,ids,got)}catch{return}
+  const o=S.pt||(S.pt={});
+  for(const id of ids){let r=o[id];if(!r||typeof r!=='object'||!Array.isArray(r.vs)||!Number.isFinite(r.c)||!Number.isFinite(r.n))r=o[id]={c:0,n:0,vs:[]};r.c=r.c*.98+(ok?1:0);r.n=r.n*.98+1;if(!r.vs.includes(x.v.inf)&&r.vs.length<6)r.vs.push(x.v.inf)}
+}
+const wilsonUp=(c,n,z=1.28)=>{const p=c/n,d=1+z*z/n;return(p+z*z/(2*n)+z*Math.sqrt(p*(1-p)/n+z*z/(4*n*n)))/d}; // upper end of a 90% interval: weak only when the evidence says accuracy is really under 85%
+function weakPatterns(){ // lowest accuracy first: at least 5 recent answers on the pattern, under 85%, and more than one verb when the pattern has more than one
+  const idx=patIndex(),out=[];
+  for(const pt of PAT){const r=(S.pt||{})[pt.id];if(!r||!Array.isArray(r.vs)||!(r.n>=5)||!(wilsonUp(r.c,r.n)<.85))continue;
+    const nv=new Set(idx.get(pt.id).map(a=>a[0].inf)).size;if(nv>1&&r.vs.length<2)continue;
+    out.push({...pt,pct:Math.round(r.c/r.n*100)})}
+  return out.sort((a,b)=>a.pct-b.pct);
+}
+function patQs(id,n=12){ // forms that exercise the pattern, everyday verbs first, one per verb before repeats
+  const all=(patIndex().get(id)||[]).filter(([v,t,p])=>(S.vos||p!==4)),near=all.filter(a=>a[0].rank<=300),pool=shuffle(near.length>=n?near:all),seen=new Set(),first=[],rest=[];
+  for(const a of pool)(seen.has(a[0].inf)?rest:first).push(a),seen.add(a[0].inf);
+  return[...first,...rest].slice(0,n).map(([v,t,p])=>q(v,t,p));
+}
+function recapQs(t){ // verbs you have practised in this tense first, then the top 100
+  const mine=[...new Set(Object.keys(S.fm||{}).filter(k=>k.split('|')[1]===t).map(k=>verbBy(k.split('|')[0])).filter(Boolean))];
+  return build([t],[...mine,...VERBS.filter(v=>v.rank<=100&&!mine.includes(v))],15);
+}
+function smartSheet(){
+  const due=dueList(),fr=freshList(),wp=weakPerson(),wps=weakPatterns().slice(0,2),top=VERBS.filter(v=>v.rank<=100),mast=top.filter(isM).length,rest=top.filter(v=>!isM(v));
+  const ts=()=>{const a=startedTenses();return a.length?a:['pres']},days=n=>n===1?'1 day':n+' days';
+  const row=(h,sub,btn,id,dis)=>`<div class="card stack"><div><b>${h}</b><div class="muted small">${sub}</div></div><button class="btn sm" id="${id}" ${dis?'disabled':''}>${btn}</button></div>`;
+  open(`<div class="qtop"><button class="x" id="cx" aria-label="Back">←</button><span class="spacer"></span></div><div class="stack"><h1 style="font-size:26px">Smart quizzes</h1>
+   <div class="card stack"><div class="row"><h3>Due today</h3><span class="pill ${due.length?'gold':''}">${due.length}</span></div>
+    <p class="muted small" style="margin:0">${due.length?`Forms whose review day has come, most overdue first. ${Math.min(15,due.length)} in this quiz.`:'Nothing due. Forms you type right come back here when it is time to see them again.'}</p>
+    <button class="btn" id="sdue" ${due.length?'':'disabled'}>Review due</button></div>
+   <h2 style="font-size:20px;margin:4px 0 0">Review your mistakes</h2>
+   ${row(S.miss.length?`${S.miss.length} to clear`:'Nothing to clear','Forms you missed. Each leaves after two right answers.','Review mistakes','smiss',!S.miss.filter(keyOk).length)}
+   <h2 style="font-size:20px;margin:4px 0 0">Keep it fresh</h2>
+   ${fr.length?fr.map(([t,a],i)=>row(`Recap: ${tn(t)}`,`Last practised ${days(a)} ago · 15 questions`,'Start recap','sfr'+i)).join(''):`<div class="card muted small">Nothing has gone stale. A tense shows here after ${FRESH_DAYS} days without a question.</div>`}
+   <h2 style="font-size:20px;margin:4px 0 0">Sharpen</h2>
+   ${wp?row(`Pronoun recap: ${LAB[wp.p]}`,`Your weakest pronoun at ${wp.pct}% across tenses.`,'Practise','swp'):`<div class="card muted small">Pronoun recap appears once you have answered enough questions to show which pronoun trips you up.</div>`}
+   ${wps.length?wps.map((w,i)=>row(w.name,`${w.pct}% on these forms, e.g. ${w.ex}.`,'Practise','spt'+i)).join(''):`<div class="card muted small">Pattern practice appears once you have answered 5 or more forms of a pattern (yo forms, stem changes, spelling changes, irregular stems) and score under 85% on them.</div>`}
+   <div class="card stack"><div class="row"><b>Top 100 verbs</b><span class="muted small">${mast}/${top.length} mastered</span></div><div class="meter"><i style="width:${mast/top.length*100}%"></i></div>
+    <button class="btn sm" id="stop" ${rest.length?'':'disabled'}>${rest.length?'Quiz the rest':'All mastered'}</button></div>
+   <h2 style="font-size:20px;margin:4px 0 0">Make your own</h2>
+   <button class="btn ghost" id="scq">Build a custom quiz</button></div>`);
+  const $=id=>document.getElementById(id),back=smartSheet,go=(id,f)=>{const el=$(id);if(el)el.onclick=f};
+  $('cx').onclick=closeSheet;
+  go('sdue',()=>dueQuiz(back));
+  go('smiss',()=>{const ks=S.miss.filter(keyOk);if(ks.length)quiz(shuffle(ks).slice(0,15).map(keyQ),{title:'Smart review',back})});
+  fr.forEach(([t],i)=>go('sfr'+i,()=>{const qs=recapQs(t);if(qs.length)quiz(qs,{title:'Recap: '+tn(t),back})}));
+  if(wp)go('swp',()=>{const qs=build(ts(),top,12,{pron:[wp.p]});if(qs.length)quiz(qs,{title:'Pronoun: '+LAB[wp.p],back})});
+  wps.forEach((w,i)=>go('spt'+i,()=>{const qs=patQs(w.id);if(qs.length)quiz(qs,{title:w.name,back})}));
+  go('stop',()=>{const qs=build(['pres','pret','impf','fut','subj'],rest.slice(0,30),12);if(qs.length)quiz(qs,{title:'Top 100',back})});
+  go('scq',()=>{closeSheet();show('practice');document.getElementById('cqh')?.scrollIntoView()});
+}
 /* ---------- skills: what the tenses let you say ----------
    A skill's score is pattern coverage: for each tense × person × verb group, two different verbs you know = full marks
    (one = half), because knowing hablé and tomé means you have the -ar preterite yo pattern.
@@ -3444,14 +3644,14 @@ function skillQuiz(s){ // aim at the patterns not covered yet, one question per 
   const qs=[...first,...rest].slice(0,10).map(([v,t,p])=>q(v,t,p));
   quiz(qs.length?qs:build(s.ts,VERBS.filter(v=>v.rank<=100),10),{title:s.name})}
 function formQuiz(keys,title){quiz(shuffle(keys).slice(0,15).map(k=>{const[inf,t,p]=k.split('|');const v=verbBy(inf);return v&&T[t]&&(S.vos||+p!==4)&&conj(v,t)[+p]?q(v,t,+p):null}).filter(Boolean),{title})}
-function recordAnswer(x,ok,typed){
+function recordAnswer(x,ok,typed,got){
   S.run=ok?(S.run||0)+1:0;if(S.run>(S.bestRun||0))S.bestRun=S.run;
   if(x.kind==='tip')return;
   if(typed&&(x.kind==='conj'||x.kind==='sent'&&x.p!=null))fmRecord(x,ok);
   // Accuracy fades old answers: each new one shrinks the rest by 2%, so a tense's score reflects roughly its last 50 answers
   // and early mistakes stop dragging it down. n is the weighted count, so it tops out near 50.
   const dk=(o,k)=>{const r=o[k]||(o[k]={c:0,n:0});r.c=r.c*.98+(ok?1:0);r.n=r.n*.98+1};
-  if(x.kind==='conj'||x.kind==='sent'&&x.p!=null){dk(S.st,x.t);dk(S.stp,x.t+'|'+x.p)}
+  if(x.kind==='conj'||x.kind==='sent'&&x.p!=null){dk(S.st,x.t);dk(S.stp,x.t+'|'+x.p);(S.tl||(S.tl={}))[x.t]=DAY();recordPattern(x,ok,got)}
   const vs=S.vs[x.v.inf]||(S.vs[x.v.inf]={c:0,n:0});vs.n++;if(ok)vs.c++;
   if(x.kind!=='conj')return;
   const key=x.v.inf+'|'+x.t+'|'+x.p;
@@ -3503,13 +3703,13 @@ function quiz(qs,opt){
         $('no').onclick=()=>{record(false,'');next2()};$('yes').onclick=()=>{record(true);next2()}};
     }
   }
-  function record(ok,got){if(navigator.vibrate&&navigator.userActivation?.hasBeenActive!==false)try{navigator.vibrate(ok?15:[30,40,30])}catch{}recordAnswer(cur,ok,mode==='type');ok?okN++:badN++;if(!ok)mistakes.push({x:cur,got});save();i++;tally()}
+  function record(ok,got){if(navigator.vibrate&&navigator.userActivation?.hasBeenActive!==false)try{navigator.vibrate(ok?15:[30,40,30])}catch{}recordAnswer(cur,ok,mode==='type',got);ok?okN++:badN++;if(!ok)mistakes.push({x:cur,got});save();i++;tally()}
   function next2(){next()}
   function submit(got,typed){
     if(!got)return;let dd=null;
     const exact=got===cur.ans,loose=strip(got)===strip(cur.ans);
     const syn=cur.kind==='mean'&&!loose&&VERBS.find(v=>(S.strict?v.inf===got:strip(v.inf)===strip(got))&&covers(v,cur.v));
-    const ok=exact||(typed&&loose&&!S.strict)||!!syn;
+    const alt=!exact&&altOf(cur).find(a=>a&&(S.strict?a===got:strip(a)===strip(got))),ok=exact||(typed&&loose&&!S.strict)||!!syn||!!alt;
     if(!ok&&typed&&S.typo&&!typoUsed&&lev(strip(got),strip(cur.ans))<=2&&got.length>2&&!isForm(diagnose(cur,got))){typoUsed=true;$('hint').innerHTML='<span class="badc">🤔 There might be a typo. Check it, then press Check again.</span>';return}
     phase='fb';record(ok,got);if($('hint'))$('hint').textContent='';
     const ans=$('ans');if(ans){ans.disabled=true;ans.className='answer '+(ok?'ok':'bad')}
@@ -3517,7 +3717,7 @@ function quiz(qs,opt){
     if(ok){
       speak(say);
       if(exact&&S.pause!=='always'){fb.innerHTML=`<div class="fb ok">¡Correcto!</div>`;phase='wait';setTimeout(()=>{if(phase==='wait')next()},mode==='mc'?900:650);return}
-      fb.innerHTML=syn?`<div class="fb ok">¡Correcto! ${syn.inf} works too. This one was looking for: <span class="c">${cur.ans}</span></div>`:`<div class="fb ok">${exact?'¡Correcto!':'Correct, but mind the accent:'} <span class="c">${exact?'':cur.ans}</span></div>`;
+      fb.innerHTML=alt?`<div class="fb ok">¡Correcto! ${alt} is accepted too. This one was looking for: <span class="c">${cur.ans}</span></div>`:syn?`<div class="fb ok">¡Correcto! ${syn.inf} works too. This one was looking for: <span class="c">${cur.ans}</span></div>`:`<div class="fb ok">${exact?'¡Correcto!':'Correct, but mind the accent:'} <span class="c">${exact?'':cur.ans}</span></div>`;
     }else{
       // near miss = within 2 letters and not some other real form (those get a specific diagnosis instead)
       const d0=diagnose(cur,got),near=got.length>2&&lev(strip(got),strip(cur.ans))<=2&&!isForm(d0),d=near&&d0&&d0[0]==='Not a real verb.'?null:d0;
