@@ -1,6 +1,9 @@
 <meta charset="utf-8">
 <title>Conjuga</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="theme-color" content="#F6F4EF">
 <link rel="manifest" href="manifest.webmanifest">
@@ -2059,7 +2062,8 @@ let S;try{S=Object.assign(fresh(),JSON.parse(localStorage.getItem(KEY)||'{}'))}c
 S.cq=Object.assign(fresh().cq,S.cq);
 migrateLv();
 const THEMES=[['system','System'],['light','Light'],['dark','Dark'],['sunset','Sunset'],['ocean','Ocean'],['contrast','Contrast']];
-const applyTheme=()=>{if(!THEMES.some(t=>t[0]===S.theme))S.theme='system';const r=document.documentElement;if(S.theme==='system')delete r.dataset.theme;else r.dataset.theme=S.theme};
+const applyTheme=()=>{if(!THEMES.some(t=>t[0]===S.theme))S.theme='system';const r=document.documentElement;if(S.theme==='system')delete r.dataset.theme;else r.dataset.theme=S.theme;const m=document.querySelector('meta[name=theme-color]');if(m)m.content=getComputedStyle(r).getPropertyValue('--bg').trim()||m.content};
+matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>applyTheme());
 applyTheme();
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch{}};
 const today=()=>new Date().toISOString().slice(0,10);
@@ -2309,8 +2313,18 @@ function bindSettings(after){for(const k of['vos','hidePro','enPro','esNames','e
 /* ---------- sheets and modals ---------- */
 const sheet=document.getElementById('sheet'),body=document.getElementById('sheetBody'),modal=document.getElementById('modal'),mbody=document.getElementById('modalBody');
 let sheetStack=[];
-function open(html,reopen){body.innerHTML=html;sheet.hidden=false;sheet.scrollTop=0;document.body.style.overflow='hidden';if(reopen)sheetStack.push(reopen)}
-function closeSheet(){sheetStack=[];sheet.hidden=true;modal.hidden=true;document.body.style.overflow='';try{speechSynthesis.cancel()}catch{}show(tab)}
+// System Back: each open sheet/modal owns a history entry, so Back closes it (or runs its own back button) instead of leaving the app.
+let hd=0,skipPop=0;
+const pushH=()=>{history.pushState({c:1},'');hd++};
+function unwindH(n){if(n>0&&hd>0){n=Math.min(n,hd);skipPop=1;hd-=n;history.go(-n)}}
+addEventListener('popstate',()=>{
+  if(skipPop){skipPop=0;return}
+  if(hd>0)hd--;
+  if(!modal.hidden)modal.hidden=true;
+  else if(!sheet.hidden){const b=sheet.querySelector('#cx,.qtop .x');if(b)b.click();else closeSheet()}
+  if(!sheet.hidden&&hd===0)pushH()});
+function open(html,reopen){if(sheet.hidden)pushH();body.innerHTML=html;sheet.hidden=false;sheet.scrollTop=0;document.body.style.overflow='hidden';if(reopen)sheetStack.push(reopen)}
+function closeSheet(){sheetStack=[];sheet.hidden=true;modal.hidden=true;unwindH(hd);document.body.style.overflow='';try{speechSynthesis.cancel()}catch{}show(tab)}
 function settingsSheet(){
   open(`<div class="qtop"><button class="x" aria-label="Back" id="cx">←</button><h1 style="font-size:26px">Settings</h1></div>
   <div class="card">${settingsHtml(true)}</div>
@@ -2332,8 +2346,8 @@ function settingsSheet(){
   const r=document.getElementById('reset');r.onclick=()=>{if(r.dataset.arm){S=fresh();save();applyTheme();settingsSheet()}else{r.dataset.arm=1;r.textContent='Yes, reset everything';document.getElementById('resetMsg').hidden=false}};
 }
 document.getElementById('gear').innerHTML=ICON.gear;document.getElementById('gear').onclick=settingsSheet;
-function popModal(html){mbody.innerHTML=html;modal.hidden=false;mbody.querySelector('button')?.focus()}
-function closeModal(){modal.hidden=true}
+function popModal(html){if(modal.hidden)pushH();mbody.innerHTML=html;modal.hidden=false;mbody.querySelector('button')?.focus()}
+function closeModal(){if(modal.hidden)return;modal.hidden=true;unwindH(1)}
 modal.onclick=e=>{if(e.target===modal)closeModal()};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!modal.hidden)closeModal();else if(!sheet.hidden)closeSheet()}});
 const table=(v,t,rows=conj(v,t))=>`<table>${rows.map((f,i)=>f&&persons().includes(i)?`<tr><td>${(t==='imp'||t==='neg'?IMPLAB:LAB)[i]}</td><td><b>${f}</b></td></tr>`:'').join('')}</table>`;
@@ -2403,7 +2417,7 @@ function verbSheet(v){
       document.getElementById('mc').onclick=closeModal;document.getElementById('mq').onclick=()=>{closeModal();quiz(build([t.id],[v],6),{title:v.inf,back:()=>verbSheet(v)})}});
     body.querySelectorAll('[data-steps]').forEach(b=>b.onclick=()=>{const[t,i]=b.dataset.steps.split('|');showSteps(v,t,+i)});
   };
-  sheet.hidden=false;document.body.style.overflow='hidden';sheet.scrollTop=0;draw();
+  if(sheet.hidden)pushH();sheet.hidden=false;document.body.style.overflow='hidden';sheet.scrollTop=0;draw();
 }
 
 /* ---------- quiz ---------- */
