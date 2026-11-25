@@ -4,7 +4,7 @@ const fs=require('fs'),vm=require('vm'),path=require('path');
 const html=fs.readFileSync(path.join(__dirname,'..','conjuga.html'),'utf8');
 const src=html.slice(html.indexOf('<script>')+8,html.lastIndexOf('</script>'));
 const stub=()=>new Proxy(function(){},{get:(t,k)=>k===Symbol.toPrimitive?()=>'':k==='length'?0:stub(),set:()=>true,apply:()=>stub(),construct:()=>stub()});
-const ctx={console,document:stub(),window:stub(),navigator:{},localStorage:{getItem:()=>null,setItem(){}},location:{protocol:'file:'},speechSynthesis:stub(),setTimeout};
+const ctx={addEventListener(){},history:stub(),requestAnimationFrame(){},matchMedia:()=>({matches:false,addEventListener(){}}),getComputedStyle:()=>stub(),console,document:stub(),window:stub(),navigator:{},localStorage:{getItem:()=>null,setItem(){}},location:{protocol:'file:'},speechSynthesis:stub(),setTimeout};
 vm.createContext(ctx);
 vm.runInContext(src+`
 globalThis.OUT=(()=>{const bad=checkLessons(+(process_runs||30));
