@@ -2380,6 +2380,8 @@ const sheet=document.getElementById('sheet'),body=document.getElementById('sheet
 let sheetStack=[];
 // System Back: each open sheet/modal owns a history entry, so Back closes it (or runs its own back button) instead of leaving the app.
 let hd=0,skipPop=0;
+// The app sets scroll itself. Without this, the async history.go() in closeSheet() lets the browser restore the old scroll after we scroll to a tip.
+history.scrollRestoration='manual';
 const pushH=()=>{history.pushState({c:1},'');hd++};
 function unwindH(n){if(n>0&&hd>0){n=Math.min(n,hd);skipPop=1;hd-=n;history.go(-n)}}
 addEventListener('popstate',()=>{
