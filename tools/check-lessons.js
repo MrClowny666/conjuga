@@ -8,6 +8,12 @@ const ctx={addEventListener(){},history:stub(),requestAnimationFrame(){},matchMe
 vm.createContext(ctx);
 vm.runInContext(src+`
 globalThis.OUT=(()=>{const bad=checkLessons(+(process_runs||30));
+  // English to Spanish: an ambiguous prompt must accept every right form
+  const acc=(inf,t,g)=>prodAcc(verbBy(inf),t,g).map(([u,t,p])=>conj(u,t)[p]);
+  for(const[inf,t,g,want]of[['ser','pret',0,'fui,era,estuve,estaba'],['comer','pres',1,'comes,come,coméis,comen,comés'],['comer','pres',4,'coméis,comen'],
+    ['comer','imp',1,'come,coma,comed,coman'],['poner','pres',0,'pongo,puse,ponía'],['ir','fut',3,'iremos,vamos a ir'],['hablar','prog',2,'está hablando,habla']]){
+    const got=acc(inf,t,g);for(const f of want.split(','))if(!got.includes(f))bad.push('English to Spanish: '+inf+' '+t+' '+g+' does not accept '+f)}
+  if(acc('tener','pres',0).includes('he'))bad.push('English to Spanish: "I have" accepts the auxiliary he');
   for(const x of CHX){const v=verbBy(x.v);if(!v||conj(v,x.t)[x.p]!==x.a)bad.push('CHX answer does not match the engine: '+x.s)}
   return{bad,levels:LEVELS.length}})();`.replace('process_runs||30','30'),ctx);
 const {bad,levels}=ctx.OUT;

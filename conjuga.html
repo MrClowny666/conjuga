@@ -1982,6 +1982,9 @@ function checkLessons(runs=30){
       for(const[v,t,p]of reqsOf(q)){const ns=needs(v,t,p);if(!metBy(ns,T2))say(l,`${src}: asks ${v.inf} ${t} ${p} = ${formOf(v,t,p)} but needs ${ns.filter(k=>k[0]==='='?!T2.w.has(k.slice(1)):!T2.r.has(k)).join(' ')}`)}}};
     let nonEmpty=0;
     for(const d of l.drills){let any=false;for(let n=0;n<runs;n++){let qs;try{qs=drillQs(l,d,l.q)}catch(e){say(l,`${d.name}: ${e.message}`);break}if(qs.length)any=true;test(d.name,qs)}if(any)nonEmpty++;else if(!d.all)console.log?.(`  (note) ${l.n}: drill "${d.name}" has nothing to ask yet and is hidden`)}
+    for(let n=0;n<3;n++)for(const x of prodQs(10,i)){test('English to Spanish',[x]); // the free English to Spanish mode at this point of the path
+      if(!x.acc.some(([u,t,p])=>u===x.v&&t===x.t&&p===x.p))say(l,`English to Spanish: "${x.prompt}" does not accept its own answer ${x.ans}`);
+      if(/s\/he|\(|^ /.test(x.prompt))say(l,`English to Spanish: badly formed prompt "${x.prompt}"`)}
     for(let n=0;n<runs;n++){const qs=levelQs(l);test('level test',qs);if(qs.length<l.total)say(l,`test only has ${qs.length} of ${l.total} questions`)}
     if(!nonEmpty)say(l,'no working drill');
   });
@@ -2212,6 +2215,7 @@ const VIEWS={
    <div class="card stack"><h3>Sentences</h3>
    <p class="muted small" style="margin:0">Fill the missing verb in a real sentence. Only tenses and forms you have reached on the path. ${sp.length<10?`${sp.length} sentences so far.`:'Level-up test: 10 sentences, pass with 8.'}</p>
    <div class="row"><button class="btn" id="sent5" ${sp.length?'':'disabled'}>5 questions</button><button class="btn ghost" id="sentTest" ${sp.length>=10?'':'disabled'}>Level-up test</button></div></div>
+ <div class="card stack"><h3>English to Spanish</h3><p class="muted small" style="margin:0">See the English, type the Spanish: <i>we will go → iremos</i>. No tense or person is given, so you choose them. Ten questions, only verbs and forms you have reached on the path.</p><button class="btn" id="prodGo">Start</button></div>
  <div class="card stack"><h3>Commands with pronouns</h3><p class="muted small" style="margin:0">Attach the pronouns and place the accent: <i>dámelo, démelo, dígaselo</i>, and the negative <i>no me lo des</i>. Ten questions.</p><button class="btn" id="proGo">Start</button></div>
  <div class="card stack"><h3>Voseo</h3><p class="muted small" style="margin:0">Vos instead of tú, as in Argentina, Uruguay and Central America: <i>tenés, sos, vení</i>. Ten questions, present and commands.</p><button class="btn" id="voseoGo">Start</button></div>
    <button class="card" id="vod" style="text-align:left;display:flex;justify-content:space-between;align-items:flex-end;gap:12px;color:var(--ink)"><span><span class="muted small" style="display:block">Verb of the day</span><span style="font-family:var(--display);font-size:40px;font-weight:700;display:block;line-height:1.1">${vd.inf}</span><span class="muted">${vd.en}</span></span>
@@ -2237,6 +2241,7 @@ const VIEWS={
    document.getElementById('qm').onclick=()=>{C.n=Math.max(5,C.n-5);save();draw()};
    document.getElementById('qp').onclick=()=>{C.n=Math.min(50,C.n+5);save();draw()};
    document.getElementById('go').onclick=()=>quiz(make(),{title:C.what==='conj'?(C.tenses.length===1?tn(C.tenses[0]):'Custom quiz'):'Meanings',mode:C.how,hideInf:C.what==='conj'&&C.hideInf,hideEn:C.what==='conj'&&C.hideEn});
+   document.getElementById('prodGo').onclick=()=>quiz(prodQs(),{title:'English to Spanish'});
    document.getElementById('proGo').onclick=()=>quiz(proQs(),{title:'Commands with pronouns'});
    document.getElementById('voseoGo').onclick=()=>quiz(voseoQs(),{title:'Voseo'});
    document.getElementById('todaySet').onclick=()=>quiz(todayQs(nl),{title:cap(todayName)});
@@ -2512,6 +2517,38 @@ const proQs=(n=10)=>{const vs=VERBS.filter(v=>PRO_V.includes(v.root)&&!v.refl),o
   while(out.length<n){const v=pick(vs),p=pick([1,1,2,2,3,5]),io=pick(PRO_IO[p]),dobj=pick(PRO_DO);if(!io&&!dobj)continue;if(p===3&&io==='se'&&!dobj)continue;out.push(proQ(v,p,io,dobj,Math.random()<.3&&p!==3))}
   return out};
 const voseoQs=()=>shuffle(VERBS.filter(v=>v.rank<=150&&!DEF3.has(v.root)&&!['haber','soler'].includes(v.root))).slice(0,10).map((v,i)=>q(v,i%2?'vimp':'vpres',1));
+/* English to Spanish: only the English is shown ("they had eaten"), so the learner has to choose the tense and person.
+   Every Spanish form whose English reads the same is accepted, so an ambiguous prompt never marks a right answer wrong. */
+const PROD_T=['pres','prog','prox','pret','impf','fut','cond','perf','plup','futp','condp','imp','neg']; // the subjunctives read like the indicative in English, so they stay out
+const PROD_SKIP=new Set(['haber','desconocer','pretender']); // "to have (auxiliary)" is not "I have", and two glosses that do not make an English sentence
+const PROD_ALSO={impf:['pret'],pres:['prog'],fut:['prox'],prox:['fut']}; // "I ate" can be comía, "I am eating" can be como, "will" and "going to" swap
+const PROD_PS={0:[0],1:[1,2,4,5],2:[2],3:[3],4:[4,5],5:[5]}; // English "you" is tú, usted, vosotros or ustedes; "you all" is vosotros or ustedes
+const prodG=(t,p)=>t==='imp'||t==='neg'?(p===3?3:1):p; // commands to usted, vosotros and ustedes read like the tú one: "eat!"
+const PROD_EN=new Map;
+const prodRest=(en,t,g)=>{const k=en+'|'+t+g;if(!PROD_EN.has(k)){const e=english({en},t,g);PROD_EN.set(k,t==='imp'||t==='neg'?e.replace(/^\(to you[^)]*\) /,''):e.slice(EP[g].length+1))}return PROD_EN.get(k)}; // the English without its subject
+function prodAcc(v,t,g){ // [verb, tense, person] of every form that says this English: other tenses, persons and verbs with the same meaning
+  const R=prodRest(v.en,t,g),out=[],seen=new Set,add=(u,t2,p)=>{const k=u.inf+t2+p;if(!seen.has(k)&&conj(u,t2)[p]){seen.add(k);out.push([u,t2,p])}};
+  for(const u of VERBS){if(PROD_SKIP.has(u.inf))continue;
+    for(const s of senses(u))for(const t2 of PROD_T)if([t2,...(PROD_ALSO[t2]||[])].some(t3=>prodRest(s,t3,g)===R)){
+      for(const p of PROD_PS[g])add(u,t2,p);
+      if(g===1&&(t2==='pres'||t2==='imp'))add(u,t2==='pres'?'vpres':'vimp',1)}} // vos forms are right too
+  return out}
+function prodQ(x){const g=prodG(x.t,x.p),R=prodRest(x.v.en,x.t,g);
+  const sub=g===2?(conj(x.v,'pres')[0]?pick(['he','she']):'it'):EP[g]; // weather and gustar-type verbs only have the it / they forms
+  const acc=prodAcc(x.v,x.t,g),k=acc.findIndex(([u,t,p])=>u===x.v&&t===x.t&&p===x.p);acc.unshift(...acc.splice(k,1)); // the asked form first
+  return{...x,prompt:x.t==='imp'||x.t==='neg'?R:sub+' '+R,acc}}
+const prodVerbs=i=>[...new Set(LEVELS.slice(0,i+1).flatMap(l=>l.verbs||[]))].filter(v=>!PROD_SKIP.has(v.inf)); // only verbs whose meaning a level has listed
+const prodQs=(n=10,i=curIdx())=>build(PROD_T,prodVerbs(i),n,{at:i}).map(prodQ);
+function prodMatch(x,got,exactOnly){ // the accepted form the learner typed, as its own question, so the answer counts for that form
+  const hit=k=>x.acc.find(([u,t,p])=>{const y=q(u,t,p);return[y.ans,...altOf(y)].some(k)});
+  const f=hit(a=>a===got)||(!exactOnly&&!S.strict&&hit(a=>strip(a)===strip(got)));
+  if(!f)return null;const[u,t,p]=f;return u===x.v&&t===x.t&&p===x.p?x:{...q(u,t,p),prompt:x.prompt,acc:x.acc}}
+const prodWho=(t,p)=>t==='vpres'||t==='vimp'?'vos':(t==='imp'||t==='neg'?IMPLAB:LAB)[p];
+function prodNote(x){ // the answer's person and tense, then the other right answers the lessons have taught
+  const T_=taughtAt(curIdx()),seen=new Set([x.ans]),also=[];
+  for(const[u,t,p]of x.acc){const f=conj(u,t)[p];
+    if(!seen.has(f)&&PROD_T.includes(t)&&persons().includes(p)&&metBy(needs(u,t,p),T_)){seen.add(f);also.push(`<b>${f}</b> <span class="muted">(${u===x.v?'':u.inf+', '}${prodWho(t,p)}${t===x.t?'':', '+tns(t)})</span>`)}}
+  return[`<div class="small" style="margin-top:4px">${prodWho(x.t,x.p)} · ${tn(x.t)}${also.length?`<br>Also right: ${also.join(', ')}`:''}</div>`,also.length]}
 const vod=()=>{const l=VERBS.filter(v=>v.irregular&&!v.refl&&v.rank<=60);return l[Math.floor(Date.now()/864e5)%l.length]};
 /* ---------- sentence questions ----------
    p is the person index used everywhere else (0 yo, 1 tú, 2 él/ella/usted, 3 nosotros, 4 vosotros, 5 ellos/ellas/ustedes;
@@ -3434,7 +3471,7 @@ const qs_=s=>({kind:'sent',v:verbBy(s.v),t:s.t,p:s.p,ans:s.a,s:s.s,en:s.en,note:
 const isIrregularForm=(v,t,p)=>bare(v,t)[p]!==bare(plainOf(v),t)[p];
 function build(ts,vs,n,o={}){
   const ps=o.pron?persons().filter(p=>o.pron.includes(p)):persons();
-  const T_=o.lv?null:taughtAt(curIdx()),all=[];for(const v of vs)for(const t of ts)for(const p of ps)if(conj(v,t)[p]&&(!T_||metBy(needs(v,t,p),T_))&&(!o.irrOnly||isIrregularForm(v,t,p))&&(!o.regOnly||!isIrregularForm(v,t,p)))all.push([v,t,p]);
+  const T_=o.lv?null:taughtAt(o.at??curIdx()),all=[];for(const v of vs)for(const t of ts)for(const p of ps)if(conj(v,t)[p]&&(!T_||metBy(needs(v,t,p),T_))&&(!o.irrOnly||isIrregularForm(v,t,p))&&(!o.regOnly||!isIrregularForm(v,t,p)))all.push([v,t,p]);
   const out=[],seen=new Set();
   for(const [v,t,p] of shuffle(all)){if(out.length>=n)break;if(seen.has(v.inf+t)&&all.length>n*3)continue;seen.add(v.inf+t);out.push(q(v,t,p))}
   return out;
@@ -3839,17 +3876,18 @@ function quiz(qs,opt){
     $('pr').innerHTML=cur.kind==='tip'?`<span class="tchip">${tt(cur.tip)}</span><div class="inf" style="font-size:26px;line-height:1.3">${cur.s.replace('___','<span style="color:var(--blue)">___</span>')}</div><div class="en">${cur.en}</div>${cur.opts.includes('—')?'<div class="muted small">— means nothing goes in the gap</div>':''}${cur.clue&&!opt.level?'<button class="tiplink" id="clue">Show clue</button>':''}`
       :cur.kind==='sent'?`<span class="tchip">${tn(cur.t)}</span><div class="inf" style="font-size:26px;line-height:1.3">${cur.s.replace('___',`<span style="color:var(--blue)">___</span>${cur.hide?'':` <span class="muted" style="font-weight:600">(${cur.v.inf})</span>`}`)}</div><div class="en">${cur.en}</div>${cur.hide?'<button class="tiplink" id="rvl">Show the verb</button>':''}`
       :cur.kind==='nf'?`<span class="tchip">${cur.nf==='ger'?'Gerund':'Past participle'}</span><div class="inf">${cur.v.inf}</div><div class="en">${nfEn(cur)}</div>`
+      :cur.prompt?`<span class="tchip">English to Spanish</span><div class="inf" style="font-size:30px;line-height:1.3">${cur.prompt}</div>`
       :c?`<span class="tchip">${tn(cur.t)}</span>${opt.hideInf?'':`<div class="inf">${cur.v.inf}</div>`}${opt.hideEn?'':`<div class="en">${gloss}</div>`}<div class="who">${SUBJ.has(cur.t)?'que ':''}${cur.who} …</div>`
       :`<span class="tchip">Meaning</span><div class="inf" style="font-size:30px">${cur.v.en}</div>${cur.v.refl?'<div class="en">reflexive</div>':''}`;
     if(cur.kind==='tip'&&cur.clue&&!opt.level)$('clue').onclick=e=>{e.target.outerHTML=`<span class="muted">${cur.clue.trim()}</span>`;S.clues=(S.clues||0)+1;save()};
     if(cur.hide)$('rvl').onclick=e=>{e.target.outerHTML=`<span class="muted">${cur.v.inf}</span>`};
     if(mode==='type'){
-      io.innerHTML=`<input class="answer" id="ans" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Your answer" placeholder="${cur.kind==='mean'?'Type the Spanish verb':'Type the form'}">
+      io.innerHTML=`<input class="answer" id="ans" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Your answer" placeholder="${cur.kind==='mean'?'Type the Spanish verb':cur.prompt?'Type it in Spanish':'Type the form'}">
         <div class="accents">${['á','é','í','ó','ú','ñ','ü'].map(ch=>`<button data-c="${ch}" aria-label="Insert ${ch}">${ch}</button>`).join('')}</div><div class="small" id="hint"></div>`;
       const ans=$('ans');
       io.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{const s=ans.selectionStart??ans.value.length,e=ans.selectionEnd??s;ans.value=ans.value.slice(0,s)+b.dataset.c+ans.value.slice(e);ans.focus();ans.setSelectionRange(s+1,s+1)});
       ans.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();phase==='ask'?submit(norm(ans.value),true):next2()}};
-      ans.oninput=()=>{$('hint').textContent='';if(S.auto&&norm(ans.value)===cur.ans)submit(cur.ans,true)};
+      ans.oninput=()=>{$('hint').textContent='';const v=norm(ans.value);if(S.auto&&(cur.acc?prodMatch(cur,v,true):v===cur.ans))submit(v,true)};
       ctl.innerHTML=`<button class="btn" id="ck">Check</button>`;$('ck').onclick=()=>phase==='ask'?submit(norm(ans.value),true):next2();ans.focus();
     }else if(mode==='mc'){
       io.innerHTML=choices(cur).map(o=>`<button class="opt" data-o="${o}">${o}</button>`).join('');ctl.innerHTML='';
@@ -3868,6 +3906,7 @@ function quiz(qs,opt){
   function next2(){next()}
   function submit(got,typed){
     if(!got)return;let dd=null;
+    if(cur.acc)cur=prodMatch(cur,got)||cur; // English to Spanish: any form that says the English is right, and counts for that form
     const exact=got===cur.ans,loose=strip(got)===strip(cur.ans);
     const syn=cur.kind==='mean'&&!loose&&VERBS.find(v=>(S.strict?v.inf===got:strip(v.inf)===strip(got))&&covers(v,cur.v));
     const alt=!exact&&altOf(cur).find(a=>a&&(S.strict?a===got:strip(a)===strip(got))),ok=exact||(typed&&loose&&!S.strict)||!!syn||!!alt;
@@ -3877,15 +3916,16 @@ function quiz(qs,opt){
     const c=cur.kind==='conj',say=(c&&SUBJ.has(cur.t)?'que ':'')+(c?cur.who+' ':'')+cur.ans;
     if(ok){
       speak(say);
-      if(exact&&S.pause!=='always'){fb.innerHTML=`<div class="fb ok">¡Correcto!</div>`;phase='wait';setTimeout(()=>{if(phase==='wait')next()},mode==='mc'?900:650);return}
-      fb.innerHTML=alt?`<div class="fb ok">¡Correcto! ${alt} is accepted too. This one was looking for: <span class="c">${cur.ans}</span></div>`:syn?`<div class="fb ok">¡Correcto! ${syn.inf} works too. This one was looking for: <span class="c">${cur.ans}</span></div>`:`<div class="fb ok">${exact?'¡Correcto!':'Correct, but mind the accent:'} <span class="c">${exact?'':cur.ans}</span></div>`;
+      const[pn,pAlso]=cur.acc?prodNote(cur):['',0];
+      if(exact&&S.pause!=='always'&&!pAlso){fb.innerHTML=`<div class="fb ok">¡Correcto!${pn}</div>`;phase='wait';setTimeout(()=>{if(phase==='wait')next()},mode==='mc'?900:650);return}
+      fb.innerHTML=alt?`<div class="fb ok">¡Correcto! ${alt} is accepted too. This one was looking for: <span class="c">${cur.ans}</span>${pn}</div>`:syn?`<div class="fb ok">¡Correcto! ${syn.inf} works too. This one was looking for: <span class="c">${cur.ans}</span></div>`:`<div class="fb ok">${exact?'¡Correcto!':'Correct, but mind the accent:'} <span class="c">${exact?'':cur.ans}</span>${pn}</div>`;
     }else{
       // near miss = within 2 letters and not some other real form (those get a specific diagnosis instead)
       const d0=diagnose(cur,got),near=got.length>2&&lev(strip(got),strip(cur.ans))<=2&&!isForm(d0),d=near&&d0&&d0[0]==='Not a real verb.'?null:d0;
       dd=d;const named=d&&d[0]!=='Not quite.'&&!near,bd=d&&d[2];
       fb.innerHTML=`<div class="fb bad"><div>${near?'So close! Just a spelling slip – check the highlighted letters.':named?d[0]:"That's incorrect…"}</div>
         <div class="cmp"><div>✓ <span class="c">${hl(cur.ans,got)}</span> <button class="speak" id="sa" aria-label="Hear it">${ICON.speak.replace('<svg','<svg width="20" height="20"')}</button></div>
-        <div>✗ <span class="c wrongc">${hl(got,cur.ans)}</span></div>${bd?`<div class="muted small"><i>= ${english(cur.v,bd.t,bd.i)}</i></div>`:''}${c?`<div class="muted small"><i>Asked: ${english(cur.v,cur.t,cur.p)}</i></div>`:''}</div>
+        <div>✗ <span class="c wrongc">${hl(got,cur.ans)}</span></div>${bd?`<div class="muted small"><i>= ${english(cur.v,bd.t,bd.i)}</i></div>`:''}${c?`<div class="muted small"><i>Asked: ${cur.prompt||english(cur.v,cur.t,cur.p)}</i></div>`:''}${cur.acc?prodNote(cur)[0]:''}</div>
         ${d?`<p class="diag">${named?'':`<b>${d[0]}</b> `}${d[1]}</p>`:''}${(c&&d&&/wrong tense/.test(d[0]))?`<p class="small muted" style="margin:0">${T[cur.t].use}</p>`:''}</div>`;
       $('sa').onclick=()=>speak(say,true);
     }
@@ -3908,7 +3948,7 @@ function quiz(qs,opt){
       <p class="muted" style="margin:0">${opt.title} – ${okN} of ${total} correct</p><p style="margin:0;font-size:18px">${msg}</p>
       ${opt.level?starHtml(stars):''}<span class="pill gold">🔥 ${S.streak} day streak</span>${froze?'<span class="pill">❄️ A freeze saved your streak</span>':''}${S.bestRun>run0&&S.bestRun>=10?`<span class="pill gold">🏅 New best: ${S.bestRun} right in a row</span>`:''}${fmHtml}
       ${opt.level&&!stars?'<p class="muted small" style="margin:0">You need ${opt.pass} of ${total} to unlock the next level.</p>':''}</div>
-      ${mistakes.length?`<section class="stack"><h2 style="font-size:20px">Your mistakes</h2>${mistakes.map((m,k)=>`<div class="card mist"><div class="row"><span class="muted small">${m.x.kind==='conj'?`${m.x.who} (${m.x.v.inf.toUpperCase()}) · ${tn(m.x.t)}`:m.x.kind==='sent'?`${m.x.s} (${m.x.v.inf})`:m.x.kind==='tip'?m.x.s:m.x.kind==='nf'?`${m.x.v.inf} · ${m.x.nf==='ger'?'gerund':'past participle'}`:m.x.v.en}</span>${m.x.kind==='conj'?`<button class="speak" data-ms="${k}" aria-label="Steps">${ICON.steps.replace('<svg','<svg width="20" height="20"')}</button>`:''}</div>
+      ${mistakes.length?`<section class="stack"><h2 style="font-size:20px">Your mistakes</h2>${mistakes.map((m,k)=>`<div class="card mist"><div class="row"><span class="muted small">${m.x.prompt?`${m.x.prompt} · ${tn(m.x.t)}`:m.x.kind==='conj'?`${m.x.who} (${m.x.v.inf.toUpperCase()}) · ${tn(m.x.t)}`:m.x.kind==='sent'?`${m.x.s} (${m.x.v.inf})`:m.x.kind==='tip'?m.x.s:m.x.kind==='nf'?`${m.x.v.inf} · ${m.x.nf==='ger'?'gerund':'past participle'}`:m.x.v.en}</span>${m.x.kind==='conj'?`<button class="speak" data-ms="${k}" aria-label="Steps">${ICON.steps.replace('<svg','<svg width="20" height="20"')}</button>`:''}</div>
         <div>✓ <b>${hl(m.x.ans,m.got)}</b> ${m.got?`&nbsp; ✗ <span class="wrongc">${hl(m.got,m.x.ans)}</span>`:''}</div></div>`).join('')}
         <p class="muted small" style="margin:0">${mistakes.filter(m=>m.x.kind==='conj').length?'These forms are in your Smart review and come back until you get them right twice.':''}</p></section>`:''}
       ${covered.length?`<section><div class="row"><h2 style="font-size:20px">Verbs covered</h2><span class="muted small">Star to add to My verbs</span></div>
